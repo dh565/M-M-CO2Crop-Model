@@ -1,1 +1,6 @@
 .DS_Store
+*.o
+*.mod
+mmco2crop
+run/
+RERUN_*/
