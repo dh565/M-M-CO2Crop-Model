@@ -1,0 +1,4 @@
+! Maricopa FACE TRNO 912 initial surface residue - archive Init_conditions
+! icpcr=OAT icrag=500 kg/ha icrn=1.00 %N icdat=1995-12-18
+1
+cereal_residue,3,500.0,1.000,40.0,-1,4,Maricopa initial residue (previous crop OAT)

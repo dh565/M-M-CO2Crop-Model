@@ -1,0 +1,101 @@
+cff-version: 1.2.0
+message: "If you use this software or results obtained with it, please cite both companion papers listed under preferred-citation and references below."
+title: "M&M-CO2Wheat v1.0"
+version: "1.0.0"
+date-released: "2026-10-21"
+abstract: "M&M-CO2Wheat v1.0 is a mechanistic, point-scale wheat model in which carbon, nitrogen, water and energy are solved as one coupled system: a three-node canopy-soil-airspace surface energy balance with a solved canopy airspace, hourly two-leaf-class Farquhar-Busch photosynthesis with Leuning stomatal conductance, a one-dimensional mixed-form Richards soil-water solver, one-dimensional soil heat conduction, a daily organ-level carbon and nitrogen economy with an organ-resolved canopy, residue and mineral soil nitrogen, and a six-element grain mineral economy. It was built to predict the responses of wheat yield and grain quality to elevated CO2, water supply, temperature and nitrogen, and is evaluated at three wheat FACE experiments."
+type: software
+license: LicenseRef-MMCO2Crop-Research-1.0
+license-url: "https://doi.org/10.5281/zenodo.23687586"
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.23687586"
+    description: "Zenodo archive of this publication package (version 1.0.0)"
+repository-code: "https://github.com/dh565/M-M-CO2Crop-Model"
+url: "https://github.com/dh565/M-M-CO2Crop-Model"
+contact:
+  - family-names: "Helman"
+    given-names: "David"
+    email: "david.helman@mail.huji.ac.il"
+    affiliation: "The Hebrew University of Jerusalem"
+authors:
+  - family-names: "Helman"
+    given-names: "David"
+    email: "david.helman@mail.huji.ac.il"
+    affiliation: "The Hebrew University of Jerusalem"
+    city: "Rehovot"
+    country: "IL"
+keywords:
+  - wheat
+  - crop model
+  - elevated CO2
+  - FACE
+  - carbon-nitrogen coupling
+  - surface energy balance
+  - Richards equation
+  - grain quality
+  - grain minerals
+languages:
+  - en
+preferred-citation:
+  type: article
+  title: "M&M-CO2Wheat v1.0: A fully mechanistic coupled carbon-nitrogen-water-energy wheat model with a closed canopy energy balance - Part 1: Model description"
+  authors:
+    - family-names: "Helman"
+      given-names: "David"
+      email: "david.helman@mail.huji.ac.il"
+      affiliation: "The Hebrew University of Jerusalem"
+  year: 2026
+  journal: "Geoscientific Model Development"
+  doi: "TBD"
+  notes: "DOI PENDING. Submitted to Geoscientific Model Development; not yet assigned a DOI. The string TBD is a placeholder and must be replaced with the assigned DOI on acceptance. Until then cite as: Helman, D. (2026), M&M-CO2Wheat v1.0: A fully mechanistic coupled carbon-nitrogen-water-energy wheat model with a closed canopy energy balance - Part 1: Model description, Geoscientific Model Development, submitted."
+references:
+  - type: article
+    title: "M&M-CO2Wheat v1.0 - Part 2: Model evaluation against three wheat free-air CO2 enrichment (FACE) experiments"
+    authors:
+      - family-names: "Helman"
+        given-names: "David"
+        email: "david.helman@mail.huji.ac.il"
+        affiliation: "The Hebrew University of Jerusalem"
+    year: 2026
+    journal: "Geoscientific Model Development"
+    doi: "TBD"
+    notes: "DOI PENDING. Submitted to Geoscientific Model Development; not yet assigned a DOI. The string TBD is a placeholder and must be replaced with the assigned DOI on acceptance. Until then cite as: Helman, D. (2026), M&M-CO2Wheat v1.0 - Part 2: Model evaluation against three wheat free-air CO2 enrichment (FACE) experiments, Geoscientific Model Development, submitted."
+  - type: article
+    title: "WheatDryFACE: Design, performance, and insights from a multifaceted Mediterranean dryland wheat free-air carbon dioxide enrichment (FACE) platform"
+    authors:
+      - family-names: "Mulero"
+        given-names: "G."
+      - family-names: "Bonfil"
+        given-names: "D."
+      - family-names: "Lerner"
+        given-names: "G."
+      - family-names: "Tamata"
+        given-names: "E."
+      - family-names: "Egorov"
+        given-names: "F."
+      - family-names: "Harris"
+        given-names: "Y."
+      - family-names: "Michael"
+        given-names: "Y."
+      - family-names: "Usenko"
+        given-names: "D."
+      - family-names: "Helman"
+        given-names: "David"
+    year: 2026
+    journal: "Field Crops Research"
+    doi: "10.2139/ssrn.6719421"
+    notes: "In review; the DOI is that of the SSRN preprint. Describes the WheatDryFACE facility whose observations the decks and paper_scripts use."
+  - type: article
+    title: "Where does the carbon go? Elevated CO2 amplifies photosynthesis under high nitrogen but not yield in dryland Mediterranean wheat"
+    authors:
+      - family-names: "Mulero"
+        given-names: "G."
+      - family-names: "Bonfil"
+        given-names: "D. J."
+      - family-names: "Helman"
+        given-names: "David"
+    year: 2026
+    journal: "Plant, Cell & Environment"
+    doi: "10.2139/ssrn.6879639"
+    notes: "Under review; the DOI is that of the SSRN preprint."

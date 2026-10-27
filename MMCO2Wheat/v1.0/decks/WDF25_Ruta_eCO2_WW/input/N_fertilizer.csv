@@ -1,0 +1,15 @@
+! N fertilizer application schedule for M&M-CO2Crop
+! First non-comment line: number of applications (integer)
+! Subsequent lines: DAS (days after sowing; sowing 2024-12-01 = DAS 0 = model
+! day 14; simulation day 1 = 2024-11-18 = field preparation), N_kg_per_ha
+! Optional 3rd field: form keyword (default urea)
+! WheatDryFACE 2024/25 season: 5 split applications of UREA (46:0:0),
+! total 212 kg N/ha, at DAS 36, 46, 65, 80, 95 (field record: urea; the
+! earlier "CAN" note here was wrong — CAN was diagnostic-only, retracted).
+! Field CALENDAR dates of the events are not in WDF25_Data_v2 (declared gap).
+5
+36,42.4
+46,42.4
+65,42.4
+80,42.4
+95,42.4

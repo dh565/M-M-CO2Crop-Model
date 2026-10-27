@@ -1,0 +1,21 @@
+axis_class,Nl_axis,HS_axis,Gl_axis,Sl_axis,phase,tau1_onset_Cd,tau2_Nl_minus_4_Cd,tau3_flag_lig_Cd,area_green_cm2,area_dead_cm2,density_m2
+MS,   11.0000    ,   11.0000    ,   0.00000    ,   11.0000    ,4,   368.220    ,   582.840    ,   1039.50    ,   0.00000    ,   98.6558    ,   200.000    
+T1,   7.87000    ,   7.87000    ,   0.00000    ,   7.87000    ,4,   554.142    ,   591.935    ,   1039.50    ,   1.38476    ,   44.4734    ,   29.5734    
+T2,   7.24700    ,   7.24700    ,   0.00000    ,   7.24700    ,4,  -1.00000    ,   579.296    ,   1039.50    ,   0.00000    ,   35.5520    ,   134.863    
+T3,   6.62400    ,   6.62400    ,   0.00000    ,   6.62400    ,4,  -1.00000    ,   595.880    ,   1039.50    ,   3.36875    ,   35.1007    ,   194.930    
+T4,   6.00100    ,   6.00100    ,   0.00000    ,   6.00100    ,4,  -1.00000    ,   632.297    ,   1039.50    ,   0.00000    ,   34.6157    ,   95.1816    
+T5,   5.37800    ,   5.37800    ,   0.00000    ,   5.37800    ,4,  -1.00000    ,   689.736    ,   1039.50    ,   0.00000    ,   28.5970    ,   6.25709    
+
+summary,value,units
+green_area_index_end,  0.697623E-01,m2 m-2
+standing_dead_instantaneous_end,   3.61569    ,m2 m-2
+standing_dead_pool_end,   3.61569    ,m2 m-2
+standing_dead_culled_end,  0.588228E-02,m2 m-2
+standing_dead_total_end,   3.62158    ,m2 m-2
+standing_dead_max,   3.62158    ,m2 m-2
+instantaneous_dip_days,0,days
+instantaneous_dip_max,   0.00000    ,m2 m-2
+HS_at_senescence_onset,   5.01165    ,leaves
+Gl_MS_at_flag_ligulation,   5.45000    ,leaves
+g1_g2_g3_used,   4.90000    ,   3.30000    ,   5.45000    
+delta_tiller_used,  0.850000    ,-

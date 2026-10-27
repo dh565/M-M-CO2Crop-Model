@@ -1,0 +1,23 @@
+# Maricopa FACE cv. Yecora Rojo: replicate dispersion of the measured summary end-points.
+# Source: archive workbook 'Biomass Yield Area Phenology Management Weather Soil Moisture.ods',
+#   sheet 'Obs_summary_by_Reps' (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z).
+# Sample sd (n-1) across replicate plots (RP) per TRNO; HWAH = harvest yield kg ha-1, CWAM = above-ground DM at maturity kg ha-1,
+#   LAIX = max LAI. HWUM, H#UM, P#AM and HIAM are NA in the by-reps sheet (no replicate values), so TKW, grain number and
+#   ear number carry no dispersion. Means here are the replicate means.
+TRNO,n_reps,HWAH_mean,HWAH_sd,CWAM_mean,CWAM_sd,HWUM_mean,HWUM_sd,HnUM_mean,HnUM_sd,PnAM_mean,PnAM_sd,HIAM_mean,HIAM_sd,LAIX_mean,LAIX_sd
+901,4,5954.75,100.0812,14913.25,3639.9624,,,,,,,,,6.0325,1.3982
+902,4,8369.0,424.0527,18276.25,776.4296,,,,,,,,,6.6,0.5073
+903,4,7197.25,594.5723,15523.75,1459.7252,,,,,,,,,6.0175,0.4216
+904,4,9035.75,561.6152,19832.5,1750.2062,,,,,,,,,6.7,0.5068
+905,4,4744.25,716.9627,13858.0,1051.9734,,,,,,,,,4.34,0.8638
+906,4,7435.75,871.5245,18000.75,3117.708,,,,,,,,,7.21,0.9319
+907,4,5918.25,694.223,15830.75,3848.7279,,,,,,,,,5.6025,1.2565
+908,4,8311.5,270.2807,19277.5,610.1768,,,,,,,,,7.3825,1.4191
+909,4,5772.75,767.6094,12628.5,1553.6298,,,,,,,,,3.255,1.0365
+910,4,7399.75,662.3999,16818.25,2023.1028,,,,,,,,,5.09,0.9412
+911,4,6457.25,567.6903,14159.5,2129.4886,,,,,,,,,3.9675,0.9827
+912,4,8494.25,298.9553,16115.25,1662.5134,,,,,,,,,5.8325,0.4495
+913,3,5043.0,663.4365,12658.3333,1544.7661,,,,,,,,,3.35,0.4371
+914,3,6126.0,750.0907,12697.0,3704.4596,,,,,,,,,4.8767,0.1704
+915,3,5306.0,694.0195,12037.0,2558.6666,,,,,,,,,2.8833,0.3482
+916,3,7157.0,446.288,13997.6667,4786.379,,,,,,,,,5.5267,0.3213

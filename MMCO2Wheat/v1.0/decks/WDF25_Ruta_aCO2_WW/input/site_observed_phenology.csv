@@ -1,0 +1,8 @@
+stage,observed_dap,observed_dap_sd,model_stage_name,notes
+elongation_jointing,52.0,1.5,,"first node / start of stem elongation (Zadoks ~31); NO explicit model stage yet - falls between Tillering and Booting"
+flag_leaf,76.0,1.2,,"flag leaf fully emerged (Zadoks ~39); NO explicit model stage yet - falls within Booting window; defines start of flag-leaf gas-exchange validation window"
+booting,83.7,0.6,Booting,"Zadoks ~45; model Booting first DAP ~82"
+heading,93.0,0.0,Heading,"Zadoks ~55; model Heading first DAP ~94"
+anthesis,101.6,0.6,Anthesis,"Zadoks ~65; model Anthesis first DAP ~103"
+early_dough,113.0,1.2,Grain_filling,"Zadoks ~83; model Grain_filling first DAP ~116"
+hard_dough,132.7,2.3,Maturity,"Zadoks ~87; model Maturity first DAP ~133"

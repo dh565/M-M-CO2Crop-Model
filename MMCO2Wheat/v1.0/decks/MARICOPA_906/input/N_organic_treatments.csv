@@ -1,0 +1,4 @@
+! Maricopa FACE TRNO 906 initial surface residue - archive Init_conditions
+! icpcr=WHB icrag=1100 kg/ha icrn=0.53 %N icdat=1993-12-09
+1
+cereal_residue,2,1100.0,0.530,40.0,-1,4,Maricopa initial residue (previous crop WHB)

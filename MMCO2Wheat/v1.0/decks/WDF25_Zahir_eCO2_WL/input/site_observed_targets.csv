@@ -1,0 +1,20 @@
+quantity,observed_value,observed_unit,model_target_value,model_unit,stage_window,observed_value_eco2,model_target_eco2,notes
+An_mean,19.85,umol_CO2_m-2_s-1,19.85,umol_CO2_m-2_s-1,flag_leaf_to_maturity,30.76,30.76,Ruta WW high-N (Mulero SI Table S2B); aCO2 / eCO2(600)
+gs_mean,0.31,mol_H2O_m-2_s-1,0.31,mol_H2O_m-2_s-1,flag_leaf_to_maturity,0.29,0.29,Ruta WW high-N (Mulero SI Table S2B)
+Tr_mean,5.57,mmol_H2O_m-2_s-1,5.57,mmol_H2O_m-2_s-1,flag_leaf_to_maturity,4.89,4.89,Ruta WW high-N (Mulero SI Table S2B)
+shoot_biomass,11.8,t_ha-1,1180.0,g_m-2,harvest,14.6,1460.0,Ruta WW high-N (Mulero SI Table S4B); shoot dry mass
+straw_stem_spike,6.1,t_ha-1,610.0,g_m-2,harvest,7.6,760.0,Ruta WW high-N; straw (stem+leaves)
+spike,5.6,t_ha-1,560.0,g_m-2,harvest,7.1,710.0,Ruta WW high-N; spike = grain + chaff
+chaff,1.5,t_ha-1,150.0,g_m-2,harvest,1.81,181.0,Ruta WW high-N; chaff (non-grain ear)
+TKW,30.0,g_1000_kernel-1,30.0,g_1000_kernel-1,harvest,29.3,29.3,Ruta WW high-N; thousand-kernel weight (~flat under eCO2)
+grain_yield,4.1,t_ha-1,410.0,g_m-2,harvest,5.24,524.0,Ruta WW high-N; grain dry mass (eCO2 +28% via kernel number)
+harvest_index,0.35,unitless,0.35,unitless,harvest,0.36,0.36,Ruta WW high-N; grain / shoot
+max_LAI,3.6,m2_m-2,3.6,m2_m-2,season,4.3,4.3,Ruta WW high-N (Mulero SI Table S4B)
+max_height,98.3,cm,0.983,m,season,108.3,1.083,Ruta WW high-N (Mulero SI Table S4B)
+grain_protein,15.0,percent,15.0,percent,harvest,14.1,14.1,Ruta high-N approx (Mulero: protein ~-6% under eCO2 high N); cultivar value to confirm
+grain_Fe,37.13,mg_kg-1,37.13,mg_kg-1,harvest,,,grain iron concentration (mineral module not yet implemented)
+grain_Zn,46.56,mg_kg-1,46.56,mg_kg-1,harvest,,,grain zinc concentration
+grain_Ca,0.56,g_kg-1,0.56,g_kg-1,harvest,,,grain calcium concentration
+grain_Cu,4.01,mg_kg-1,4.01,mg_kg-1,harvest,,,grain copper concentration
+grain_Mg,1.21,g_kg-1,1.21,g_kg-1,harvest,,,grain magnesium concentration
+grain_Mn,29.98,mg_kg-1,29.98,mg_kg-1,harvest,,,grain manganese concentration

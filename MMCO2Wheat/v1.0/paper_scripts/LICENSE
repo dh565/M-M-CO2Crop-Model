@@ -1,0 +1,24 @@
+M&M-CO2Crop Research Licence v1.0
+
+Copyright (c) 2018-2026 David Helman and The Hebrew University of Jerusalem. All rights reserved.
+
+1. Permission is granted, free of charge, to any person obtaining a copy of this software and
+   its documentation (the "Software") to use, copy, compile and run the Software, and to
+   modify it for the person's own non-commercial research and teaching, provided that any
+   publication, presentation or report that uses results obtained with the Software cites:
+   Helman, D. (2026), M&M-CO2Wheat v1.0 - Part 1: Model description, and Part 2: Evaluation
+   at three wheat FACE experiments, Geoscientific Model Development (DOIs in README).
+2. Redistribution of the Software, in original or modified form, in source or binary form,
+   requires the prior written consent of the copyright holders. Modified versions that are
+   published or distributed with such consent must be clearly marked as modified and must
+   not be presented as M&M-CO2Wheat or M&M-CO2Crop.
+3. Any commercial use of the Software, including use in paid services, products or
+   consulting, requires a separate licence from the copyright holders.
+4. The Software is provided "as is", without warranty of any kind, express or implied. In no
+   event shall the copyright holders be liable for any claim, damages or other liability
+   arising from the use of the Software.
+5. Reading the source for the purpose of scientific review, replication and verification is
+   permitted without restriction.
+
+Licence name for file headers: "M&M-CO2Crop Research Licence v1.0 (see LICENSE)".
+Contact: david.helman@mail.huji.ac.il

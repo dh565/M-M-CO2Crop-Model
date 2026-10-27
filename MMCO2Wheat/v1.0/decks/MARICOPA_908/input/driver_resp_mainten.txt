@@ -1,0 +1,4 @@
+0.030                      ! Maintenance respiration coefficient for green leaves [from Table 7.1 Teh]
+0.015                      ! Maintenance respiration coefficient for stems 
+0.015                      ! Maintenance respiration coefficient for roots 
+0.010                      ! Maintenance respiration coefficient for storage organs - grains 

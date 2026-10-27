@@ -1,0 +1,25 @@
+# Measured cv. Yecora Rojo yield-component data, Maricopa FACE, from the archive workbook
+# 'Biomass Yield Area Phenology Management Weather Soil Moisture.ods'
+# (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z),
+# sheet 'Obs_summary_Avg_over_Reps' (header row 1, data rows 2-17):
+#   HWUM = unit grain weight, g seed-1 (sheet 'Definitions' row 131)  -> TKW_measured_g = HWUM * 1000
+#   H#UM = grains per ear;  P#AM = panicle (ear) number at maturity, m-2 (Definitions row 134)
+#   -> grain_number_m2 = H#UM * P#AM  (a product of two measured columns)
+# Cultivar cv. Yecora Rojo for all 16 treatments: sheet 'Plantings' column Cultivar_ID, rows 2-17.
+TRNO,sow_year,treatment,cultivar,HWUM_g_per_seed,TKW_measured_g,grains_per_ear_HnUM,ears_m2_PnAM,grain_number_m2,CWAM_kg_ha,deck_exists
+901,1992,Dry-High_N-Ambient_CO2,Yecora Rojo,0.046235,46.23,43.455,333.45,14490,14913,no (no run deck exists)
+902,1992,Wet-High_N-Ambient_CO2,Yecora Rojo,0.04516,45.16,42.94,415.2,17829,18276,no (no run deck exists)
+903,1992,Dry-High_N-FACE,Yecora Rojo,0.04584,45.84,46.96,370.8,17413,15523,no (no run deck exists)
+904,1992,Wet-High_N-FACE,Yecora Rojo,0.045955,45.95,44.16,438.35,19358,19832,no (no run deck exists)
+905,1993,Dry-High_N-Ambient_CO2,Yecora Rojo,0.04297,42.97,38.34,375.3,14389,13858,yes
+906,1993,Wet-High_N-Ambient_CO2,Yecora Rojo,0.04025,40.25,37.265,532.65,19849,18000,yes
+907,1993,Dry-High_N-FACE,Yecora Rojo,0.0451867,45.19,40.023,415.53,16631,15830,yes
+908,1993,Wet-High_N-FACE,Yecora Rojo,0.0428033,42.80,37.517,536.1,20113,19277,yes
+909,1995,Wet-Low_N-Ambient_CO2,Yecora Rojo,0.045525,45.52,35.33,404.6,14295,12628,no (no run deck exists)
+910,1995,Wet-High_N-Ambient_CO2,Yecora Rojo,0.04511,45.11,36.07,505.8,18244,16818,yes
+911,1995,Wet-Low_N-FACE,Yecora Rojo,0.046195,46.20,34.61,429.6,14868,14159,no (no run deck exists)
+912,1995,Wet-High_N-FACE,Yecora Rojo,0.04502,45.02,36.31,489.2,17763,16115,yes
+913,1996,Wet-Low_N-Ambient_CO2,Yecora Rojo,NOT-MEASURED,NOT-MEASURED,NOT-MEASURED,NOT-MEASURED,NOT-MEASURED,12658,yes
+914,1996,Wet-High_N-Ambient_CO2,Yecora Rojo,0.03831,38.31,33.92,412.3,13985,12697,yes
+915,1996,Wet-Low_N-FACE,Yecora Rojo,NOT-MEASURED,NOT-MEASURED,NOT-MEASURED,NOT-MEASURED,NOT-MEASURED,12037,yes
+916,1996,Wet-High_N-FACE,Yecora Rojo,0.03929,39.29,36.49,415,15143,13998,yes

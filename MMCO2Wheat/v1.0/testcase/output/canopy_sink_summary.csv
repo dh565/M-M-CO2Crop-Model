@@ -1,0 +1,25 @@
+quantity,value,units
+LMA_used,   48.5000    ,g DM m-2
+LMA_implied_SLA,   20.6186    ,m2 kg-1
+lamina_area_built_total,   3.69134    ,m2 m-2
+lamina_C_demanded_total,   179.030    ,g DM m-2
+backlog_end,   0.00000    ,g DM m-2
+backlog_max,   1.96791    ,g DM m-2
+limited_days,9,days
+fln_cut,0,leaves
+cohorts_aborted,0,count
+births_suspended,0,days
+partition_sum_err_max,  0.111022E-15,-
+realized_SLA_end,   20.0765    ,m2 kg-1
+LAI_sink_end,  0.697623E-01,m2 m-2
+PAI_diag_end,   6.03572    ,m2 m-2
+lai_basis_Ncapacity_end,  0.625469E-01,m2 m-2
+
+inversion_input,value,units_or_status
+row_spacing,NOT A MODEL VARIABLE,the model is 1-D and carries no row geometry; the SITE value (0.175 m rows) is a site input (see INPUT_GUIDE.md)
+inclination_blade_green,NONE IN MODEL,areas are one-sided projected areas and no angular distribution is carried. MEASURED SOURCE AVAILABLE BUT NOT IMPLEMENTED: Abichou 2016 Ch.4 Figs 5-7 (leaf inclination and insertion angle vs phyllochronic age)
+inclination_blade_dead,NONE IN MODEL,as green; no post-senescence reorientation is carried
+inclination_sheath,VERTICAL BY CONSTRUCTION,a sheath wraps the culm; entered as a cylinder and converted to half total surface (pi/2 x L x D) on the LI-2200C basis
+inclination_internode_bare,VERTICAL BY CONSTRUCTION,same cylinder treatment as the sheath
+inclination_ear_peduncle,VERTICAL BY CONSTRUCTION,A_ep is a projected area on the same convention; the AWN STATUS of the model ear is UNDEFINED because A_ep is a declared gap
+clumping,NOT MODELLED,the model reports a GEOMETRIC total area; no clumping index is applied

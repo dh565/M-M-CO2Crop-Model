@@ -1,0 +1,51 @@
+quantity,value,units_or_source
+rec92_stem_wsc_mech,1,0 OFF / 1 THE ITEM / 2 cap+close arm / 3 draw arm / 4 elongation-start sensitivity arm
+# --- the constants (SHARED.f90) ---
+wsc_cap_frac,  0.500000    ,g WSC per g stem DM; Schnyder 1993 New Phytol 123:233-245 p.238: total WSC concentration in the stem can reach UP TO 50 % of the dry weight of internodes
+wsc_accum_end_dpa,15,d after anthesis; MIDPOINT of Schnyder 1993 p.238 measured 10-20 d, and p.233 three weeks. Corroborated by Gebbing & Schnyder 1999 Plant Physiol 121:871 p.875 (mobilisation starts about mid-grain filling)
+reserve_conv_eff,  0.950000    ,g grain DM per g reserve DM. UNCHANGED by item C. Gebbing & Schnyder 1999 p.877: MEWSC = 0.97 +- 0.07 se; 0.95 is inside one se
+stem_reserve_frac,  0.200000    ,share of the pre-anthesis stem increment LABELLED as WSC. NOT a measured law and NOT touched by item C: Ruuska et al. 2006 Funct Plant Biol 33:799 is NOT ON THIS MACHINE, so it is NOT VERIFIED. The OUTCOME is what is tested (next rows)
+reserve_remob_rate_input,  0.500000E-01,d-1, the legacy first-order throttle. NOT READ under rec 92 = 1, 3 or 4; still read under rec 92 = 2 (the attribution arm that keeps it)
+# --- what the crop actually did ---
+anthesis_model_day,116,model day the grain number was set (dvs2 = ear_end_dvs2, = 1.0 anthesis on every shipped deck)
+W_reserve_at_anthesis_g_m2,   116.618    ,g DM m-2
+W_stem_at_anthesis_g_m2,   579.192    ,g DM m-2 (before that day's surplus)
+wsc_frac_of_stem_at_anthesis,  0.201347    ,-  THE headline biology number
+W_reserve_peak_g_m2,   150.184    ,g DM m-2
+peak_days_after_anthesis,10,d
+peak_over_anthesis_ratio,   1.28782    ,-
+W_reserve_end_g_m2,   0.00000    ,g DM m-2 stranded at the last day
+deposited_pre_anthesis_g_m2,   111.979    ,g DM m-2 LABELLED by the stem-increment route
+deposited_post_anthesis_g_m2,   33.5656    ,g DM m-2 LABELLED by the sink-full surplus route
+refused_by_capacity_g_m2,  0.404874    ,g DM m-2 NOT labelled because the pool was at 0.50 of stem DM. THE CARBON IS NOT LOST -- it is in W_stem, exactly where it always was
+refused_by_deposition_close_g_m2,   94.9968    ,g DM m-2 NOT labelled because the deposition window had closed. Same: the carbon is in W_stem
+days_capacity_bound,9,days
+days_deposition_closed,17,days
+remobilisation_onset_dap_anth,16,d after anthesis of the FIRST draw; -999 = never
+drawn_total_g_m2,   150.184    ,g DM m-2 out of the pool
+delivered_to_grain_g_m2,   69.6417    ,g DM m-2 = draw x conversion efficiency
+conversion_loss_g_m2,   80.5423    ,g DM m-2 respired
+reserve_share_of_grain,  0.151259    ,-  delivered_to_grain / final W_grain. FALSIFICATION BAND: Gebbing & Schnyder 1999 p.877 Conclusions measured pre-anthesis reserves supplying 8-27 % of total carbohydrate-C in grains
+fraction_of_draw_after_16dpa,  0.406429    ,-  FALSIFICATION: Gebbing & Schnyder 1999 p.875 measured 83 % of stem pre-anthesis C mobilisation occurring after their 16-d sample
+carbon_closure_max_g_m2_d,  0.568434E-13,g DM m-2 d-1, max |dW_grain + dW_stem + dW_chaff + respired - assimilate_taken| over the run. THIS REPLACES THE RETIRED TAUTOLOGY (item-B audit note N4): the old cres_ledger_resid was (-draw)+gain+(draw-gain), identically 0 for any inputs
+# --- measured envelopes: falsification targets, never tuning targets ---
+env_wsc_frac_of_stem_at_anthesis,0.125 - 0.250, DERIVED from Schnyder 1993 p.238's own pair of measurements: the maximum is "up to 50 % of the dry weight of internodes" and that maximum is "2-4 times greater than at anthesis"
+env_peak_over_anthesis,2 - 4 (Schnyder 1993 p.238, verbatim)
+env_peak_days_after_anthesis,10 - 20 d (Schnyder 1993 p.238: "WSC accumulate in the stem until 10-20 d after anthesis"); "within three weeks following anthesis" (Summary p.233)
+env_reserve_share_of_grain,0.08 - 0.27 of grain carbohydrate-C (Gebbing & Schnyder 1999 Plant Physiol 121:871 Conclusions p.877, 13C/12C steady-state labelling, two spring wheat cultivars x two N levels x two years)
+NOT_MODELLED,the ONSET of deposition (it still starts at emergence, not at stem elongation: Schnyder p.238 states the onset internode by internode and no source here gives a CROP-scale node in a unit this model has -- rec 92 = 4 MEASURES how much it matters); any rate ceiling on the draw (the only rate the sources name is the deficit itself); any WSC in leaf sheaths, glumes or the peduncle as separate pools.
+DECLARED_TENSIONS,the 15 d close is CALENDAR, as both sources state it, on temperate crops -- at a hot short-season site it is a larger fraction of the fill; Schnyder's 50 % is of INTERNODES while this W_stem includes sheaths, so the cap is GENEROUS; and at NL/AU the cap inherits item M's early stem over-build, so their capacity is over-large.
+# --- rec 148 wsc_fate_law: the fate of the stem WSC reserve ---
+rec148_wsc_fate_law,1,0 OFF / 1 the law (term A + term B) / 2 term A only / 3 term B only
+wfl_term_a_refused_g_m2,   94.9968    ,g DM m-2 refused by the RESTORED deposition close for the grain-sink-full surplus and booked to the existing rec-129 overflow loss cfo_loss_cum. Schnyder 1993 New Phytol 123:233 p.238 (10-20 d), p.233 Summary (three weeks)
+wfl_term_a_days,17,days term A refused a deposition
+wfl_gate_day,138,model day of TERMINAL GRAIN-SINK CLOSURE as term B saw it (gfb_end_bound /= 0); 0 = never reached
+wfl_gate_bound,3,which bound closed the grain sink: 1 thermal duration / 2 dvs2 >= 2 / 3 cultivar kernel-mass ceiling / 4 rec 125 kernel potential
+wfl_pool_at_gate_g_m2,   76.8770    ,g DM m-2 W_reserve on the gate day before term B released anything; -1 = the gate was never reached
+wfl_term_b_released_g_m2,   76.8770    ,g DM m-2 released from the pool after the gate, ALL of it to cres_respired at unity (Schnyder 1993 p.240: whole-plant respiration rises during the WSC loss with the ear removed). ENVELOPE, read-out only: Spiertz & Ellen 1978 as quoted on p.240, 220 and 290 g DM m-2 lost between maximum mass and maturity at high and low N
+wfl_term_b_days,16,days term B released
+wfl_pool_end_g_m2,   0.00000    ,g DM m-2 W_reserve at the last day. FALSIFICATION read-out: the only stem-WSC measurement in the deck set is Braunschweig 11.6-20.3 mg g-1 of stem DM at maturity (Manderscheid et al. 2020 ODjAR 6:28-33). NO FLOOR IS APPLIED (missing quantity M-A1): the law empties to ~0 and the undershoot is reported, not calibrated away
+wfl_draw_deficit_g_m2,   73.3070    ,g DM m-2 drawn by the PRE-GATE deficit limb, which this record makes reachable again under rec 105 = 2 (the E1 blackout removed)
+wfl_draw_deficit_days,5,days the pre-gate deficit limb drew
+wfl_days_grain_fed,0,FALSIFIER: days term B delivered any carbon to the grain. MUST be 0 -- room is 0 at and after the gate, so gain2 = 0 by the existing arithmetic
+wfl_grain_fed_cum_g_m2,   0.00000    ,g DM m-2 of that. MUST be 0.0

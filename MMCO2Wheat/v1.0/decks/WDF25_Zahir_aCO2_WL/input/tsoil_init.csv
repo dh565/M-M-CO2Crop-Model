@@ -1,0 +1,21 @@
+! TSOIL-IC anchors, re-derived WDF_for_paper (2026-10-04; 8-file mean after excluding bad sensor values).
+! z=0.00 m: day-1 (2024-11-18) mean air temperature from input_daily_meteo.csv
+!   (Tmax+Tmin)/2 = 19.35 C (surface node equilibrates with air within days). UNCHANGED from root.
+! z=0.20, 0.55 m: first row of each WDF25_Data S3 treatment file with populated Tsoil sd columns
+!   (2024-12-22 in all 8 files; README: system powered 12-15, reliable from 12-22/23), MEAN OVER THE 8
+!   TREATMENT FILES as a shared site/season initial condition (replaces the root file's
+!   Ruta_aCO2_WW-only basis, OPT-A reviewer GO 2026-09-07).
+!   Tsoil20 per file (C, +-sd): Ruta_aCO2_WL 15.401+-0.708, Ruta_aCO2_WW 16.187+-0.803,
+!     Ruta_eCO2_WL 16.350+-0.900, Ruta_eCO2_WW 16.276+-0.633, Zahir_aCO2_WL 15.393+-0.151,
+!     Zahir_aCO2_WW 15.716+-0.260, Zahir_eCO2_WL 16.315+-0.701, Zahir_eCO2_WW 10.583+-9.189
+!     (EXCLUDED: 5 C below every other ring with an sd 10x larger, a sensor fault) -> mean of 7 = 15.948.
+!   Tsoil55 per file (C, +-sd): Ruta_aCO2_WL 16.707+-0.725, Ruta_aCO2_WW 17.231+-0.239,
+!     Ruta_eCO2_WL 11.299+-9.787, Ruta_eCO2_WW 16.962+-0.378, Zahir_aCO2_WL 11.878+-6.616,
+!     Zahir_aCO2_WW 101.821+-120.046 (EXCLUDED: physically impossible, above the boiling point of water),
+!     Zahir_eCO2_WL 17.124+-0.308, Zahir_eCO2_WW 16.849+-0.369 -> mean of 7 = 15.436.
+!   Ruta_eCO2_WL and Zahir_aCO2_WL 55 cm values (sd 9.8, 6.6) are kept as read (the exclusion applies only to the two above).
+! Below 0.55 m: deepest anchor held uniform (OPT-A unchanged).
+! z_m,T_C
+0.00,19.35
+0.20,15.948
+0.55,15.436

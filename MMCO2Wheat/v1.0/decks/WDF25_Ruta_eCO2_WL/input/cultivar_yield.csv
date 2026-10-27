@@ -1,0 +1,25 @@
+! Cultivar yield-component coefficients (Task 7) — cv. Ruta (late-maturing).
+! Format: value,parameter_name,unit,source  (values read positionally; '!' lines skipped).
+! Genotype-specific and calibratable (DSSAT cultivar-coefficient style); CO2 effects on
+! grain number / TKW / chaff EMERGE through carbon (spike DW), they are NOT prescribed here.
+! Anchors from Mulero, Bonfil & Helman (WheatDryFACE, High N 2024/25, cv. Ruta, well-watered):
+!   GY ~4.1 t/ha, TKW ~30-31 g, chaff ~150 g/m2 -> kernel number ~13700 /m2.
+! Fruiting efficiency (grains per g ear/spike DW at anthesis): Slafer (2015, Food Energy Secur
+!   4:92, ~110-170 /g full spike); Pretini (2020, Crop Sci 60:1541, genotype variation).
+65.0,fruiting_efficiency,grains_g-1_earDW,grains per g ear DW at grain-number set (Ruta; Slafer 2015 / Pretini 2020; Mulero SI)
+31.0,TKW_potential,g_1000kernel,potential thousand-kernel weight (Ruta; Mulero SI Table S4 ~30-31 g)
+0.55,chaff_share,fraction,share of ear-window reproductive DM allocated to ear/chaff structure (calibratable)
+1.0,ear_end_dvs2,dvs2,grain number set AT ANTHESIS = the FE definition point (Slafer 2015 p.95: GN determined by spike DW at anthesis; Fischer 1985 p.447); chaff construction ends there, matching the Slafer p.96 chaff-at-maturity==spike-at-anthesis proxy; former 1.35 was unsourced and let chaff grow past the measured basis
+! Spike-window partition trait nodes (runtime cultivar inputs since 2026-09-07; matrix finding:
+! cultivar traits must never require a rebuild). Derivation per the calibration-variables rules (internal; not distributed) 2b:
+! onset = DVS(anthesis - 30 d) (Fischer 1985 p.447 spike-growth period); peak = 2 x measured
+! spike-at-anthesis (chaff-at-maturity proxy, Slafer 2015 p.96) / window gross allocation.
+! Ruta: 0.693; 0.474 = 2x150/633 (v19 trajectory). [Zahir deck: 0.656; 0.894 = 2x167.7/375.3]
+0.693,storage_onset_dvs2,dvs2,DVS at anthesis-30d (Fischer 1985 p.447; v19 measured-phenology trajectory)
+0.474,storage_peak_frac,fraction,2 x measured chaff 150 g/m2 (Slafer p.96 proxy) / window allocation 633
+! rec 125 kernel-mass envelope (OPTIONAL rows 7-8, read only when driver record 125 >= 2; both or neither).
+! PLACEHOLDER (plan Sect. 9.3): no independent Ruta trial data on file; [0.6, 1.4] x the measured mean TKW of the
+! OTHER WDF season (WDF23 Ruta 35.44 / 36.79 g, mean 36.12 g; S1_Ruta_{aCO2,eCO2}.csv harvest row) for the WDF25 site.
+21.67,TKW_env_min,g_1000kernel,PLACEHOLDER lower bound of the cultivar kernel-mass envelope (0.6 x 36.12; rec 125)
+50.57,TKW_env_max,g_1000kernel,PLACEHOLDER upper bound of the cultivar kernel-mass envelope (1.4 x 36.12; rec 125)
+! rec 177 OPTIONAL NAME-KEYED cultivar grain-N potential row (D39)

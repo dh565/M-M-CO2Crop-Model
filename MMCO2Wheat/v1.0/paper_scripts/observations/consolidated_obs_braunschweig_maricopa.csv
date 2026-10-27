@@ -1,0 +1,528 @@
+# Observed values (obs) and standard deviations (obs_sd) of every observation-model pairing of the Braunschweig and
+# Maricopa decks in the consolidated observation table of the Part 2 evaluation (one row per deck and quantity; dates
+# for the phenology rows). The figures read from this table only the rows that the loaders of lib/face_results.py do
+# not carry (Braunschweig grain Fe and Zn and 2014/15 HI, Maricopa peak LAI and harvested yield); obs_source names the
+# file and column each value was taken from.
+deck,site,quantity,obs,obs_sd,obs_source
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_101_obs.csv dated stage rows
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_101_obs.csv dated stage rows
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_101_obs.csv dated stage rows
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,LAI_peak,1.4835,0.3151,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,AGB_anthesis,1008.2200,92.7231,braunschweig/BRAUNSCHWEIG_101_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,AGB_harvest,981.3570,148.9110,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,W_stem,339.7620,49.4656,braunschweig/BRAUNSCHWEIG_101_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,W_leaf_tot,67.5611,19.7073,braunschweig/BRAUNSCHWEIG_101_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,spike,574.0340,80.1394,braunschweig/BRAUNSCHWEIG_101_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,chaff,101.6760,9.0876,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,grain_yield,472.3590,71.2905,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,TKW,46.1094,0.2036,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,kernel_number,10248.2000,1585.2100,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,HI,0.4813,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,grain_protein_pct,7.9314,0.3829,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,grain_N_pct,1.3915,0.0672,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,stem_N_pct,0.1703,0.0062,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,leaf_N_pct,0.6099,0.0428,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,chaff_N_pct,0.3791,0.0356,braunschweig/BRAUNSCHWEIG_101_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,chaff_N_gm2,0.3854,0.0500,DERIVED: braunschweig/BRAUNSCHWEIG_101_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,crop_N_harvest,7.9232,0.9855,braunschweig/BRAUNSCHWEIG_101_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,stem_WSC_mg_g,16.4512,5.9750,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,grain_Fe,35.4455,2.2625,braunschweig/BRAUNSCHWEIG_101_obs.csv Fe conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,grain_Zn,19.9411,2.9373,braunschweig/BRAUNSCHWEIG_101_obs.csv Zn conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,d0_20,0.1889,0.0141,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_101,BRAUNSCHWEIG,d20_40,0.2089,0.0223,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_102_obs.csv dated stage rows
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_102_obs.csv dated stage rows
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_102_obs.csv dated stage rows
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,LAI_peak,3.3815,0.2081,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,AGB_anthesis,1428.6000,148.0130,braunschweig/BRAUNSCHWEIG_102_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,AGB_harvest,1643.6400,79.9447,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,W_stem,553.4120,26.9636,braunschweig/BRAUNSCHWEIG_102_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,W_leaf_tot,111.6520,12.4733,braunschweig/BRAUNSCHWEIG_102_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,spike,978.5790,42.1143,braunschweig/BRAUNSCHWEIG_102_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,chaff,161.6670,17.9976,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,grain_yield,816.9120,24.3844,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,TKW,45.8630,1.5646,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,kernel_number,17827.5000,854.2600,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,HI,0.4970,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,grain_protein_pct,10.5815,0.5641,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,grain_N_pct,1.8564,0.0990,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,stem_N_pct,0.3163,0.0693,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,leaf_N_pct,1.2095,0.1883,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,chaff_N_pct,0.4671,0.0668,braunschweig/BRAUNSCHWEIG_102_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,chaff_N_gm2,0.7551,0.1368,DERIVED: braunschweig/BRAUNSCHWEIG_102_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,crop_N_harvest,19.0668,2.2214,braunschweig/BRAUNSCHWEIG_102_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,stem_WSC_mg_g,13.5112,6.3487,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,grain_Fe,35.8904,2.0549,braunschweig/BRAUNSCHWEIG_102_obs.csv Fe conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,grain_Zn,21.0154,4.0295,braunschweig/BRAUNSCHWEIG_102_obs.csv Zn conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,d0_20,0.1829,0.0118,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_102,BRAUNSCHWEIG,d20_40,0.1765,0.0246,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_103_obs.csv dated stage rows
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_103_obs.csv dated stage rows
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_103_obs.csv dated stage rows
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,LAI_peak,3.7757,1.2568,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,AGB_anthesis,1057.6600,98.5329,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,AGB_harvest,1732.4000,48.7337,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,W_stem,598.1610,22.5793,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,W_leaf_tot,141.7000,10.3554,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,spike,992.5420,27.3650,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,chaff,174.8990,8.5551,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,grain_yield,817.6420,24.1765,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,TKW,43.1144,1.5581,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,kernel_number,18976.6000,735.9050,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,HI,0.4720,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,grain_protein_pct,12.3408,0.2229,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,grain_N_pct,2.1651,0.0391,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,stem_N_pct,0.6186,0.0554,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,leaf_N_pct,1.6178,0.1618,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,chaff_N_pct,0.6332,0.0138,braunschweig/BRAUNSCHWEIG_103_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,chaff_N_gm2,1.1075,0.0593,DERIVED: braunschweig/BRAUNSCHWEIG_103_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,crop_N_harvest,24.7977,0.3850,braunschweig/BRAUNSCHWEIG_103_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,stem_WSC_mg_g,14.5087,5.8110,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,grain_Fe,44.7079,1.9763,braunschweig/BRAUNSCHWEIG_103_obs.csv Fe conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,grain_Zn,23.1069,4.0150,braunschweig/BRAUNSCHWEIG_103_obs.csv Zn conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,d0_20,0.1693,0.0172,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_103,BRAUNSCHWEIG,d20_40,0.1865,0.0286,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_104_obs.csv dated stage rows
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_104_obs.csv dated stage rows
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_104_obs.csv dated stage rows
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,LAI_peak,1.4602,0.2727,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,AGB_anthesis,1049.4900,60.9311,braunschweig/BRAUNSCHWEIG_104_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,AGB_harvest,1110.2900,151.7870,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,W_stem,400.2640,48.5921,braunschweig/BRAUNSCHWEIG_104_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,W_leaf_tot,68.0109,7.2347,braunschweig/BRAUNSCHWEIG_104_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,spike,642.0110,96.0595,braunschweig/BRAUNSCHWEIG_104_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,chaff,114.4810,18.1870,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,grain_yield,527.5300,78.0206,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,TKW,45.9391,1.3048,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,kernel_number,11488.3000,1741.0200,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,HI,0.4751,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,grain_protein_pct,7.7463,0.2812,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,grain_N_pct,1.3590,0.0493,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,stem_N_pct,0.1549,0.0156,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,leaf_N_pct,0.5474,0.0351,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,chaff_N_pct,0.3704,0.0177,braunschweig/BRAUNSCHWEIG_104_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,chaff_N_gm2,0.4240,0.0704,DERIVED: braunschweig/BRAUNSCHWEIG_104_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,crop_N_harvest,8.6034,1.4387,braunschweig/BRAUNSCHWEIG_104_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,stem_WSC_mg_g,20.3121,3.4308,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,grain_Fe,36.8165,0.4667,braunschweig/BRAUNSCHWEIG_104_obs.csv Fe conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,grain_Zn,19.8977,1.8700,braunschweig/BRAUNSCHWEIG_104_obs.csv Zn conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,d0_20,0.2038,0.0178,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_104,BRAUNSCHWEIG,d20_40,0.2006,0.0085,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_105_obs.csv dated stage rows
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_105_obs.csv dated stage rows
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_105_obs.csv dated stage rows
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,LAI_peak,3.6257,0.2947,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,AGB_anthesis,1715.0800,108.0250,braunschweig/BRAUNSCHWEIG_105_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,AGB_harvest,1916.5900,76.6106,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,W_stem,657.0290,24.9013,braunschweig/BRAUNSCHWEIG_105_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,W_leaf_tot,125.3380,4.2493,braunschweig/BRAUNSCHWEIG_105_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,spike,1134.2200,50.3998,braunschweig/BRAUNSCHWEIG_105_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,chaff,184.9320,5.2760,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,grain_yield,949.2900,45.2123,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,TKW,47.3874,1.8885,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,kernel_number,20032.3000,495.2590,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,HI,0.4953,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,grain_protein_pct,9.9581,0.3948,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,grain_N_pct,1.7470,0.0693,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,stem_N_pct,0.2628,0.0183,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,leaf_N_pct,0.9955,0.0520,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,chaff_N_pct,0.4066,0.0513,braunschweig/BRAUNSCHWEIG_105_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,chaff_N_gm2,0.7519,0.0972,DERIVED: braunschweig/BRAUNSCHWEIG_105_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,crop_N_harvest,20.3263,1.4642,braunschweig/BRAUNSCHWEIG_105_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,stem_WSC_mg_g,12.8169,4.7745,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,grain_Fe,39.6714,0.6859,braunschweig/BRAUNSCHWEIG_105_obs.csv Fe conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,grain_Zn,23.0548,3.3727,braunschweig/BRAUNSCHWEIG_105_obs.csv Zn conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,d0_20,0.2000,0.0176,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_105,BRAUNSCHWEIG,d20_40,0.1928,0.0371,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_106_obs.csv dated stage rows
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_106_obs.csv dated stage rows
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_106_obs.csv dated stage rows
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,LAI_peak,4.2051,0.4719,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,AGB_anthesis,1647.6300,74.3339,braunschweig/BRAUNSCHWEIG_106_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,AGB_harvest,1992.5700,11.7529,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,W_stem,679.5920,7.7588,braunschweig/BRAUNSCHWEIG_106_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,W_leaf_tot,143.9060,6.5897,braunschweig/BRAUNSCHWEIG_106_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,spike,1169.0800,21.5024,braunschweig/BRAUNSCHWEIG_106_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,chaff,198.1900,6.2143,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,grain_yield,970.8860,21.8711,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,TKW,45.3965,2.5871,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,kernel_number,21415.8000,765.8230,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,HI,0.4873,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,grain_protein_pct,11.8898,0.1397,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,grain_N_pct,2.0859,0.0245,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,stem_N_pct,0.5272,0.0624,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,leaf_N_pct,1.5493,0.0718,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,chaff_N_pct,0.5800,0.0103,braunschweig/BRAUNSCHWEIG_106_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,chaff_N_gm2,1.1496,0.0414,DERIVED: braunschweig/BRAUNSCHWEIG_106_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,crop_N_harvest,25.7176,1.6601,braunschweig/BRAUNSCHWEIG_106_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,stem_WSC_mg_g,12.9745,1.4705,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,grain_Fe,45.0185,1.8517,braunschweig/BRAUNSCHWEIG_106_obs.csv Fe conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,grain_Zn,26.5691,4.9433,braunschweig/BRAUNSCHWEIG_106_obs.csv Zn conc at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,d0_20,0.1918,0.0124,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_106,BRAUNSCHWEIG,d20_40,0.1970,0.0484,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_107_obs.csv dated stage rows
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_107_obs.csv dated stage rows
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_107_obs.csv dated stage rows
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,LAI_peak,3.0701,0.2812,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,AGB_anthesis,1313.5400,94.4731,braunschweig/BRAUNSCHWEIG_107_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,AGB_harvest,1617.7800,31.8542,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,W_stem,559.4400,19.7092,braunschweig/BRAUNSCHWEIG_107_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,W_leaf_tot,119.5420,2.4397,braunschweig/BRAUNSCHWEIG_107_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,spike,938.8000,15.0879,braunschweig/BRAUNSCHWEIG_107_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,chaff,153.6990,2.9884,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,grain_yield,785.1010,16.4311,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,TKW,44.7493,0.5941,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,kernel_number,17548.3000,529.5160,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,HI,0.4853,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,grain_N_pct,1.7647,0.0681,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,stem_N_pct,0.3927,0.0450,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,leaf_N_pct,1.2809,0.1162,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,chaff_N_pct,0.4336,0.0749,braunschweig/BRAUNSCHWEIG_107_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,chaff_N_gm2,0.6664,0.1158,DERIVED: braunschweig/BRAUNSCHWEIG_107_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,crop_N_harvest,17.7168,0.5950,braunschweig/BRAUNSCHWEIG_107_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,stem_WSC_mg_g,11.6051,4.0052,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,d0_20,0.1929,0.0204,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_107,BRAUNSCHWEIG,d20_40,0.1940,0.0482,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,emergence,2013-11-18,,braunschweig/BRAUNSCHWEIG_110_obs.csv dated stage rows
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,anthesis,2014-06-06,,braunschweig/BRAUNSCHWEIG_110_obs.csv dated stage rows
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,maturity,2014-07-21,,braunschweig/BRAUNSCHWEIG_110_obs.csv dated stage rows
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,LAI_peak,3.7105,0.4466,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,AGB_anthesis,1530.2200,95.0407,braunschweig/BRAUNSCHWEIG_110_obs.csv SUMDW at 2014-06-23 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,AGB_harvest,1783.3500,41.4848,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,W_stem,618.2130,5.3820,braunschweig/BRAUNSCHWEIG_110_obs.csv STDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,W_leaf_tot,126.7120,6.9174,braunschweig/BRAUNSCHWEIG_110_obs.csv LDeDW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,spike,1038.4300,30.6198,braunschweig/BRAUNSCHWEIG_110_obs.csv EADW at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,chaff,171.2260,4.3485,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,grain_yield,867.2010,26.4899,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,TKW,45.1828,0.6454,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,kernel_number,19196.6000,677.8560,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,HI,0.4863,,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,grain_N_pct,1.6759,0.1103,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,stem_N_pct,0.3449,0.0522,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,leaf_N_pct,1.0521,0.1219,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,chaff_N_pct,0.4251,0.0504,braunschweig/BRAUNSCHWEIG_110_obs.csv N% CH at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,chaff_N_gm2,0.7279,0.0883,DERIVED: braunschweig/BRAUNSCHWEIG_110_obs.csv CHDW x `N% CH` / 100 at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,crop_N_harvest,18.7451,1.7954,braunschweig/BRAUNSCHWEIG_110_obs.csv N plant at 2014-07-22 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,stem_WSC_mg_g,13.2149,4.7232,obs_registry_braunschweig_maricopa.csv
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,d0_20,0.1964,0.0217,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_110,BRAUNSCHWEIG,d20_40,0.1813,0.0303,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_113_obs.csv dated stage rows
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_113_obs.csv dated stage rows
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_113_obs.csv dated stage rows
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,LAI_peak,1.3733,0.2331,"braunschweig/BRAUNSCHWEIG_113_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,AGB_anthesis,868.0530,58.3177,braunschweig/BRAUNSCHWEIG_113_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,AGB_harvest,815.8710,19.1838,braunschweig/BRAUNSCHWEIG_113_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,W_stem,265.1850,6.4925,braunschweig/BRAUNSCHWEIG_113_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,W_leaf_tot,45.7194,3.9184,braunschweig/BRAUNSCHWEIG_113_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,spike,504.9670,15.8085,braunschweig/BRAUNSCHWEIG_113_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,chaff,87.8925,2.2713,braunschweig/BRAUNSCHWEIG_113_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,grain_yield,417.0740,17.9158,braunschweig/BRAUNSCHWEIG_113_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,TKW,44.6795,2.5726,braunschweig/BRAUNSCHWEIG_113_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,kernel_number,9341.8100,248.6890,braunschweig/BRAUNSCHWEIG_113_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,HI,0.5112,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,grain_protein_pct,9.1443,0.4519,braunschweig/BRAUNSCHWEIG_113_obs.csv CP conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,grain_N_pct,1.6043,0.0793,braunschweig/BRAUNSCHWEIG_113_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,stem_N_pct,0.2332,0.0140,braunschweig/BRAUNSCHWEIG_113_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,leaf_N_pct,0.5395,0.0269,braunschweig/BRAUNSCHWEIG_113_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,chaff_N_pct,0.3338,0.0254,braunschweig/BRAUNSCHWEIG_113_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,chaff_N_gm2,0.2934,0.0236,DERIVED: braunschweig/BRAUNSCHWEIG_113_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,crop_N_harvest,7.8428,0.2841,braunschweig/BRAUNSCHWEIG_113_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,stem_WSC_mg_g,10.9346,0.4404,braunschweig/BRAUNSCHWEIG_113_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,grain_Fe,29.3997,1.5128,braunschweig/BRAUNSCHWEIG_113_obs.csv Fe conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,grain_Zn,19.9657,1.3835,braunschweig/BRAUNSCHWEIG_113_obs.csv Zn conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,d0_20,0.1824,0.0090,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_113,BRAUNSCHWEIG,d20_40,0.2087,0.0151,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_114_obs.csv dated stage rows
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_114_obs.csv dated stage rows
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_114_obs.csv dated stage rows
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,LAI_peak,3.2418,0.1527,"braunschweig/BRAUNSCHWEIG_114_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,AGB_anthesis,1371.1700,157.8820,braunschweig/BRAUNSCHWEIG_114_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,AGB_harvest,1645.5600,114.0900,braunschweig/BRAUNSCHWEIG_114_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,W_stem,541.0590,29.3541,braunschweig/BRAUNSCHWEIG_114_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,W_leaf_tot,96.7364,9.9225,braunschweig/BRAUNSCHWEIG_114_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,spike,1007.7600,80.5000,braunschweig/BRAUNSCHWEIG_114_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,chaff,176.4930,4.5568,braunschweig/BRAUNSCHWEIG_114_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,grain_yield,831.2700,79.7899,braunschweig/BRAUNSCHWEIG_114_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,TKW,43.1842,3.5910,braunschweig/BRAUNSCHWEIG_114_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,kernel_number,19236.2000,403.3980,braunschweig/BRAUNSCHWEIG_114_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,HI,0.5052,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,grain_protein_pct,12.6068,0.2399,braunschweig/BRAUNSCHWEIG_114_obs.csv CP conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,grain_N_pct,2.2117,0.0421,braunschweig/BRAUNSCHWEIG_114_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,stem_N_pct,0.3637,0.0199,braunschweig/BRAUNSCHWEIG_114_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,leaf_N_pct,0.9103,0.0952,braunschweig/BRAUNSCHWEIG_114_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,chaff_N_pct,0.4675,0.0324,braunschweig/BRAUNSCHWEIG_114_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,chaff_N_gm2,0.8251,0.0609,DERIVED: braunschweig/BRAUNSCHWEIG_114_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,crop_N_harvest,22.0659,2.1896,braunschweig/BRAUNSCHWEIG_114_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,stem_WSC_mg_g,10.6547,0.5829,braunschweig/BRAUNSCHWEIG_114_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,grain_Fe,33.4146,2.9805,braunschweig/BRAUNSCHWEIG_114_obs.csv Fe conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,grain_Zn,21.4780,4.9803,braunschweig/BRAUNSCHWEIG_114_obs.csv Zn conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,d0_20,0.1738,0.0173,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_114,BRAUNSCHWEIG,d20_40,0.1997,0.0175,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_115_obs.csv dated stage rows
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_115_obs.csv dated stage rows
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_115_obs.csv dated stage rows
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,LAI_peak,4.1098,0.2853,"braunschweig/BRAUNSCHWEIG_115_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,AGB_anthesis,1522.4000,69.0379,braunschweig/BRAUNSCHWEIG_115_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,AGB_harvest,1768.8000,70.1210,braunschweig/BRAUNSCHWEIG_115_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,W_stem,616.1020,22.5125,braunschweig/BRAUNSCHWEIG_115_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,W_leaf_tot,122.9550,6.9117,braunschweig/BRAUNSCHWEIG_115_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,spike,1029.7400,45.7961,braunschweig/BRAUNSCHWEIG_115_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,chaff,200.6550,6.4779,braunschweig/BRAUNSCHWEIG_115_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,grain_yield,829.0880,39.3676,braunschweig/BRAUNSCHWEIG_115_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,TKW,37.9204,2.0811,braunschweig/BRAUNSCHWEIG_115_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,kernel_number,21873.0000,450.8040,braunschweig/BRAUNSCHWEIG_115_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,HI,0.4687,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,grain_protein_pct,13.5260,0.2172,braunschweig/BRAUNSCHWEIG_115_obs.csv CP conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,grain_N_pct,2.3730,0.0381,braunschweig/BRAUNSCHWEIG_115_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,stem_N_pct,0.5572,0.0546,braunschweig/BRAUNSCHWEIG_115_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,leaf_N_pct,1.4399,0.0743,braunschweig/BRAUNSCHWEIG_115_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,chaff_N_pct,0.5988,0.0672,braunschweig/BRAUNSCHWEIG_115_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,chaff_N_gm2,1.2016,0.1403,DERIVED: braunschweig/BRAUNSCHWEIG_115_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,crop_N_harvest,26.0610,0.5684,braunschweig/BRAUNSCHWEIG_115_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,stem_WSC_mg_g,6.7207,0.7845,braunschweig/BRAUNSCHWEIG_115_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,grain_Fe,34.0836,2.5888,braunschweig/BRAUNSCHWEIG_115_obs.csv Fe conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,grain_Zn,25.0145,2.5589,braunschweig/BRAUNSCHWEIG_115_obs.csv Zn conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,d0_20,0.1735,0.0111,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_115,BRAUNSCHWEIG,d20_40,0.1837,0.0162,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_116_obs.csv dated stage rows
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_116_obs.csv dated stage rows
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_116_obs.csv dated stage rows
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,LAI_peak,1.3104,0.2381,"braunschweig/BRAUNSCHWEIG_116_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,AGB_anthesis,923.0670,23.2144,braunschweig/BRAUNSCHWEIG_116_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,AGB_harvest,917.8610,38.2891,braunschweig/BRAUNSCHWEIG_116_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,W_stem,315.6570,22.6159,braunschweig/BRAUNSCHWEIG_116_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,W_leaf_tot,53.9454,4.6175,braunschweig/BRAUNSCHWEIG_116_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,spike,548.2580,17.7886,braunschweig/BRAUNSCHWEIG_116_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,chaff,101.8230,8.0799,braunschweig/BRAUNSCHWEIG_116_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,grain_yield,446.4350,10.3936,braunschweig/BRAUNSCHWEIG_116_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,TKW,46.1193,1.7785,braunschweig/BRAUNSCHWEIG_116_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,kernel_number,9690.9600,478.3840,braunschweig/BRAUNSCHWEIG_116_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,HI,0.4864,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,grain_protein_pct,9.0387,0.3679,braunschweig/BRAUNSCHWEIG_116_obs.csv CP conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,grain_N_pct,1.5857,0.0646,braunschweig/BRAUNSCHWEIG_116_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,stem_N_pct,0.2370,0.0143,braunschweig/BRAUNSCHWEIG_116_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,leaf_N_pct,0.5200,0.0219,braunschweig/BRAUNSCHWEIG_116_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,chaff_N_pct,0.3730,0.0217,braunschweig/BRAUNSCHWEIG_116_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,chaff_N_gm2,0.3798,0.0374,DERIVED: braunschweig/BRAUNSCHWEIG_116_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,crop_N_harvest,8.4936,0.5356,braunschweig/BRAUNSCHWEIG_116_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,stem_WSC_mg_g,21.9827,4.0671,braunschweig/BRAUNSCHWEIG_116_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,grain_Fe,34.6761,0.9552,braunschweig/BRAUNSCHWEIG_116_obs.csv Fe conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,grain_Zn,19.9384,1.5742,braunschweig/BRAUNSCHWEIG_116_obs.csv Zn conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,d0_20,0.1751,0.0158,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_116,BRAUNSCHWEIG,d20_40,0.2094,0.0162,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_117_obs.csv dated stage rows
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_117_obs.csv dated stage rows
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_117_obs.csv dated stage rows
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,LAI_peak,3.6700,0.3839,"braunschweig/BRAUNSCHWEIG_117_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,AGB_anthesis,1697.1700,176.8680,braunschweig/BRAUNSCHWEIG_117_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,AGB_harvest,1968.2600,46.5409,braunschweig/BRAUNSCHWEIG_117_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,W_stem,665.6440,4.0225,braunschweig/BRAUNSCHWEIG_117_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,W_leaf_tot,118.0580,6.2514,braunschweig/BRAUNSCHWEIG_117_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,spike,1184.5600,47.2957,braunschweig/BRAUNSCHWEIG_117_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,chaff,211.9590,12.3898,braunschweig/BRAUNSCHWEIG_117_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,grain_yield,972.6020,38.9945,braunschweig/BRAUNSCHWEIG_117_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,TKW,45.0197,1.0228,braunschweig/BRAUNSCHWEIG_117_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,kernel_number,21606.5000,820.9120,braunschweig/BRAUNSCHWEIG_117_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,HI,0.4941,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,grain_protein_pct,11.8934,0.2074,braunschweig/BRAUNSCHWEIG_117_obs.csv CP conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,grain_N_pct,2.0866,0.0364,braunschweig/BRAUNSCHWEIG_117_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,stem_N_pct,0.3492,0.0006,braunschweig/BRAUNSCHWEIG_117_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,leaf_N_pct,0.7773,0.0293,braunschweig/BRAUNSCHWEIG_117_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,chaff_N_pct,0.4509,0.0124,braunschweig/BRAUNSCHWEIG_117_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,chaff_N_gm2,0.9556,0.0618,DERIVED: braunschweig/BRAUNSCHWEIG_117_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,crop_N_harvest,24.4874,0.8057,braunschweig/BRAUNSCHWEIG_117_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,stem_WSC_mg_g,8.8697,1.2439,braunschweig/BRAUNSCHWEIG_117_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,grain_Fe,30.5216,1.3104,braunschweig/BRAUNSCHWEIG_117_obs.csv Fe conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,grain_Zn,21.1113,2.9564,braunschweig/BRAUNSCHWEIG_117_obs.csv Zn conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,d0_20,0.1822,0.0144,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_117,BRAUNSCHWEIG,d20_40,0.2052,0.0238,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_118_obs.csv dated stage rows
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_118_obs.csv dated stage rows
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_118_obs.csv dated stage rows
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,LAI_peak,4.3343,0.2335,"braunschweig/BRAUNSCHWEIG_118_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,AGB_anthesis,1842.9700,120.5830,braunschweig/BRAUNSCHWEIG_118_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,AGB_harvest,2011.6600,65.1513,braunschweig/BRAUNSCHWEIG_118_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,W_stem,704.1710,5.5674,braunschweig/BRAUNSCHWEIG_118_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,W_leaf_tot,132.1790,11.5950,braunschweig/BRAUNSCHWEIG_118_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,spike,1175.3100,50.0512,braunschweig/BRAUNSCHWEIG_118_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,chaff,226.9740,2.5751,braunschweig/BRAUNSCHWEIG_118_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,grain_yield,948.3370,48.7162,braunschweig/BRAUNSCHWEIG_118_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,TKW,39.0888,1.4888,braunschweig/BRAUNSCHWEIG_118_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,kernel_number,24253.9000,448.2490,braunschweig/BRAUNSCHWEIG_118_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,HI,0.4714,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,grain_protein_pct,12.9336,0.1465,braunschweig/BRAUNSCHWEIG_118_obs.csv CP conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,grain_N_pct,2.2691,0.0257,braunschweig/BRAUNSCHWEIG_118_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,stem_N_pct,0.5514,0.0923,braunschweig/BRAUNSCHWEIG_118_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,leaf_N_pct,1.2117,0.1029,braunschweig/BRAUNSCHWEIG_118_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,chaff_N_pct,0.5689,0.0385,braunschweig/BRAUNSCHWEIG_118_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,chaff_N_gm2,1.2914,0.0885,DERIVED: braunschweig/BRAUNSCHWEIG_118_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,crop_N_harvest,28.2999,1.8868,braunschweig/BRAUNSCHWEIG_118_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,stem_WSC_mg_g,8.5053,3.0457,braunschweig/BRAUNSCHWEIG_118_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,grain_Fe,32.7445,1.9762,braunschweig/BRAUNSCHWEIG_118_obs.csv Fe conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,grain_Zn,24.1568,3.0816,braunschweig/BRAUNSCHWEIG_118_obs.csv Zn conc at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,d0_20,0.1722,0.0265,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_118,BRAUNSCHWEIG,d20_40,0.2005,0.0263,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_119_obs.csv dated stage rows
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_119_obs.csv dated stage rows
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_119_obs.csv dated stage rows
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,LAI_peak,3.4882,0.3993,"braunschweig/BRAUNSCHWEIG_119_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,AGB_anthesis,1393.6900,156.2710,braunschweig/BRAUNSCHWEIG_119_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,AGB_harvest,1602.1800,96.0516,braunschweig/BRAUNSCHWEIG_119_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,W_stem,550.0620,12.9257,braunschweig/BRAUNSCHWEIG_119_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,W_leaf_tot,95.5311,3.2888,braunschweig/BRAUNSCHWEIG_119_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,spike,956.5880,80.3747,braunschweig/BRAUNSCHWEIG_119_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,chaff,171.7560,13.7754,braunschweig/BRAUNSCHWEIG_119_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,grain_yield,784.8330,72.1277,braunschweig/BRAUNSCHWEIG_119_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,TKW,43.1916,3.9613,braunschweig/BRAUNSCHWEIG_119_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,kernel_number,18190.6000,959.4610,braunschweig/BRAUNSCHWEIG_119_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,HI,0.4899,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,grain_N_pct,2.0294,0.0582,braunschweig/BRAUNSCHWEIG_119_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,stem_N_pct,0.3204,0.0337,braunschweig/BRAUNSCHWEIG_119_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,leaf_N_pct,1.0425,0.1351,braunschweig/BRAUNSCHWEIG_119_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,chaff_N_pct,0.5280,0.0138,braunschweig/BRAUNSCHWEIG_119_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,chaff_N_gm2,0.9068,0.0765,DERIVED: braunschweig/BRAUNSCHWEIG_119_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,crop_N_harvest,19.5664,1.2338,braunschweig/BRAUNSCHWEIG_119_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,stem_WSC_mg_g,10.3639,2.6637,braunschweig/BRAUNSCHWEIG_119_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,d0_20,0.1799,0.0218,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_119,BRAUNSCHWEIG,d20_40,0.2091,0.0151,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,emergence,2014-11-19,,braunschweig/BRAUNSCHWEIG_122_obs.csv dated stage rows
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,anthesis,2015-06-12,,braunschweig/BRAUNSCHWEIG_122_obs.csv dated stage rows
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,maturity,2015-07-27,,braunschweig/BRAUNSCHWEIG_122_obs.csv dated stage rows
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,LAI_peak,3.5300,0.1115,"braunschweig/BRAUNSCHWEIG_122_obs.csv peak LGrAI, at 2015-05-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)"
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,AGB_anthesis,1494.9700,48.7589,braunschweig/BRAUNSCHWEIG_122_obs.csv SUMDW at 2015-06-30 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,AGB_harvest,1749.6600,243.0740,braunschweig/BRAUNSCHWEIG_122_obs.csv SUMDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,W_stem,581.8360,74.8934,braunschweig/BRAUNSCHWEIG_122_obs.csv STDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,W_leaf_tot,100.2710,18.5863,braunschweig/BRAUNSCHWEIG_122_obs.csv LDeDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,spike,1067.5500,150.6730,braunschweig/BRAUNSCHWEIG_122_obs.csv EADW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,chaff,189.0780,26.4385,braunschweig/BRAUNSCHWEIG_122_obs.csv CHDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,grain_yield,878.4750,125.6370,braunschweig/BRAUNSCHWEIG_122_obs.csv GRDW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,TKW,43.6667,0.7138,braunschweig/BRAUNSCHWEIG_122_obs.csv TGW at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,kernel_number,20143.0000,3114.8100,braunschweig/BRAUNSCHWEIG_122_obs.csv GRNO at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,HI,0.5021,,DERIVED obs GRDW / obs SUMDW at 2015-07-27
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,grain_N_pct,1.9716,0.0679,braunschweig/BRAUNSCHWEIG_122_obs.csv N% GR at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,stem_N_pct,0.2964,0.0104,braunschweig/BRAUNSCHWEIG_122_obs.csv N% ST at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,leaf_N_pct,0.8930,0.1009,braunschweig/BRAUNSCHWEIG_122_obs.csv N% LDe at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,chaff_N_pct,0.4752,0.0503,braunschweig/BRAUNSCHWEIG_122_obs.csv N% CH at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,chaff_N_gm2,0.8986,0.1575,DERIVED: braunschweig/BRAUNSCHWEIG_122_obs.csv CHDW x `N% CH` / 100 at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,crop_N_harvest,20.8989,3.6328,braunschweig/BRAUNSCHWEIG_122_obs.csv N plant at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,stem_WSC_mg_g,9.3540,4.4641,braunschweig/BRAUNSCHWEIG_122_obs.csv WSC at 2015-07-27 (Manderscheid et al. 2020 doi 10.18174/odjar.v6i0.16397)
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,d0_20,0.1805,0.0193,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d0_20')
+BRAUNSCHWEIG_122,BRAUNSCHWEIG,d20_40,0.2161,0.0168,per-date pairs from scripts/part2_ebwb_gx_figures.py pairs('d20_40')
+MARICOPA_905,MARICOPA,emergence,1994-01-08,,"<archive>/MARICOPA_905/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_905,MARICOPA,anthesis,1994-04-03,,"<archive>/MARICOPA_905/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_905,MARICOPA,maturity,1994-05-13,,"<archive>/MARICOPA_905/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_905,MARICOPA,LAI_peak,4.3400,0.8638,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 4; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_905,MARICOPA,AGB_harvest,1385.8000,105.1973,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_905,MARICOPA,grain_yield,618.2950,93.4383,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_905,MARICOPA,grain_yield_HWAH,474.4250,71.6963,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 4 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_905,MARICOPA,TKW,42.9700,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_905,MARICOPA,kernel_number,14389.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_905,MARICOPA,ears_m2,375.3000,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_905,MARICOPA,HI,0.4462,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_905,MARICOPA,MAR_SWC_0_30,0.2961,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_905,MARICOPA,MAR_SWC_30_50,0.2418,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_906,MARICOPA,emergence,1993-12-28,,"<archive>/MARICOPA_906/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_906,MARICOPA,anthesis,1994-04-06,,"<archive>/MARICOPA_906/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_906,MARICOPA,maturity,1994-05-21,,"<archive>/MARICOPA_906/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_906,MARICOPA,LAI_peak,7.2100,0.9319,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 4; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_906,MARICOPA,AGB_harvest,1800.0000,311.7578,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_906,MARICOPA,grain_yield,798.9220,93.6395,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_906,MARICOPA,grain_yield_HWAH,743.5750,87.1525,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 4 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_906,MARICOPA,TKW,40.2500,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_906,MARICOPA,kernel_number,19849.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_906,MARICOPA,ears_m2,532.6500,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_906,MARICOPA,HI,0.4438,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_906,MARICOPA,MAR_SWC_0_30,0.3331,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_906,MARICOPA,MAR_SWC_30_50,0.2838,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_907,MARICOPA,emergence,1993-12-30,,"<archive>/MARICOPA_907/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_907,MARICOPA,anthesis,1994-04-01,,"<archive>/MARICOPA_907/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_907,MARICOPA,maturity,1994-05-10,,"<archive>/MARICOPA_907/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_907,MARICOPA,LAI_peak,5.6025,1.2565,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 4; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_907,MARICOPA,AGB_harvest,1583.0000,384.8546,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_907,MARICOPA,grain_yield,751.5550,88.1590,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_907,MARICOPA,grain_yield_HWAH,591.8250,69.4223,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 4 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_907,MARICOPA,TKW,45.1900,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_907,MARICOPA,kernel_number,16631.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_907,MARICOPA,ears_m2,415.5300,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_907,MARICOPA,HI,0.4748,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_907,MARICOPA,MAR_SWC_0_30,0.2929,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_907,MARICOPA,MAR_SWC_30_50,0.2535,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_908,MARICOPA,emergence,1993-12-28,,"<archive>/MARICOPA_908/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_908,MARICOPA,anthesis,1994-04-02,,"<archive>/MARICOPA_908/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_908,MARICOPA,maturity,1994-05-17,,"<archive>/MARICOPA_908/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_908,MARICOPA,LAI_peak,7.3825,1.4191,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 4; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_908,MARICOPA,AGB_harvest,1927.7000,61.0161,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_908,MARICOPA,grain_yield,860.8360,27.9934,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_908,MARICOPA,grain_yield_HWAH,831.1500,27.0281,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 4 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_908,MARICOPA,TKW,42.8000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_908,MARICOPA,kernel_number,20113.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_908,MARICOPA,ears_m2,536.1000,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_908,MARICOPA,HI,0.4466,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_908,MARICOPA,MAR_SWC_0_30,0.3728,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_908,MARICOPA,MAR_SWC_30_50,0.2943,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_910,MARICOPA,emergence,1996-01-08,,"<archive>/MARICOPA_910/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_910,MARICOPA,anthesis,1996-03-29,,"<archive>/MARICOPA_910/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_910,MARICOPA,maturity,1996-05-10,,"<archive>/MARICOPA_910/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_910,MARICOPA,LAI_peak,5.0900,0.9412,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 4; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_910,MARICOPA,AGB_harvest,1681.8000,202.3073,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_910,MARICOPA,grain_yield,822.9870,73.6709,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_910,MARICOPA,grain_yield_HWAH,739.9750,66.2400,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 4 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_910,MARICOPA,TKW,45.1100,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_910,MARICOPA,kernel_number,18244.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_910,MARICOPA,ears_m2,505.8000,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_910,MARICOPA,HI,0.4893,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_910,MARICOPA,MAR_SWC_0_30,0.2917,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_910,MARICOPA,MAR_SWC_30_50,0.2852,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_912,MARICOPA,emergence,1996-01-11,,"<archive>/MARICOPA_912/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_912,MARICOPA,anthesis,1996-03-26,,"<archive>/MARICOPA_912/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_912,MARICOPA,maturity,1996-05-10,,"<archive>/MARICOPA_912/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_912,MARICOPA,LAI_peak,5.8325,0.4495,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 4; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_912,MARICOPA,AGB_harvest,1611.5000,166.2488,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_912,MARICOPA,grain_yield,799.6900,28.1451,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_912,MARICOPA,grain_yield_HWAH,849.4250,29.8955,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 4 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_912,MARICOPA,TKW,45.0200,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_912,MARICOPA,kernel_number,17763.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_912,MARICOPA,ears_m2,489.2000,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_912,MARICOPA,HI,0.4962,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_912,MARICOPA,MAR_SWC_0_30,0.3070,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_912,MARICOPA,MAR_SWC_30_50,0.2766,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_913,MARICOPA,anthesis,1997-04-02,,"<archive>/MARICOPA_913/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_913,MARICOPA,maturity,1997-05-08,,"<archive>/MARICOPA_913/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_913,MARICOPA,LAI_peak,3.3500,0.4371,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 3; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_913,MARICOPA,AGB_harvest,1265.8000,154.4725,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_913,MARICOPA,grain_yield_HWAH,504.3000,66.3436,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 3 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_913,MARICOPA,MAR_SWC_0_30,0.3121,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_913,MARICOPA,MAR_SWC_30_50,0.2852,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_914,MARICOPA,emergence,1997-01-18,,"<archive>/MARICOPA_914/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_914,MARICOPA,anthesis,1997-04-03,,"<archive>/MARICOPA_914/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_914,MARICOPA,maturity,1997-05-09,,"<archive>/MARICOPA_914/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_914,MARICOPA,LAI_peak,4.8767,0.1704,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 3; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_914,MARICOPA,AGB_harvest,1269.7000,370.4460,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_914,MARICOPA,grain_yield,535.7650,65.6011,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_914,MARICOPA,grain_yield_HWAH,612.6000,75.0091,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 3 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_914,MARICOPA,TKW,38.3100,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_914,MARICOPA,kernel_number,13985.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_914,MARICOPA,ears_m2,412.3000,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_914,MARICOPA,HI,0.4220,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_914,MARICOPA,MAR_SWC_0_30,0.3240,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_914,MARICOPA,MAR_SWC_30_50,0.2815,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_915,MARICOPA,anthesis,1997-04-01,,"<archive>/MARICOPA_915/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_915,MARICOPA,maturity,1997-05-08,,"<archive>/MARICOPA_915/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_915,MARICOPA,LAI_peak,2.8833,0.3482,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 3; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_915,MARICOPA,AGB_harvest,1203.7000,255.8667,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_915,MARICOPA,grain_yield_HWAH,530.6000,69.4019,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 3 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_915,MARICOPA,MAR_SWC_0_30,0.3416,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_915,MARICOPA,MAR_SWC_30_50,0.2756,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"
+MARICOPA_916,MARICOPA,emergence,1997-01-17,,"<archive>/MARICOPA_916/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_916,MARICOPA,anthesis,1997-04-04,,"<archive>/MARICOPA_916/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_916,MARICOPA,maturity,1997-05-10,,"<archive>/MARICOPA_916/input/phenology_cultivar.txt Sowing_Y/M/D + Obs_*_DAP (DAP from sowing, converted to a calendar date)"
+MARICOPA_916,MARICOPA,LAI_peak,5.5267,0.3213,"maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv LAIX_mean +- LAIX_sd (sheet Obs_summary_by_Reps, sample sd over replicate plots, n = 3; Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_916,MARICOPA,AGB_harvest,1399.8000,478.6493,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_916,MARICOPA,grain_yield,594.9680,37.1003,"obs_registry_braunschweig_maricopa.csv + replicate sd from maricopa/MARICOPA_YECORA_ROJO_REPS_SD.csv (sheet Obs_summary_by_Reps, sample sd over replicate plots)"
+MARICOPA_916,MARICOPA,grain_yield_HWAH,715.7000,44.6288,"MARICOPA_YECORA_ROJO_REPS_SD.csv HWAH_mean / 10 (kg ha-1 -> g m-2), n = 3 replicate plots (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z)"
+MARICOPA_916,MARICOPA,TKW,39.2900,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_916,MARICOPA,kernel_number,15143.0000,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_916,MARICOPA,ears_m2,415.0000,,"maricopa/MARICOPA_YECORA_ROJO_MEASURED.csv (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826); no dispersion in any column [ears_m2_PnAM = P#AM, panicle (ear) number at maturity]"
+MARICOPA_916,MARICOPA,HI,0.4250,,obs_registry_braunschweig_maricopa.csv
+MARICOPA_916,MARICOPA,MAR_SWC_0_30,0.3150,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_0_30'))"
+MARICOPA_916,MARICOPA,MAR_SWC_30_50,0.2789,,"per-date pairs, season mean (lib/ebwb_gx.py pairs('MAR_SWC_30_50'))"

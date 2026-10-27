@@ -1,0 +1,125 @@
+/* Copyright (c) 2018-2026 David Helman and The Hebrew University of Jerusalem
+ * Licensed under the M&M-CO2Crop Research Licence v1.0 (see LICENSE): non-commercial
+ * research use with citation; redistribution of modified versions and commercial use
+ * require the copyright holders' consent.
+ *
+ * M&M-CO2Wheat v1.0 -- module call and data-flow graph.
+ *
+ * THIS FILE IS THE SOURCE OF TRUTH for docs/ARCHITECTURE.png. The nodes are the 20
+ * compiled source files, grouped into subgraphs by TIME STEP; the edges are data flow,
+ * labelled with the main variables that cross them.
+ *
+ * To render with Graphviz (not installed on the machine this release was prepared on):
+ *     dot -Tpng docs/ARCHITECTURE.dot -o docs/ARCHITECTURE.png
+ *
+ * The shipped PNG was produced instead by scripts/render_architecture.py, which reads
+ * THIS file, checks that its own layout table contains exactly these nodes and edges,
+ * writes an SVG and converts it with the macOS system renderer (qlmanage). See the
+ * README section "Architecture diagram".
+ */
+digraph MMCO2Wheat_v1_0 {
+  graph [rankdir=TB, splines=true, fontname="Helvetica", labelloc=t,
+         label="M&M-CO2Wheat v1.0 - module call and data-flow graph (nodes grouped by time step)"];
+  node  [shape=box, style=rounded, fontname="Helvetica", fontsize=11];
+  edge  [fontname="Helvetica", fontsize=9];
+
+  /* ---------- band A: no time step (declarations, sizing, CSV helper) ---------- */
+  subgraph cluster_decl {
+    label="no time step: declarations, input sizing, CSV helper";
+    style=dashed;
+    TYPES          [label="TYPES.f90\nworking-precision kinds"];
+    SHARED         [label="SHARED.f90\nglobal parameter and state store"];
+    csv_file       [label="csv_file.f90\nminimal CSV writer"];
+    csv_file_1d    [label="csv_file_1d.f90\ninclude body of csv_file"];
+    count_lines    [label="count_lines.f90\ncounts input records"];
+  }
+
+  /* ---------- band B: the program; season and daily loop ---------- */
+  subgraph cluster_prog {
+    label="season: the program and its daily loop";
+    style=dashed;
+    main_MMCO2Crop [label="main_MMCO2Crop.f90\nPROGRAM mmco2crop: reads the decks,\nrefuses retired options, runs the day loop,\nwrites the 88 output files"];
+  }
+
+  /* ---------- band C: daily step ---------- */
+  subgraph cluster_daily {
+    label="daily: one call per simulated day";
+    style=dashed;
+    phenology_module [label="phenology_module.f90\nthermal time, stages, dvs 0-2"];
+    growth_module    [label="growth_module.f90\ncarbon and nitrogen economy,\norgan-level canopy, yield formation"];
+    soiln_module     [label="soiln_module.f90\nresidue and microbial C-N turnover"];
+    mineral_module   [label="mineral_module.f90\nsix-element grain mineral economy"];
+  }
+
+  /* ---------- band D: hourly step ---------- */
+  subgraph cluster_hourly {
+    label="hourly: 24 steps per day, with a nested fixed point";
+    style=dashed;
+    meteo        [label="meteo.f90\nhourly weather from a daily record"];
+    th           [label="th.f90\nsolar geometry of the day"];
+    solar        [label="solar.f90\ntwo-leaf PAR partition"];
+    CANOPY_MODEL [label="CANOPY_MODEL.f90\ncanopy integration and\ncanopy-temperature solve"];
+    assim        [label="assim.f90\nleaf gas exchange (one leaf class)"];
+  }
+
+  /* ---------- band E: hourly energy-balance sub-step ---------- */
+  subgraph cluster_eb {
+    label="hourly energy-balance sub-step, once per Newton iterate";
+    style=dashed;
+    energy_balance_module [label="energy_balance_module.f90\nthree-node canopy / soil / airspace\nenergy balance"];
+    radiation_module      [label="radiation_module.f90\ncomponent shortwave and\ngray-body longwave"];
+    soil_heat_module      [label="soil_heat_module.f90\n1-D soil heat conduction"];
+  }
+
+  /* ---------- band F: adaptive Richards sub-step ---------- */
+  subgraph cluster_sub {
+    label="adaptive sub-step within one day";
+    style=dashed;
+    hydro [label="hydro.f90\nmixed-form Richards soil water,\nroot uptake, infiltration, drainage"];
+  }
+
+  /* ---------- data flow ---------- */
+  TYPES       -> SHARED         [label="wp, ik"];
+  SHARED      -> main_MMCO2Crop [label="all parameters, switches and state\n(read and written by 15 of the 20 units)", dir=both, style=dashed];
+  count_lines -> main_MMCO2Crop [label="NDays"];
+  main_MMCO2Crop -> csv_file    [label="daily energy-balance row"];
+  csv_file    -> csv_file_1d    [label="include: array write body", style=dashed];
+
+  main_MMCO2Crop   -> phenology_module [label="Tmax, Tmin, DOY, photoperiod"];
+  phenology_module -> main_MMCO2Crop   [label="dvs 0-2, stage dates, dTT"];
+  main_MMCO2Crop   -> growth_module    [label="net assimilate, dvs, N supply"];
+  growth_module    -> main_MMCO2Crop   [label="organ dry matter, LAI, height,\nN pools, grain number, TKW"];
+  main_MMCO2Crop   -> soiln_module     [label="residue pools, Tsoil, theta"];
+  soiln_module     -> main_MMCO2Crop   [label="mineralization, immobilization,\nmicrobial turnover N"];
+  main_MMCO2Crop   -> mineral_module   [label="organ dDM, transpiration, theta"];
+  mineral_module   -> main_MMCO2Crop   [label="grain concentration (mg kg-1),\norgan mineral pools"];
+
+  main_MMCO2Crop -> CANOPY_MODEL [label="LAI, leaf N, height, theta, CO2"];
+  CANOPY_MODEL   -> main_MMCO2Crop [label="An, A, Tr demand, Esoil demand,\nTcan, gsw, Ci, resistances"];
+  main_MMCO2Crop -> hydro        [label="Tr demand, Esoil demand,\nrain, irrigation, root depth"];
+  hydro          -> main_MMCO2Crop [label="theta per layer, Tr actual,\nE actual, drainage, runoff"];
+  main_MMCO2Crop -> soil_heat_module [label="initialize_soil_heat:\nlayer theta, Tdeep", style=dashed];
+
+  CANOPY_MODEL -> th    [label="DOY, latitude"];
+  th           -> CANOPY_MODEL [label="daylength, declination, sunrise"];
+  CANOPY_MODEL -> meteo [label="daily weather record, declination"];
+  meteo        -> CANOPY_MODEL [label="Tair, VPD, SW down,\nsky emissivity"];
+  meteo        -> solar [label="solar elevation,\ndirect / diffuse split"];
+  solar        -> CANOPY_MODEL [label="Kdr, sunlit and shaded LAI,\nabsorbed PAR per class"];
+  CANOPY_MODEL -> assim [label="Tleaf, absorbed PAR, Narea,\nCa, leaf-surface VPD"];
+  assim        -> CANOPY_MODEL [label="An, A, gsw, Ci, N assimilated"];
+
+  CANOPY_MODEL          -> energy_balance_module [label="Tcan, rcs, LAI, wind"];
+  energy_balance_module -> CANOPY_MODEL [label="Tac, e_ac, Tsoil surface,\nHc, Hs, LEc, LEs, raa/rca/rsa/rss"];
+  energy_balance_module -> radiation_module [label="Tcan, Tsoil, Kdr"];
+  radiation_module      -> energy_balance_module [label="Rnc, Rns, G, rad_* ledger"];
+  energy_balance_module -> soil_heat_module [label="surface flux G, k_face"];
+  soil_heat_module      -> energy_balance_module [label="Tsoil profile, Cv, lambda"];
+
+  hydro -> energy_balance_module [label="surface head,\nsoil latent-heat supply limit"];
+  hydro -> CANOPY_MODEL [label="soil water potential"];
+  hydro -> growth_module [label="water-stress state"];
+  growth_module -> hydro [label="root depth, Tr demand"];
+  growth_module -> CANOPY_MODEL [label="LAI, leaf N"];
+  growth_module -> mineral_module [label="organ dDM, senescence DM"];
+}

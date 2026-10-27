@@ -1,0 +1,26 @@
+input/input_daily_meteo.csv
+100                        ! NTsteps: Number of time steps
+0.01                       ! Initial root depth (m).
+.FALSE.                    ! wt_pres: Water table presence
+10                         ! Number of soil layers used in the simulation
+0.09114
+0.09459
+0.10034
+0.10838
+0.11987
+0.13596
+0.15549
+0.17618
+0.19686
+0.21754
+0.00      		   ! Soil layers depths (m) - from surface
+-0.02
+-0.06
+-0.12
+-0.20
+-0.32
+-0.48
+-0.66
+-0.84
+-1.02
+-1.20

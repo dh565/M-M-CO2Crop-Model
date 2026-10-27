@@ -1,0 +1,19 @@
+! Cultivar yield-component coefficients (Task 7) — cv. Ruta (late-maturing).
+! Format: value,parameter_name,unit,source  (values read positionally; '!' lines skipped).
+! Genotype-specific and calibratable (DSSAT cultivar-coefficient style); CO2 effects on
+! grain number / TKW / chaff EMERGE through carbon (spike DW), they are NOT prescribed here.
+! Anchors from Mulero, Bonfil & Helman (WheatDryFACE, High N 2024/25, cv. Ruta, well-watered):
+!   GY ~4.1 t/ha, TKW ~30-31 g, chaff ~150 g/m2 -> kernel number ~13700 /m2.
+! Fruiting efficiency (grains per g ear/spike DW at anthesis): Slafer (2015, Food Energy Secur
+!   4:92, ~110-170 /g full spike); Pretini (2020, Crop Sci 60:1541, genotype variation).
+76.0,fruiting_efficiency [v7 accepted]
+45.19,tkw_potential [ENVELOPE RULE, Sect. 6d of the calibration rules (internal; not distributed): the MEASURED SITE MAXIMUM over the 10 modelled Maricopa decks, TRNO 907 = 45.19 g, read from the Maricopa Yecora Rojo measured-cultivar table (internal; not distributed) column TKW_measured_g (= HWUM x 1000), sheet Obs_summary_Avg_over_Reps of 'Biomass Yield Area Phenology Management Weather Soil Moisture.ods' (Kimball et al. 2017 ODJAR 3:29-38 doi 10.18174/odjar.v3i1.15826; data doi 10.7910/DVN/YRTQ3Z). SUPERSEDES the 41.22 g adopted 2026-10-09, which was the MEAN of three decks (906 40.25 + 910 45.11 + 914 38.31) and therefore not an envelope maximum. DISCLOSED: over ALL 16 measured treatments the maximum is 46.23 g (TRNO 901), but 901-904, 909 and 911 carry no deck in the 42-deck set, so the maximum of the MODELLED decks is the one used; 913 and 915 are NOT-MEASURED.]
+0.55,chaff_share,fraction,share of ear-window reproductive DM allocated to ear/chaff structure (calibratable)
+1.0,ear_end_dvs2,dvs2,grain number set AT ANTHESIS = the FE definition point (Slafer 2015 p.95: GN determined by spike DW at anthesis; Fischer 1985 p.447); chaff construction ends there, matching the Slafer p.96 chaff-at-maturity==spike-at-anthesis proxy; former 1.35 was unsourced and let chaff grow past the measured basis
+! Spike-window partition trait nodes (runtime cultivar inputs since 2026-09-07; matrix finding:
+! cultivar traits must never require a rebuild). Derivation per the calibration-variables rules (internal; not distributed) 2b:
+! onset = DVS(anthesis - 30 d) (Fischer 1985 p.447 spike-growth period); peak = 2 x measured
+! spike-at-anthesis (chaff-at-maturity proxy, Slafer 2015 p.96) / window gross allocation.
+! Ruta: 0.693; 0.474 = 2x150/633 (v19 trajectory). [Zahir deck: 0.656; 0.894 = 2x167.7/375.3]
+0.693,storage_onset_dvs2,dvs2,DVS at anthesis-30d (Fischer 1985 p.447; v19 measured-phenology trajectory)
+0.474,storage_peak_frac,fraction,2 x measured chaff 150 g/m2 (Slafer p.96 proxy) / window allocation 633

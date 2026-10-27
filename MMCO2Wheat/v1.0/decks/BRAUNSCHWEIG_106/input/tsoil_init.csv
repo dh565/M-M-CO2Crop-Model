@@ -1,0 +1,5 @@
+! TSOIL-IC anchors, Braunschweig TRNO 106. DECLARED: no soil temperature exists at this site (PROG sec.1 #6).
+! z=0.00 and z=2.10 m both = mean 15-min air temperature on day 1 (2013-09-01) = 13.99 C -> UNIFORM profile.
+! z_m,T_C
+0.00,13.99
+2.10,13.99

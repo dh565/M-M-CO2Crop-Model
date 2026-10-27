@@ -1,0 +1,25 @@
+! D37 fruiting_efficiency RE-DERIVATION (2026-10-18): cv. Batis 120.0 -> 129.5 grains g-1 ear DW,
+! by the documented derivation of the calibration-variables rules (internal; not distributed) sect. 2b (kernel number is LINEAR in FE),
+! on the Braunschweig yield-formation control deck BRAUNSCHWEIG_103 of the D37 run
+! 20261018_1407_V1CAND_D37_ON42: model 17588.3 vs observed 18976.6 kernels m-2 (-1.887 obs sd, i.e.
+! outside 1 obs sd, so the lever is admissible), ratio 1.0789.  Documented range 50-200
+! (Slafer et al. 2015 Food Energy Secur. 4:92-109 Fig. 4 p.97); the reader refuses values outside it.
+! Cultivar yield-component coefficients (Task 7) — cv. Ruta (late-maturing).
+! Format: value,parameter_name,unit,source  (values read positionally; '!' lines skipped).
+! Genotype-specific and calibratable (DSSAT cultivar-coefficient style); CO2 effects on
+! grain number / TKW / chaff EMERGE through carbon (spike DW), they are NOT prescribed here.
+! Anchors from Mulero, Bonfil & Helman (WheatDryFACE, High N 2024/25, cv. Ruta, well-watered):
+!   GY ~4.1 t/ha, TKW ~30-31 g, chaff ~150 g/m2 -> kernel number ~13700 /m2.
+! Fruiting efficiency (grains per g ear/spike DW at anthesis): Slafer (2015, Food Energy Secur
+!   4:92, ~110-170 /g full spike); Pretini (2020, Crop Sci 60:1541, genotype variation).
+129.5,fruiting_efficiency [v7 accepted]
+47.39,tkw_potential [INPUT PROVENANCE, same rule: measured Batis TGW 47.39 g (deck 105, 2014) applied to the 2015 decks, replacing the unsourced v7 placeholder 38.0; Batis is ONE cultivar -> one TKW_potential on all 16 decks]
+0.55,chaff_share,fraction,share of ear-window reproductive DM allocated to ear/chaff structure (calibratable)
+1.0,ear_end_dvs2,dvs2,grain number set AT ANTHESIS = the FE definition point (Slafer 2015 p.95: GN determined by spike DW at anthesis; Fischer 1985 p.447); chaff construction ends there, matching the Slafer p.96 chaff-at-maturity==spike-at-anthesis proxy; former 1.35 was unsourced and let chaff grow past the measured basis
+! Spike-window partition trait nodes (runtime cultivar inputs since 2026-09-07; matrix finding:
+! cultivar traits must never require a rebuild). Derivation per the calibration-variables rules (internal; not distributed) 2b:
+! onset = DVS(anthesis - 30 d) (Fischer 1985 p.447 spike-growth period); peak = 2 x measured
+! spike-at-anthesis (chaff-at-maturity proxy, Slafer 2015 p.96) / window gross allocation.
+! Ruta: 0.693; 0.474 = 2x150/633 (v19 trajectory). [Zahir deck: 0.656; 0.894 = 2x167.7/375.3]
+0.693,storage_onset_dvs2,dvs2,DVS at anthesis-30d (Fischer 1985 p.447; v19 measured-phenology trajectory)
+0.474,storage_peak_frac,fraction,2 x measured chaff 150 g/m2 (Slafer p.96 proxy) / window allocation 633

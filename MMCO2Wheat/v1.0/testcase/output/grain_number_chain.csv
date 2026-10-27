@@ -1,0 +1,134 @@
+axis_class,density_m2,spike_DW_per_axis_g,competent_florets_per_spike,kernels_per_spike,bears_ear,spike_DM_pool_g_m2,floret_survival,spike_DM_pool_pre_mortality_g_m2,ear_fraction_phi_sp
+MS,   200.000    ,  0.699995    ,   50.3797    ,   39.2962    ,YES,   139.999    ,  0.259689    ,   138.303    ,   1.00000    
+T1,   29.5734    ,  0.335747    ,   26.0549    ,   20.3228    ,YES,   9.92916    ,  0.134304    ,   9.80884    ,   1.00000    
+T2,   134.863    ,  0.262670    ,   20.6995    ,   16.1456    ,YES,   35.4246    ,  0.106698    ,   34.9953    ,   1.00000    
+T3,   194.930    ,  0.253969    ,   20.0505    ,   15.6394    ,YES,   49.5061    ,  0.103353    ,   48.9062    ,   1.00000    
+T4,   95.1816    ,  0.218072    ,   17.3475    ,   13.5310    ,YES,   17.9628    ,  0.894200E-01,   20.5049    ,  0.865406    
+T5,   6.25709    ,  0.181533    ,   14.5530    ,   11.3513    ,YES,  0.818281    ,  0.750152E-01,   1.12210    ,  0.720402    
+
+quantity,value,units_or_source
+rec89_grain_number_mech,1,0 OFF / 1 A+D / 2 D only / 3 A only
+chain_fired,YES,-
+# --- the spike growth period (Fischer 1985 p.449: penultimate leaf appearance -> anthesis) ---
+window_open_model_day,91,day the MAIN STEM reached Haun FLN-1
+window_days,25,d (Fischer: the 30 days or so preceding anthesis, p.447)
+window_degCd_above_4.5,   231.209    ,screen air; FALSIFIER vs Fischer p.449 ~300
+window_open_rule,projected remaining degCd above 4.5 C <= 300 (Fischer p.449 thermal form)
+tdu_remaining_at_open,   333.392    ,phenology units still to anthesis
+tt_ratio_degCd_per_tdu,  0.836456    ,season-to-date unit conversion; DECLARED
+penultimate_leaf_model_day,87,Fischer DEVELOPMENTAL form; CROSS-CHECK ONLY, read by nothing
+# --- the partitioning coefficient (Fischer 1985 p.452: 0.44 of the ABOVE-GROUND increment) ---
+window_AGB_increment_g_m2,   576.455    ,SUM dm_gain*(1-f_root) in window
+window_spike_increment_g_m2,   253.640    ,SUM dm_gain*f_storage in window
+window_spike_share_realised,  0.440000    ,TARGET Fischer 0.44 p.452 = ITEM-D GATE
+spike_share_clamp_days,0,days lamina left < 0.44*(1-f_root) room
+spike_share_clamp_max,   0.00000    ,share units
+# --- the chain (Fischer 1985 p.449 florets, p.447 kernels) ---
+spike_DW_at_anthesis_g_m2,   253.640    ,= W_chaff when the number was set
+florets_per_g_spike_DW,   100.000    ,Fischer p.449 1 floret / 10 mg; Tab 4 102.3
+kernels_per_competent_floret,  0.780000    ,78 g-1 p.447 / 100 g-1 p.449
+competent_florets_m2,   19041.0    ,florets m-2 PREDICTED
+ears_m2,   646.245    ,PREDICTED: SUM dens x phi_sp (spike affordability, no bar)
+grains_per_ear,   22.9820    ,kernels ear-1 PREDICTED
+grain_number_m2,   14852.0    ,kernels m-2 PREDICTED
+kernels_per_g_spike_DW_realised,   58.5555    ,THE HEADLINE TEST: must VARY across decks; measured 52.4-82.9 Rivera-Amado 2019 FCR 240:154, 73-94 Fischer 1985 p.454, 78+-2 p.447
+kernels_per_spikelet_realised,   1.18464    ,FALSIFIER vs Fischer 1985 p.450 measured 1.98
+ears_per_plant,   3.23123    ,FALSIFIER vs Abichou 2016 Ch.1 sec.3.6 measured 1.4-5.0
+spike_DW_per_ear_g,  0.392483    ,FALSIFIER vs Fischer Tab 4 0.29-0.32 g, Rivera-Amado 0.56-1.33 g
+# --- carbon bookkeeping (the per-axis split creates and destroys nothing) ---
+pool_rescale_to_W_chaff,   1.00000    ,1.0 = pools already summed to W_chaff
+spike_DM_unshared_g_m2,   0.00000    ,to main stem on days no axis window open
+spike_DM_in_sterile_classes_g_m2,   3.07357    ,no-ear classes; STAYS in W_chaff
+# --- DECLARED: not a measurement ---
+per_axis_share_rule,green lamina area of the axis class (ct_dens*ct_area_axis_real), from the CROP window onward - DECLARED CONSTRUCTION; no measured per-axis sharing law is on this machine. A per-axis sub-window was built first and REMOVED: see growth_module
+rec90_floret_survival_mech,4,0 OFF / 1 chain / 2 survival only / 3 hyperbola arm / 4 spike-affordability ear test
+spikelets_per_spike,   19.4000    ,Fischer 1985 p.450 verbatim, cv. Yecora 70 CIANO (436 spikes/m2, 19.4 spikelets/spike, 1.98 kernels/spikelet)
+floret_primordia_per_spikelet,   10.0000    ,Guo & Schnurbusch 2015 JXB 66:5945 DOI 10.1093/jxb/erv303: around 10, range 9-12; Guo 2016 8-11; Backhaus 2023 mean 9.13
+floret_primordia_per_spike,   194.000    ,= spikelets x primordia per spikelet
+floret_survival_law,S = 1 - exp(-W_spike_per_axis / (194 x 10 mg)). DECLARED CONSTRUCTION with NO constant of its own: pinned at W->0 on Fischer's measured proportionality (1 floret per 10 mg) and at W->inf on the measured primordia ceiling (Guo & Schnurbusch 2015). Backhaus 2023 states survival is a saturation function; every named alternative (cumulative normal / Hill / logistic) carries a shape parameter, this does not.
+fertile_tiller_test,rec 90 = 4: a class bears ears on the FRACTION phi_sp = MIN(1, W_axis / W_pot) of its axes, W_axis = spike DM per axis actually accrued (gnx_pool_pre / ct_dens, SHARED gnx_pool_pre) and W_pot = bgn_r_spike x gnx_win_tt45 (SHARED bgn_r_spike = 0.323 g / 300 degCd, Fischer 1985 Tab 4 p.451 x p.449; gnx_win_tt45 = the realised window degCd above 4.5 C); the rest STAND without a spike (Fischer 1985 p.452 verbatim "higher order tillers which do not bear spikes in the control crop yet amount to 5-10% of total anthesis dry weight") and their pool returns to the ear-bearers pro rata (carbon-neutral); main stem never earless (Abichou 2016 N_e floor); NO bar, NO new constant; the ONE affordability law of rec 99 (phi = MIN(1, supply/demand), SHARED) applied to the spike sink in its own sourced window. Abichou 2016 Ch.1 sec.1.3 doc pp.20-21: one dichotomy (die / complete the cycle and produce an ear), one cause (competition), one order (last emerged), NO criterion at the ear. The ROLE of Fischer's control spike as the per-axis potential is DECLARED (the rec 98 [B-GN3] declaration). Youngest-first is EMERGENT. Code: growth_module.f90 gnx_set_grain_number, rec 90 = 4 branch.
+axis_classes_culled,2,classes with ear-bearing fraction phi_sp < 1 (part reduction, no class removed)
+cull_passes,2,monotone loop passes
+spike_DM_returned_to_survivors_g_m2,   3.07357    ,carbon-NEUTRAL: SUM_c pool(c) unchanged
+W_pot_axis_g,  0.248934    ,g per axis = bgn_r_spike x window_degCd_above_4.5 (Fischer's unshaded spike over the REALISED window; DECLARED role, rec 98 [B-GN3])
+axes_standing_m2,   660.805    ,axes m-2 standing at anthesis = SUM_c density_m2 (rec 99 deaths already removed; d2_cohort_table.csv)
+earless_axes_m2,   14.5603    ,axes m-2 standing WITHOUT a spike = SUM_c density_m2 (1 - phi_sp); Fischer 1985 p.452 class; Jiang 2022 Tab 7 np-T# band 4-32 % (harvest, pot) REPORTED
+standing_spikeless_fraction,  0.220342E-01,earless_axes_m2 / axes_standing_m2
+fate_identity_resid,  4.085621E-14,axes_standing_m2 - ears_m2 - earless_axes_m2, from STATE; must be 0 to 1e-9 (F3)
+pool_return_resid_g_m2, -2.842171E-14,SUM_c spike_DM_pool_g_m2 - spike_DW_at_anthesis_g_m2, from STATE; carbon-neutral return, must be 0 to 1e-12 (F3)
+env_MFS_range,9 - 12 primordia per spikelet (Guo & Schnurbusch 2015) REPORTED
+floret_survival_MAIN_STEM,  0.259689    ,REPORTED NOT GATED (the source gives no spike DW, so no equal-mass comparison is possible) vs Guo & Schnurbusch 2015 control (tillered) MAIN-SHOOT means 0.337-0.441: greenhouse 3.11/9.23, 3.94/10.20, 3.78/10.09; field 3.56/9.72, 4.69/10.64, 4.64/10.67
+fertile_florets_per_spikelet_MAIN_STEM,   2.59689    ,REPORTED NOT GATED vs Guo & Schnurbusch 2015 control MAIN-SHOOT measured 3.11-4.69 florets per spikelet
+floret_survival_CROP_MEAN,  0.151877    ,THE GATE (like-for-like: a CROP quantity against a FIELD-CROP measurement) = Fischer-derived 0.216-0.232; NOT the Guo main-shoot value
+fertile_florets_per_spikelet_CROP,   1.51877    ,THE GATE, LIKE-FOR-LIKE vs Fischer 1985 p.450 FIELD CROP 1.98 kernels/spikelet / 0.853-0.916 kernels per competent floret (Tab 4 p.451) = 2.16-2.32 fertile florets per spikelet
+env_floret_survival_range,CORRECTED 2026-09-17, bound AND basis. WAS "0.40 - 0.60 across 30 modern cultivars (Guo, Slafer & Schnurbusch 2016 JXB 67:4241)", printed beside the model CROP MEAN. The source sentence is "the relative variation in floret survival (~50% difference FROM <0.4 TO ~0.55-0.6)" -- "<0.4" is not a measured floor of 0.40 -- and it defines survival as "the proportion of the maximum number of floret primordia that reached the stage of fertile florets (FFS MFS-1)", measured on MAIN SHOOTS (Guo & Schnurbusch 2015 Materials and methods: "main shoots of three plants for each cultivar were randomly selected to measure floret primordia and fertile floret number per spikelet") at apical, central and basal spikelet positions. IS NOW: MAIN-SHOOT survival 0.337-0.441, the six control (normally tillered) means of Guo & Schnurbusch 2015 -- NARROWER at the top than the old gate, not widened to admit the model -- with the 30-cultivar genotypic spread "<0.4 to ~0.55-0.6" reported alongside but not used as the gate. WHICH COMPARISON IS THE GATE: the model grain number is a CROP quantity and Fischer 1985 p.450 measured a FIELD CROP (1.98 kernels/spikelet, 436 spikes/m2), while Guo measured MAIN SHOOTS of selected plants and reports NO spike dry weight, so Guo cannot be compared at equal spike mass - and survival here is a function of spike assimilate per axis. Under the like-for-like rule the GATE is the CROP comparator (fertile_florets_per_spikelet_CROP vs 2.16-2.32) and the main-shoot value is REPORTED beside it, not gated. Guo et al. 2016 also states at first hand that "the rate of floret survival is generally low" and that "increased plant density reduces both the number of floret primordia initiated and floret survival", which is the direction of the remaining main-shoot gap.
+env_kernels_per_fertile_floret,0.853 - 0.916 (Fischer 1985 Table 4 p.451, kernels at maturity / competent florets at anthesis) REPORTED; the model applies 0.78 (p.447/p.449)
+NOT_VERIFIED_Fischer1983,the "1 floret per 10 mg" SLOPE at Fischer 1985 p.449 is a SECONDARY citation of Fischer (1983), which is not on this machine. The VALUE is rested on first-hand measurement instead: Fischer Table 4 p.451 102.3/103.3 florets g-1 and Prieto et al. 2020 JXB 71:2703 100.9-123.8 florets g-1.
+NOT_MODELLED,genotypic variation in spikelet number; post-anthesis grain abortion as a separate process (folded into kernels per fertile floret); Abichou Eqn T4.4 ramp (its Ne is an experimental INPUT, and the shipped die fraction 0.632 rests on Evers 2006, whose file here is a 1816-byte anti-bot HTML page = NOT VERIFIED).
+# --- Fischer 1985 measured components: REPORTED ENVELOPE, read by nothing ---
+env_Fischer_T3_spikes_m2,   436.000    ,Table 3 control p.450, Yecora 70 CIANO
+env_Fischer_T3_spikelets_per_spike,   19.4000    ,Tab 3 p.450
+env_Fischer_T3_kernels_per_spikelet,   1.98000    ,Table 3 control p.450
+env_Fischer_T4_spikes_m2,   598.000    ,Table 4 p.451 at anthesis, cv. Egret
+env_Fischer_T4_florets_per_spike,   32.3000    ,Tab 4 p.451 anth, Egret
+env_Fischer_T4_kernels_per_spike,   29.6000    ,Table 4 p.451 at maturity, cv. Egret
+env_Fischer_spike_growth_period_degCd,   300.000    ,p.449 Yecora 70
+# --- inputs this record RETIRES (read by nothing on this path) ---
+fruiting_efficiency_trait,   65.0000    ,READ under rec 151 = 1: m_floret,cv = 0.78/FE; scale    1.20000    
+retired_storage_onset_dvs2,  0.693000    ,NOT READ under rec 89 = 1
+retired_storage_peak_frac,  0.474000    ,NOT READ under rec 89 = 1
+# --- rec 139 n_uptake_diffusion: diffusion to the root surface, N uptake supply law ---
+rec139_n_uptake_diffusion,1,0 OFF / 1 ON
+rec139_S_diff_season_gN_m2,   2.19063    ,season cumulative REALIZED diffusion-term N uptake (post-cap, post-ratio)
+rec139_S_mf_season_gN_m2,   4.78408    ,season cumulative REALIZED mass-flow-term N uptake (post-cap, post-ratio)
+rec139_S_act_season_gN_m2,   13.6529    ,season cumulative REALIZED active-transporter-term N uptake (post-cap, post-ratio)
+rec139_days_cap_bound,139,days ANY layer's standing pool (not the rate terms mf+act+diff) was the binding cap
+# --- rec 140 mineral_supply_mech: diffusion/HATS mineral supply mechanics ---
+rec140_mineral_supply_mech,1,0 OFF / 1 ON
+rec140_Fe_S_mf_season_mg_m2,   29.0626    ,season cumulative REALIZED mass-flow uptake
+rec140_Fe_S_diff_season_mg_m2,  0.515685    ,season cumulative REALIZED diffusion-term uptake
+rec140_Fe_S_hats_season_mg_m2,   0.00000    ,season cumulative REALIZED Zn-HATS-term uptake (0 for every element but Zn)
+rec140_Fe_grain_conc_final,   18.1439    ,mg kg-1, final grain concentration
+rec140_Zn_S_mf_season_mg_m2,   25.4080    ,season cumulative REALIZED mass-flow uptake
+rec140_Zn_S_diff_season_mg_m2,  0.382636E-01,season cumulative REALIZED diffusion-term uptake
+rec140_Zn_S_hats_season_mg_m2,   6.42213    ,season cumulative REALIZED Zn-HATS-term uptake (0 for every element but Zn)
+rec140_Zn_grain_conc_final,   22.9988    ,mg kg-1, final grain concentration
+rec140_Ca_S_mf_season_mg_m2,   2606.13    ,season cumulative REALIZED mass-flow uptake
+rec140_Ca_S_diff_season_mg_m2,   0.00000    ,season cumulative REALIZED diffusion-term uptake
+rec140_Ca_S_hats_season_mg_m2,   0.00000    ,season cumulative REALIZED Zn-HATS-term uptake (0 for every element but Zn)
+rec140_Ca_grain_conc_final,   617.185    ,mg kg-1, final grain concentration
+rec140_Cu_S_mf_season_mg_m2,   6.43425    ,season cumulative REALIZED mass-flow uptake
+rec140_Cu_S_diff_season_mg_m2,  0.528835E-02,season cumulative REALIZED diffusion-term uptake
+rec140_Cu_S_hats_season_mg_m2,   0.00000    ,season cumulative REALIZED Zn-HATS-term uptake (0 for every element but Zn)
+rec140_Cu_grain_conc_final,   4.52670    ,mg kg-1, final grain concentration
+rec140_Mg_S_mf_season_mg_m2,   1866.64    ,season cumulative REALIZED mass-flow uptake
+rec140_Mg_S_diff_season_mg_m2,   30.6565    ,season cumulative REALIZED diffusion-term uptake
+rec140_Mg_S_hats_season_mg_m2,   0.00000    ,season cumulative REALIZED Zn-HATS-term uptake (0 for every element but Zn)
+rec140_Mg_grain_conc_final,   1268.91    ,mg kg-1, final grain concentration
+rec140_Mn_S_mf_season_mg_m2,   51.3636    ,season cumulative REALIZED mass-flow uptake
+rec140_Mn_S_diff_season_mg_m2,  0.258172E-01,season cumulative REALIZED diffusion-term uptake
+rec140_Mn_S_hats_season_mg_m2,   0.00000    ,season cumulative REALIZED Zn-HATS-term uptake (0 for every element but Zn)
+rec140_Mn_grain_conc_final,   30.5467    ,mg kg-1, final grain concentration
+# --- rec 141 lamina_n_remob_pre: pre-anthesis lamina N remobilization to stem/chaff ---
+rec141_lamina_n_remob_pre,1,0 OFF / 1 ON
+rec141_rem_used_cum_gN_m2,  0.119153E-01,season cumulative lamina N remobilized to stem/chaff
+rec141_days_rem_used,11,-
+rec141_rem_used_window_gN_m2,   0.00000    ,SUM rem_used over the Fischer pre-anthesis window (gnx_win_open .AND. dvs2 < 1)
+# --- rec 130 grain_n_min_conc = 3: Martre (2003) soft structural grain-N floor ---
+rec130_mode,3,0 OFF / 1 cumulative hard / 2 guarded daily hard / 3 Martre soft structural
+rec130_c_stru_final_pct,   1.30604    ,final-day gnm_c_stru_day x 100, Option C reference %DM
+rec130_days_floor_bound,1,days the mode-3 ceiling bound room (reuses the shared gnm_days_bind counter)
+rec130_Nstru_final_gN_m2,   6.01318    ,final-day kernel_number x Nstru(Tt), Eq. 3 cumulative demand
+# --- rec 145 leaf_maintenance_basis: leaf term removed from maint_raw, Rd only ---
+rec145_leaf_maintenance_basis,1,0 OFF (Teh leaf term + Rd) / 1 ON (leaf term removed, Rd only)
+# --- rec 146 par_reflection_basis: single Teh per-waveband PAR reflection coefficient ---
+rec146_par_reflection_basis,1,0 OFF (double reflection, const_P_sr then const_P_par) / 1 ON (const_P_par only, solar.f90:88,92)
+# --- rec 179 lamina_expansion_n_limit: N limit on the lamina-area EXPANSION increment ---
+rec179_lamina_expansion_n_limit,1,0 OFF / 1 PRIMARY (Bertheloot 2008 FPB Eqn 8 minN^ph,a, a 0.46 b 1.9 c 0.24, Table 1 p.784) / 2 arm (Eqn 8 plateau 1.114) / 3 arm (Jamieson & Semenov 1.5 on total lamina N) / 4 attribution arm (Yin l_N log form, kN 0.41, nb 0.40)
+rec179_minNpha_end_gN_m2,   1.10486    ,the Eqn-8 minimum photosynthetic N per unit lamina area in force on the last evaluated day
+rec179_maxNpha_gN_m2,   1.88013    ,the running maximum photosynthetic SLN the lamina reached (Eqn 8 maxN^ph,a); modes 2-4 do not use it
+rec179_refused_area_cum_m2_m2,  0.959487E-01,season sum of the lamina area THIS record refused BEYOND what records 121/122 already refused
+rec179_days_refuse,19,days this record refused area beyond rec 121/122
+rec179_gai_max_min_m2_m2,  0.100000    ,GREEN-AREA GUARD on the running maximum maxN^ph,a: a DECLARED DOMAIN guard (SHARED.f90 [LNL-G-1]), not a literature constant; below it N^ph/cls_gai is not the SLN of any lamina (Bertheloot 2008 FPB p.784, maxN^ph,a is reached BY THE LAMINA); mode 1 only
+rec179_days_maxNpha_updated,2,days the guard admitted a new running maximum (mode 1 only; 0 at modes 2-4, which never read maxN^ph,a)
+rec179_gai_at_last_maxupd_m2_m2,  0.588446    ,cls_gai on the last day the running maximum was updated

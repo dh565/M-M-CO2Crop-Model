@@ -1,0 +1,26 @@
+input/input_daily_meteo.csv
+100                        ! NTsteps: Number of time steps
+0.01                       ! Initial root depth (m).
+.FALSE.                    ! wt_pres: Water table presence
+10                         ! Number of soil layers used in the simulation
+0.08652
+0.08803
+0.09054
+0.09407
+0.09909
+0.10614
+0.11469
+0.12374
+0.13279
+0.14185
+0.00      		   ! Soil layers depths (m) - from surface [TEMPLATE grid; thetas above = WDF23 sec.3b line through first-valid TDR SWC20/SWC55 on 2022-12-07, see README]
+-0.02
+-0.06
+-0.12
+-0.20
+-0.32
+-0.48
+-0.66
+-0.84
+-1.02
+-1.20

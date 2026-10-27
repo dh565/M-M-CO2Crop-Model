@@ -1,0 +1,37 @@
+! Maricopa FACE TRNO 912 - archive sheet Fertilizations (FEDATE, FECD, FEAMN).
+! DAS = days after sowing (PDATE 1995-12-15). Form mapping documented in gen_maricopa.py.
+34
+6,0.100,nitrate
+6,1.790,nitrate
+46,50.000,AN
+47,0.040,nitrate
+47,1.720,nitrate
+69,0.050,nitrate
+69,2.240,nitrate
+69,125.000,AN
+81,0.040,nitrate
+81,1.850,nitrate
+87,0.050,nitrate
+87,2.520,nitrate
+98,0.050,nitrate
+98,2.520,nitrate
+106,125.000,AN
+107,0.050,nitrate
+107,2.440,nitrate
+113,0.040,nitrate
+113,1.290,nitrate
+117,0.030,nitrate
+117,1.560,nitrate
+122,0.010,nitrate
+122,1.130,nitrate
+125,50.000,AN
+126,0.010,nitrate
+126,2.160,nitrate
+130,0.040,nitrate
+130,3.380,nitrate
+133,0.030,nitrate
+133,2.940,nitrate
+139,0.070,nitrate
+139,2.100,nitrate
+143,0.050,nitrate
+143,2.630,nitrate

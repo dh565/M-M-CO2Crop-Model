@@ -1,0 +1,21 @@
+axis_class,HS_emergence_measured,tau_birth_Cd,Pint_window,p_occurrence,density_born_m2,density_final_m2,Nl_axis,area_axis_pot_cm2,area_axis_real_cm2,area_axis_sterile_cm2
+MS,   0.00000    ,   0.00000    ,   0.00000    ,   1.00000    ,   200.000    ,   200.000    ,   11.0000    ,   110.972    ,   110.972    ,   0.00000    
+T1,   2.50000    ,   158.911    ,  0.347024E-01,   1.00000    ,   29.5734    ,   29.5734    ,   7.87000    ,   53.6215    ,   53.6215    ,   42.9943    
+T2,   3.20000    ,   205.721    ,  0.625449E-01,   1.00000    ,   134.863    ,   134.863    ,   7.24700    ,   41.4588    ,   41.4588    ,   33.2421    
+T3,   4.30000    ,   304.861    ,  0.735101E-01,   1.00000    ,   194.930    ,   194.930    ,   6.62400    ,   41.2052    ,   41.2052    ,   33.0387    
+T4,   5.50000    ,   428.591    ,  0.735101E-01,   1.00000    ,   110.929    ,   95.1816    ,   6.00100    ,   34.7314    ,   34.7314    ,   27.8480    
+T5,   6.90000    ,   569.241    ,  0.792959E-01,   1.00000    ,   33.8311    ,   6.25709    ,   5.37800    ,   28.6490    ,   28.6490    ,   22.9711    
+
+summary,value,units
+Namax_axes_m2,   688.379    ,axes m-2
+Namax_axes_per_plant,   3.44190    ,axes
+axes_live_end_m2,   660.805    ,axes m-2
+Ne_predicted_m2,   660.805    ,ears m-2
+ears_per_plant,   3.30403    ,ears
+tau_start_mortality_Cd,   492.204    ,degCd
+tau_end_mortality_Cd,   1039.50    ,degCd
+HS_start_mortality,   6.12500    ,leaves
+cessation_reason,0,1=Evers light law 2=axis cap 0=never
+blade_area_index_pot,   4.08887    ,m2 m-2
+blade_area_index_real,   4.08887    ,m2 m-2
+site_filling_implied,  0.648242E-01,tillers tiller-1 phyllochron-1

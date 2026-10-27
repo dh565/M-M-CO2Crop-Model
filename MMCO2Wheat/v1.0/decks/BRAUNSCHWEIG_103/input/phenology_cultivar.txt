@@ -1,0 +1,48 @@
+! D37 PHENOLOGY RE-DERIVATION (2026-10-18). Record 173 spac_sink_coupling = 1 cools the
+! canopy, so the canopy clock that drives cum_tdu moved and every threshold below was re-derived by
+! the cum_tdu bracket-midpoint rule of the calibration-variables rules (internal; not distributed) section 1 on the D37-A run
+! 20261018_1403_D37A_ON42, control deck BRAUNSCHWEIG_102.
+! Stages moved: Emergence 185.1 -> 185.1, Anthesis 1159.2 -> 1154.0, Maturity 1983.6 -> 1968.0.
+! Stages NOT moved: only Emergence, Anthesis and Maturity carry a dated obs row in this deck's observation table (internal; not distributed); season 2013/14 group.
+1       GDD_Method
+0.0     T_Base_[TO-PIN_MW1997]
+25.0    T_Opt_Lower_[TO-PIN_MW1997]
+50.0    T_Opt_Upper
+60.0    T_Max
+90.0    Photo_Sens
+30.0     Vern_Factor	! [2026-10-16: lowered to the McMaster 2008 Eq 3 / Table 3 printed maximum 30: 50 -> 30; outputs identical except the printed vf column (Sect. 6); P1D 90 kept, see Sect. 6d]
+185.1   Emergence
+219.412 3_leaves
+328.822 Tillering
+888.233 Booting
+1038.652 Heading
+1154.0  Anthesis
+1298.462 Grain_filling
+1968.0  Maturity
+2013	Sowing_Year
+10	Sowing_Month
+29	Sowing_Day
+20	Obs_Emergence_DAP
+0	Obs_2_leaves_DAP
+153	Obs_3_leaves_DAP
+0	Obs_Tillering_DAP
+0	Obs_Booting_DAP
+0	Obs_Heading_DAP
+220	Obs_Anthesis_DAP
+0	Obs_Grain_filling_DAP
+265	Obs_Maturity_DAP
+0.020   Init_Green_g_plant
+0.012   Init_Stem_g_plant
+0.015   Init_Root_g_plant
+0.000   Init_Storage_g_plant
+0.050   Init_LeafN_frac_gN_gDM
+0.020   Init_StemN_frac_gN_gDM
+0.020   Init_RootN_frac_gN_gDM
+0.015   Init_StorageN_frac_gN_gDM
+0       Use_Beta_Emerge
+85.0	Phyllochron_degCd	! literature-range + observed-timing calibration (Abichou 2016 p.29 range 87-126; flag leaf 2014-05-14), control deck 103
+18.0133	Blade_L_max_cm	! literature-range calibration on control-deck LAI (Abichou 2016 Fig. 8b five-cultivar spread), control deck 103
+1.2557	Blade_W_max_cm	! literature-range calibration on control-deck LAI (Abichou 2016 Fig. 8b five-cultivar spread), control deck 103
+17.0	Sheath_L_max_cm	! D28 staging: compiled default (identity)
+0.45	Sheath_D_cm	! D28 staging: compiled default (identity)
+1.800	Axes_max_per_plant	! axes plant-1 (0 = no cap); crop bound = value x plant density

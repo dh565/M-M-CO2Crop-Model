@@ -1,0 +1,65 @@
+axis_class,HS_emergence_measured,tau_birth_Cd,window_days,Pint_window,p_occurrence_TIMING_ONLY,sum_Csur_window_gDM,D_cohort_gDM,ranks_in_D_cohort,supply_ratio,density_born_m2,density_final_m2,Nl_axis
+MS,   0.00000    ,   0.00000    ,   0.00000    ,NA,NA,   0.00000    ,   0.00000    ,0,   1.00000    ,   200.000    ,   200.000    ,   11.0000    
+T1,   2.50000    ,   158.911    ,   4.00000    ,  0.347024E-01,   1.00000    ,  0.836412    ,   5.65652    ,2,  0.147867    ,   29.5734    ,   29.5734    ,   7.87000    
+T2,   3.20000    ,   205.721    ,   5.00000    ,  0.625449E-01,   1.00000    ,   4.04668    ,   6.00117    ,2,  0.674316    ,   134.863    ,   134.863    ,   7.24700    
+T3,   4.30000    ,   304.861    ,   6.00000    ,  0.735101E-01,   1.00000    ,   6.38803    ,   6.55417    ,2,  0.974650    ,   194.930    ,   194.930    ,   6.62400    
+T4,   5.50000    ,   428.591    ,   7.00000    ,  0.735101E-01,   1.00000    ,   4.06764    ,   7.33375    ,2,  0.554646    ,   110.929    ,   95.1816    ,   6.00100    
+T5,   6.90000    ,   569.241    ,   7.00000    ,  0.792959E-01,   1.00000    ,   2.30080    ,   13.6017    ,3,  0.169155    ,   33.8311    ,   6.25709    ,   5.37800    
+
+summary,value,units
+rec82_tiller_carbon_gate,1,-
+rec83_leaf_expansion_water,1,-
+rec84_lai_from_organs,1,-
+Namax_axes_m2,   688.379    ,axes m-2
+axes_live_end_m2,   660.805    ,axes m-2
+axes_born_m2,   704.127    ,axes m-2
+env600_days,109,days live axes > 600 (Abichou Ch.3 Fig.3 lower bound) REPORTED
+env800_days,0,days live axes > 800 (Abichou Ch.3 Fig.3 upper bound) REPORTED
+Ne_envelope_lo_m2,   361.165    ,ears m-2 IF Evers die fraction 0.67 on Namax - NOT APPLIED
+Ne_envelope_hi_m2,   410.003    ,ears m-2 IF Evers die fraction 0.57 on Namax - NOT APPLIED
+productive_fraction,NOT DETERMINED (D2-4 blocked: per-axis structural demand unmeasured)
+cessation_reason_end,0,0 open / 1 Evers light law / 2 cap (never under rec 82)
+LMA_used,   48.5000    ,g DM m-2 (Sales 2022 Table 1 anthesis mean)
+Acker_wheat_200ppm_line,LER = 1.6 + 3.4*SRWC (Fig. 4B) - bracket
+Acker_wheat_800ppm_line,LER = 0.8 + 4.7*SRWC (Fig. 4B) - bracket
+f_w_applied,mean of the two lines normalised at SRWC = 1: (1.2 + 4.05*SRWC)/5.25
+SRWC_basis,root-fraction-weighted theta/theta_33 (Acker Eq. 1: water / field capacity); Se alternative reported
+SLA_out_end_m2_kg,   20.0765    ,m2 kg-1
+leaf_death_clock,organ law (Abichou M-law) carries W_green and N_leaf out with the dead area (v14)
+sen_dm_cum_gDM,   183.719    ,g DM m-2 lamina shed by the organ clock
+sen_N_out_cum_gN,   4.77390    ,g N m-2 out of N_leaf with the dead area
+sen_N_dead_cum_gN,   1.81079    ,g N m-2 structural (SLN_min x area) to the dead leaf
+sen_N_resorb_cum_gN,   2.96312    ,g N m-2 resorbed to N_mobile_veg
+
+rec99_tiller_survival,value,units
+rec99_tiller_survival_mech,4,-
+tau_sm_Cd,   492.204    ,degCd start of mortality phase (Abichou Eqn T4.2)
+tau_em_Cd,   1039.50    ,degCd end = flag-leaf ligulation of the main stem (Eqn T4.3)
+mortality_window_days,40,days
+ears_predicted_m2,   660.805    ,ears m-2 PREDICTED, spike-mass-free (surviving axes at tau_em)
+axes_max_m2,   688.379    ,axes m-2 before mortality (Namax)
+plants_m2,   200.000    ,plants m-2 = the Ne floor, main stem never culled
+die_fraction_realised,  0.564602E-01,- (Namax - Ne)/(Namax - Np), EMERGENT not prescribed
+mode,4,- (2 = tiller carbon affordability, SHARED)
+dead_axes_m2,   43.3217    ,axes m-2 dead = SUM_c dead_c (each cohort monotone; youngest first)
+unaff_target_m2,   27.5740    ,axes m-2 monotone population target MAX_t SUM dens_pre (1 - phi)
+days_skip,0,window days skipped because L_tot = 0
+frozen,1,1 = tau_em reached and the population final
+class,0,   1.00000    ,  0.745622    ,   2.82052    ,  0.590249    ,   200.000    ,   200.000    ,   0.00000    
+class,1,   1.00000    ,  0.302150E-01,  0.911368    ,  0.274000    ,   29.5734    ,   29.5734    ,   0.00000    
+class,2,   1.00000    ,  0.944466E-01,  0.673263    ,  0.221708    ,   134.863    ,   134.863    ,   0.00000    
+class,3,   1.00000    ,  0.948908E-01,  0.447686    ,  0.230250    ,   194.930    ,   194.930    ,   0.00000    
+class,4,   1.00000    ,  0.331404E-01,  0.314779    ,  0.233850    ,   110.929    ,   95.1816    ,   15.7477    
+class,5,   1.00000    ,  0.168520E-02,  0.212945    ,  0.203281    ,   33.8311    ,   6.25709    ,   27.5740    
+class_columns,axis_class,affordability_phi,light_share_last_day,cum_supply_gCH2O_per_axis,cum_lamina_demand_gCH2O_per_axis,dens_entering_m2,dens_final_m2,dead_m2
+mode4_label,survival timed by T4.4 cap on the matured ledger (SHARED); the mode line above carries the mode-2 label text
+U_endpoint_m2,   0.00000    ,axes m-2 U = SUM dens_pre (1 - phi) on the last stepped window day
+dead_target_m2,   27.5740    ,axes m-2 MAX_t F(tau_n) U(t) incl. the endpoint (F = 1)
+premature_m2,   43.3217    ,axes m-2 dead - U_endpoint (deaths taken on an immature U; PK gate)
+F_endpoint,   1.00000    ,- F on the endpoint day (:= 1 by Eqn T4.3 / Fig. 2 phi4 plateau)
+Ne_source_mode4,Eqn T4.4 used as TIMING SHAPE only (theta 3.32, delta 1.77, doc p.36); N_e EMERGENT; the Ne_source line below is the mode-2 wording
+Ne_source,PREDICTED by rec 99; Abichou 2016 doc p.45 lists Ne as an INPUT VARIABLE of his tillering model, so Eqn T4.4 is NOT used and no observed ear count enters
+cullgreen_seen_m2_m2,  0.588228E-02,m2 m-2 green blade area the rec-99 cull removed
+cullgreen_charged_m2_m2,  0.588228E-02,m2 m-2 the same area charged to the leaf-death coupling
+cullgreen_closure_resid_m2_m2,   0.00000    ,m2 m-2 |seen - charged|; GATE D closure for the rec-99 path
+new_constants_introduced,0,count

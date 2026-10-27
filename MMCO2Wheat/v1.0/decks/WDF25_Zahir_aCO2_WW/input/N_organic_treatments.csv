@@ -1,0 +1,20 @@
+! Organic-N / residue treatment schedule for M&M-CO2Crop (general; not case-specific).
+! First non-comment line = number of ACTIVE treatments (0 => no treatment, reproduces the no-residue baseline).
+! Then one row per treatment:
+!   treatment_type, das, dry_mass_kg_ha, N_percent, C_percent, fast_fraction, age_days_before_sowing, notes
+! Units / precedence:
+!   - dry_mass_kg_ha * 0.1 = g DM m-2 ; C_percent, N_percent are PERCENT (divided by 100 internally).
+!   - N_percent >= 0  -> use it ; N_percent = -1 -> derive N from C_in / (treatment_type default C:N).
+!   - C_percent = -1  -> use residue_C_frac default (driver_N.csv).
+!   - fast_fraction = -1 -> use treatment_type default.
+!   - das = application day-after-sowing for IN-SEASON events (use 0 with age_days_before_sowing>0 for pre-sowing).
+!   - age_days_before_sowing > 0 -> event is PRE-SOWING: pre-decomposed at init using presow_Tsoil/presow_fwater
+!     (decomposition + mineralization + immobilization + hydrolysis + nitrification; NO uptake, NO leaching).
+! treatment_type in: cereal_residue, immature_cereal, green_manure, legume_residue, manure, compost, custom
+! Default C:N by type: cereal_residue 80, immature_cereal 40, green_manure 20, legume_residue 20, manure 12, compost 18.
+! Default fast_fraction by type: cereal_residue 0.20, immature_cereal 0.35, green_manure 0.55,
+!   legume_residue 0.55, manure 0.40, compost 0.10 (slow_fraction = 1 - fast_fraction).
+!
+! EXAMPLE (commented = INACTIVE). WheatDryFACE: previous immature wheat smashed/incorporated ~3 months pre-sow:
+! immature_cereal, 0, 4000, 1.0, 42, 0.35, 90, last season wheat that did not reach grain harvest
+0

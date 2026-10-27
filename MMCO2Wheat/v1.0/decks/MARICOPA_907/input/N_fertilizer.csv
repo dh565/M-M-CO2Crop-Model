@@ -1,0 +1,10 @@
+! Maricopa FACE TRNO 907 - archive sheet Fertilizations (FEDATE, FECD, FEAMN).
+! DAS = days after sowing (PDATE 1993-12-07). Form mapping documented in gen_maricopa.py.
+7
+-5,54.000,AS
+58,46.000,AN
+58,46.000,urea
+99,34.500,AN
+99,34.500,urea
+122,23.000,AN
+122,23.000,urea

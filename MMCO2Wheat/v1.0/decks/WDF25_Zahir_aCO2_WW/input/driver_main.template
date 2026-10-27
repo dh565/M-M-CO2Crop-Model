@@ -1,0 +1,36 @@
+input/input_daily_meteo.csv
+2                          ! Number of developmental stages
+31.8953                    ! Latitude {0.55689}
+34.8106                    ! Longitude {0.60738}
+0.000                      ! initial LAI (m2 m-2)
+20.00                      ! maximum LAI (m2 m-2)
+0.020                      ! specific leaf area SLA (m2 g-1) [HACK; canopy-average placeholder]
+200.0                      ! plant density (plants m-2)
+0.040                      ! leaf N fraction (g N g-1 DM) [Teh 2006 Ch7 p.145-146: leaves ~25% protein; N=0.16*protein -> ~0.04]
+0.0                        ! initial plant height (meters)
+2.0                        ! Reference height (meters)
+2.5                        ! alpha (wind attenuation coefficient - change to 2.5 for wheat)
+2.5                        ! n     (eddy attenuation coefficient - between 2-3 for crops pp. 94).
+2.8927                     ! Jarvis (1976) empirical coefficient a1 (for sunflower) Eq. 4.79
+0.0040                     ! Jarvis (1976) empirical coefficient a2 (for sunflower) Eq. 4.79
+0.027                      ! typical mean leaf width (m). {2.7 cm - based on eCO2 Exp#1)
+0.02                       ! dry layer thickness (upper soil layer - should be read from wtbal.f90)
+0.42                       ! Porosity
+0.18                       ! Pore size distance
+0.39                       ! Saturation point (theta_s - hack for now).
+0.20                       ! initial water content at w10 (upper layer) - hack for now.
+420.0                      ! atmospheric CO2 (umol mol-1)
+1                          ! water stress mode (1=gsw, 2=An)
+1                          ! soil water stress (1=on, 0=off)
+0                          ! allow drainage beyond last layer (1=on, 0=off)
+0                          ! explicit infiltration (1=on, 0=off)
+2                          ! integration mode (1=Gauss-daylight, 2=full 24-hr)
+0.001                      ! root growth rate (m day-1)
+1.21                       ! N_max (umol m-2 s-1)
+1                          ! dynamic n_eddy (0=off, 1=on)
+0                          ! meteo debug prints (0=off, 1=on)
+2                          ! irrig mode (1=above canopy, 2=below canopy)
+0.0                        ! prestart precipitation (mm)
+1.65                       ! bulk density (g/cm3)
+0                          ! K averaging mode (0=arith,1=geom,2=upstream)
+0                          ! Hydraulic model (0=VGM,1=Brooks-Corey,2=Campbell)

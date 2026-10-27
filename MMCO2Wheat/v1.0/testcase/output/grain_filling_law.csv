@@ -1,0 +1,41 @@
+quantity,value,units_or_source
+rec91_grain_fill_mech,1,0 OFF / 1 rate x duration / 2 shape-off arm / 3 cap-kept arm
+# --- the constants, all from ONE table (SHARED.f90) ---
+c_m_at_T_ref,   1.92833    ,mg kernel-1 d-1; mean c_m of Yin et al. 2003 Ann Bot 91:361 Table 2 regime T1 (20/15 C), six CIMMYT genotypes; DOI 10.1093/aob/mcg029, PMC4244967
+c_m_slope,  0.110667    ,mg kernel-1 d-1 K-1 = (2.481667 - 1.928333)/5 from the same table
+T_ref,   17.5000    ,degC; daily mean of Yin's 20/15 regime at a 12 h photoperiod. DECLARED ASSUMPTION: the paper states no photoperiod. D_fill is INVARIANT to it (405.581 for 12/14/16 h); only T_base moves, 6.6187 -> 7.4521
+T_base,   6.61873    ,degC; DERIVED, not asserted: reciprocal-of-duration method of Fischer 1985 Table 6 footnote p.455 (printed; pdf p.9) applied to Yin's two mean t_e (37.2733 / 25.5383 d)
+D_fill,   405.581    ,degCd above T_base; same derivation; identical from BOTH Yin regimes
+t_m_over_t_e,  0.433143    ,beta shape; mean of ALL TWELVE rows of Yin Table 2
+beta_shape_integral,  0.685644    ,mean rate / c_m at that shape (analytic 0.685711)
+# --- what this deck actually did ---
+filling_start_model_day,116,day the grain number was set (= anthesis)
+filling_end_model_day,138,0 = still filling at the last simulated day
+filling_days_realised,22,d; THE DURATION -- an OUTCOME, not an input
+filling_degCd_realised,   282.722    ,degCd above T_base accumulated
+rec118_kernel_mass_ceiling,1,ON: per-kernel mass bounded by TKW_potential =    31.0000     g per 1000 kernels (SHARED.f90); a third stop KERNEL_MASS_CAP can fire
+rec125_grainN_ceiling_gN_m2,   20.4958    ,kernel_number x 1.3800 mg N kernel-1 IN FORCE (rec 177 = 1: the cultivar_yield.csv grainN_pot_mgN_kernel row if present, else the Martre et al. 2003 Plant Physiol 133:1959 Table I p.1961 control maximum 1.11; rec 177 = 0: the compiled gnf_mgN_kernel_hi = 1.38 from the ABLATED-ear treatment of the same table); cut cumulative    0.00000     g N m-2 on 0 days (SHARED.f90)
+filling_end_bound,KERNEL_MASS_CAP  ,which of the three stops fired -- REPORTED, never assumed
+T_mean_filling_C,   18.9967    ,degC, screen air, mean over the filling days. Yin's measured bracket is 17.5-22.5: values inside it are INTERPOLATION
+c_m_min_over_window,   1.36338    ,mg kernel-1 d-1
+c_m_max_over_window,   2.92876    ,mg kernel-1 d-1
+c_m_zero_clamped,NO ,TRUE would mean a filling day below 0.08 degC
+realised_rate_max,   2.90894    ,mg kernel-1 d-1, largest POTENTIAL daily rate reached
+realised_rate_mean,   1.40909    ,mg kernel-1 d-1, carbon ACTUALLY delivered / kernels / days. FALSIFIER vs Yang & Zhang 2006 New Phytol 169:223 Table 3 p.228 wheat MEASURED 0.95-1.94
+sink_demand_total_g_m2,   549.095    ,g m-2, integral of the potential demand
+unmet_demand_total_g_m2,   77.3977    ,g m-2 CUMULATIVE. This REPLACES the OFF path's stock 'sink room left': under a flux law that stock has no meaning. > 0 = SOURCE-limited
+supplied_to_grain_g_m2,   460.412    ,g m-2, assimilate + reserve actually delivered
+reserve_C_pool_end_g_m2,   76.8770    ,g m-2 W_reserve after supply on the LAST day the law was live (report fix 2026-10-15: the harvest-day value printed before this was zeroed by the rec 105 release). FALSIFIER: it was 58.5-451.8 across the 20 ceiling-pinned decks under the capacity cap, and must FALL where the real sink is larger
+N_floor_refused_dm_total_g_m2,   11.2853    ,g m-2 CUMULATIVE grain DM refused by the rec 130 structural-N floor AFTER supply (same quantity as run.log refused grain DM)
+demand_cut_before_supply_g_m2,   11.2853    ,g m-2 = sink_demand_total - supplied_to_grain - unmet_demand_total: the part of the potential demand removed by the N floor and the other caps BEFORE the carbon supply saw it (report fix 2026-10-15; 0 where no cap bound)
+grain_number_m2,   14852.0    ,from the grain-number chain (rec 89/90); the grain-filling law does not touch it
+TKW_g_realised,   31.0000    ,g per 1000 kernels; THE OUTCOME = integral of the realised rate / kernel number. NOT bounded by any deck constant
+TKW_potential_input_g,   31.0000    ,the deck constant. NOT READ under rec 91 = 1 or 2; still read under rec 91 = 3 (the attribution arm that keeps the cap)
+# --- measured envelopes: falsification targets, never tuning targets ---
+env_filling_days,21.60 - 42.95 d (t_e, Yin 2003 Table 2, twelve rows); 19 - 34 d (active grain-filling period, Yang & Zhang 2006 Table 3 p.228, wheat cv. Yangmai 158)
+env_mean_rate,0.95 - 1.94 mg kernel-1 d-1 (Yang & Zhang 2006 Table 3 p.228, wheat, four N x soil-moisture treatments); the law gives 1.32 at 17.5 C and 1.70 at 22.5 C
+env_kernel_weight,36 - 45 mg (Yang & Zhang 2006 Table 3 p.228, wheat); 39.73 - 52.20 mg (w_max, Yin 2003 Table 2)
+env_duration_base0_degCd,652.3 / 574.6 (Yin Table 2 means on a base-0 basis); 498 (Apache) and 567 (Renan), Baillot et al. 2018 PLoS ONE 13:e0209597 Results, base 0; 614 - 711, Girousse et al. 2023 PLoS ONE 18:e0285218 (RANGE ONLY, transcription discrepancy flagged)
+env_duration_response_bracket,THE OPEN TENSION. Shortening factor per +5 degC: 1.24 Wardlaw 2002 Ann Bot 90:469 (18/13 -> 27/22 C, -32% over 9 C); 1.46 CODED (Yin 2003 Table 2); 1.73 Wang et al. 2017 Nature Plants 3:17102 Fig. 4b post-anthesis cardinals (0, 33, 44 C), derived from Hot Serial Cereal at MARICOPA cv. Yecora Rojo + INRA over 12.6-24.7 C. Three MEASURED estimates that DISAGREE; the coded value sits between the brackets, not at an extreme.
+NOT_MODELLED,a cultivar kernel-size trait (so a small-grained cultivar such as WDF25 cv. Ruta, measured TKW 30.0 g, is OVER-PREDICTED -- the fix by scaling on TKW_potential is REFUSED because at AR and AU that constant IS the observation and elsewhere it is a 38.0 placeholder); any direct water- or N-stress term on the rate (Fang et al. 2024 JXB doi 10.1093/jxb/erae310 measured that both suppress it -- here stress reaches the grain ONLY through the source); any decline of c_m above the optimum (c_m is LINEAR in T and only interpolated inside Yin's 17.5-22.5 C bracket).
+NOT_VERIFIED,Sofield et al. 1977 (10.1071/PP9770785), Wardlaw & Moncur 1995 (10.1071/PP9950391), Chowdhury & Wardlaw 1978 (Aust J Agric Res 29:205, 10.1071/AR9780205 -- the "Aust J Plant Physiol 5:195" form does not exist), Panozzo & Eagles 1999 (10.1071/AR98146) and Pararajasingham & Hunt 1991 (10.4141/cjps91-007, the one paper that DERIVES a grain-filling base temperature) are all CLOSED ACCESS with no route from this machine. No number from any of them is used.

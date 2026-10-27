@@ -1,0 +1,191 @@
+! N model parameter file for M&M-CO2Crop
+! Format: value,parameter_name,unit,source
+! Lines starting with ! are comments and are skipped.
+! Values are read positionally (first column); the rest is documentation.
+!
+! --- Soil mineral N pool (Module N-1) ---
+1.514,N_soil_init,g_N_m-2,MEASURED: archive Init_conditions_Soil_layers icno3 summed over 0-210 cm (15.1 kg N/ha)
+!
+! --- Plant N uptake kinetics (Module N-2) ---
+! CITATION CORRECTED 2026-09-07: the former "Barraclough 1989 Plant Soil 116:175-188 Table 2" does NOT exist (Crossref-checked). Value descends from Barraclough (1986, J Agric Sci 106:45-52, DOI 10.1017/S0021859600061712, abstract): max wheat crop N uptake 2.75 kg N ha-1 d-1 = 0.275 g N m-2 d-1, WHOLE-CROP REALIZED uptake per ground area at peak growth - NOT a root kinetic Vmax. Kept provisionally until the root-scaled uptake redesign (an internal design note, not distributed).
+! Lemaire & Gastal (2009, Ann Bot 106:35-49, p. 38, Eq. 2): transpiration scaling.
+0.30,V_Nmax,g_N_m-2_d-1,RETIRED (2026-09-07; internal design note): replaced by the root-scaled active-uptake law (rows 47-53 below); value read but UNUSED - row kept only for positional stability
+0.10,Km_N,g_N_m-2,RETIRED (2026-09-07): pool-basis Km replaced by concentration-basis Km_c_no3 (row below); value read but UNUSED - row kept only for positional stability
+1.0,trans_ref_N,mm_d-1,reference transpiration for N uptake scaling (Lemaire 2009)
+!
+! --- Plant N parameters (Modules N-3 to N-5) ---
+! Lemaire et al. (2008, Field Crops Res 105:35-44, Table 1): SLN_min for wheat.
+! Bertheloot et al. (2008, J Exp Bot 59:1947-1963, Fig. 3): k_remob_leaf.
+! Triboï & Triboi-Blondel (2002, Eur J Agron 16:229-239, Fig. 4): k_remob_stem.
+! Yin et al. (2001, Plant Res Int Note 129, App. 2): n_struct_stem.
+! Yin et al. (2004, NJAS 51:407-427, App. 2): k_N_canopy and n_b_canopy.
+0.50,SLN_min,g_N_m-2_leaf,structural minimum SLN (Lemaire 2008)
+0.04,k_remob_leaf,d-1,leaf N remobilization rate constant (Bertheloot 2008)
+0.025,k_remob_stem,d-1,stem N remobilization rate constant (Triboï 2002)
+0.005,n_struct_stem,g_N_g-1_DM,structural stem N fraction (Yin 2001)
+0.35,k_N_canopy,m2_m-2,leaf N extinction in canopy (Yin 2004 App.2)
+0.30,n_b_canopy,g_N_m-2_leaf,minimum leaf N for N-driven LAI (Yin 2004 App.2)
+!
+! --- Busch (2017) de-novo N: dynamic N_max coupling to soil N (Module N-6/Busch) ---
+! Busch et al. (2017, Nature Plants 4:46-54, p. 48-49):
+!   "N_max can be limited by the nitrogen availability, the demand for nitrogen
+!    in the form of glycine and serine, or by the activities of the enzymes
+!    involved in the reduction of NO3- to NH4+."
+! The fitted value 1.21 umol m-2 s-1 was for well-fertilized plants with
+! non-limiting NO3- (Fig. 3 caption). Under N supply limitation N_max scales with
+! soil N availability. N_max_param = N_max_ref * N_soil_min / (Km_N_busch + N_soil_min).
+1.21,N_max_ref,umol_m-2_s-1,reference N_max for non-limiting NO3- supply (Busch 2017 Fig. 3)
+0.10,Km_N_busch,g_N_m-2,CALIBRATION PARAMETER - no empirical literature value; represents soil NO3 level at which N_max halves; site-specific
+0.030,N_mineral_rate,g_N_m-2_d-1,[RC2CAL_MARICOPA 2026-10-11: moved from the DECLARED default 0.015 to the HIGH BOUND 0.030 of the Stanford & Smith 1972 SSSAJ 36:465-472 cited range (site calibratable, the calibration control table (internal; not distributed) Stage 4 row); lever-tested on the Wet-aCO2 control deck 906 and the Low-N control deck 913 (an internal design note (not distributed)): INERT-to-small at every High-N deck tested (906 +0.08% AGB, 914 -1.4% AGB, both still within target), substantially REDUCES the pre-existing severe Low-N AGB under-prediction at 913 (-37.9% -> -19.1% bias) and by extension 915; applied UNIFORMLY to all 10 decks per the one-value-per-site rule (no sourced per-season difference exists at Maricopa)]
+300.0,Ci_ref_N,umol_mol-1,DEPRECATED (Process 4): no longer used. Was the reference Ci for the empirical f_CO2_N=Ci_ref_N/Ci_day uptake multiplier (Gojon 2022 hypothesis D, root NRT downregulation); removed from core because its molecular mechanism is unknown (Gojon Fig.1D) and it is a direct CO2 multiplier. CO2 now affects uptake only via transpiration mass-flow (Gojon B). Kept here only to preserve positional driver_N.csv indices.
+!
+! --- Post-anthesis N allocation fractions (Module N-6) ---
+! Triboï & Triboi-Blondel (2002, Eur J Agron 16:229-239, Fig. 2 and 4):
+! well-fertilized winter wheat: 60-70% of grain N from post-anthesis uptake.
+0.70,f_postanth_storage,fraction,DEPRECATED (Process 5): unused. Was post-anthesis soil N to grain (Triboï 2002); replaced by Martre 2003 grain N source-sink. Kept to preserve positional driver_N.csv indices.
+0.20,f_postanth_leaf,fraction,DEPRECATED (Process 5): unused. Was post-anthesis soil N to leaf maintenance; replaced by Martre source-sink surplus-to-veg. Kept for positional indices.
+0.10,f_postanth_stem,fraction,DEPRECATED (Process 5): unused. Was post-anthesis soil N to stem maintenance; replaced by Martre source-sink. Kept for positional indices.
+!
+! --- Root/shoot nitrate partition (Module N-6 / Andrews; Gojon 2022 routing) ---
+! Andrews (1986, Plant Cell Environ 9:511-519): root/shoot partition of nitrate
+!   assimilation. Abstract p.511 + p.515: "A constant partitioning ... is achieved
+!   by balancing NR levels in the root with rates of nitrate uptake"; a greater
+!   share is assimilated in the shoot when uptake rises faster than root NR, so the
+!   unassimilated overflow passes into the xylem -> shoot. Table 1b, T. aestivum:
+!   shoot share ~50% (in-vivo NRA) rising to 65-83% (xylem sap) with external [NO3-].
+! Andrews et al. (1992, Ann Bot 70:271-282): cereal transition 1-5 mol m-3
+!   (root major 0.1-1.0; shoot major 5-20 mol m-3) -> K_partition_NO3 ~ 3.
+! r_root_NR derivation (observation-free): root Andrews share at field NO3
+!   (NO3_rz~K=3 -> f_shoot=0.50) of the max uptake V_Nmax=0.30 g N m-2 d-1
+!   (whole-crop figure, Barraclough 1986 abstract; phantom-1989 citation corrected 2026-09-07) = 0.15 g N m-2 d-1, divided by the model structural root
+!   biomass scale ~25 g m-2 = 0.006 g N g-1DM d-1. Cross-check: ~2 umol NO3 g-1FW h-1
+!   root NRA x ~10% DM:FW x 24 h ~ 0.0067 g N g-1DM d-1 (same order).
+0.20,f_shoot_min,fraction,min shoot nitrate-assim share at low NO3 (Andrews 1986 p.511; 1992 root major 0.1-1.0 mol m-3)
+0.80,f_shoot_max,fraction,max shoot nitrate-assim share at high NO3 (Andrews 1986 Table 1b T. aestivum xylem sap 65-83%; 1992)
+3.0,K_partition_NO3,mol_m-3,root-zone NO3 at half-max shoot share (Andrews 1992 transition 1-5 mol m-3)
+0.006,r_root_NR,g_N_g-1DM_d-1,root nitrate-reductase capacity per unit root DM (derived: Andrews 1986 p.511/515 root NR balances uptake reproducing Table 1b shoot~50% at field NO3; anchored to V_Nmax (Barraclough 1986 whole-crop figure; corrected citation) and model root biomass ~25 g m-2)
+!
+! --- Grain N source-sink (Module N-5/N-6; Martre 2003) --- Process 5 ---
+! Martre et al. (2003, Plant Physiol 133:1959-1967): grain N is source-limited
+! (storage protein; Fig.5 supply 2-3x demand after ~15 d; p.1963) except early
+! cell division when structural N is sink-limited (first ~10-15 d). Structural
+! grain N per grain DM from Fig.3 (N_stru ~110 ug N/grain) over grain DM ~35 mg
+! (Table I, 1.26 g/ear / 36 grains); structural protein fraction Shewry & Halford
+! (2002, J Cereal Sci 36:239). Cell-division end ~15 d post-anthesis -> dvs2~1.4
+! (Martre p.1963; Stone & Nicolas 1996, Aust J Plant Physiol 23:739).
+0.004,n_stru_grain,g_N_g-1DM,structural/metabolic grain N per grain DM (Martre 2003 Fig.3/Table I; Shewry & Halford 2002)
+1.40,dvs_grain_stru_end,dvs2,end of endosperm cell division / start of source-limited storage phase (~15 d post-anthesis; Martre 2003 p.1963; Stone & Nicolas 1996)
+!
+! --- Fertilizer availability: 3-pool urea -> NH4 -> NO3 model (Module N-1) ---
+! Fertilizer enters urea/NH4/NO3 pools by form fractions (see input/N_fertilizer.csv).
+! Urea hydrolyzes to NH4; NH4 nitrifies to NO3; only NO3 (=N_soil_min) is leachable (Burns 1975)
+! and taken up. First-order, temperature-dependent rates: k(T) = k_ref * Q10^((T_soil - T_ref)/10), d-1.
+! k_hyd CITATION CORRECTED 2026-09-07: the paper at DOI 10.1139/cjss-2020-0044 is Lasisi & Akinremi
+!   (2020, Can J Soil Sci), NOT "Cui (2020)". Values UNCHANGED: urea hydrolysis k 0.07/0.12/0.20
+!   d-1 at 5/15/25 C (their Table 3; t1/2 10.0/5.7/3.5 d), Q10~2 (Ea 20.6-48.9 kJ/mol, Table 4);
+!   sandy loams 0.175-0.20/d (their Fig 2). Fisher & Parks (1958, SSSAJ 22:247).
+! k_nit: nitrification first-order k1 ~0.186 d-1, optimum 25-30 C, Ea 61-202 kJ/mol (Taylor et al.
+!   2017 PMC5364361); Stanford & Smith (1972, SSSAJ 36:465) temperature dependence.
+0.12,k_hyd_ref,d-1,urea hydrolysis rate at T_ref_hyd=15 C (Lasisi & Akinremi 2020 CJSS DOI 10.1139/cjss-2020-0044 Table 3; range 0.05-0.25)
+1.7,Q10_hyd,-,urea hydrolysis Q10 (Lasisi & Akinremi 2020 Table 3: 0.07/0.12/0.20 at 5/15/25 C -> Q10~2; range 1.5-2.0)
+0.15,k_nit_ref,d-1,nitrification rate at T_ref_nit=25 C (Taylor 2017 k1~0.186; range 0.05-0.30)
+2.5,Q10_nit,-,nitrification Q10 (Ea 61-202 kJ/mol; range 2.0-3.0)
+15.0,T_ref_hyd,C,reference soil temperature for k_hyd (Cui 2020)
+25.0,T_ref_nit,C,reference soil temperature for k_nit (Taylor 2017)
+!
+! --- Initial soil N + organic residue/amendment decomposition (Module N-1; general) ---
+! Initial mineral N split: N_soil_init (above, pos 1) = initial NO3; N_soil_init_NH4 = initial NH4.
+! Residue/organic treatments are defined in input/N_organic_treatments.csv (absent/count=0 => none).
+! CENTURY-style (Parton et al. 1988) first-order fast(metabolic)/slow(structural) pools; decomposition
+! k(T,water)=k_ref*Q10_dec^((Tsoil-T_ref_dec)/10)*f_water, f_water=min(1, vwc_root/theta_ref_dec).
+! C:N-controlled mineralization/immobilization via microbial CUE (e_mic) and microbial C:N (CN_mic);
+! microbial turnover (k_mic) re-mineralizes N to NH4. Sources: Parton 1988 CENTURY; GMD CENTURY-CUE
+! (gmd-11-4779-2018); microbial CUE review (PMC12024887); residue C~40%, C:N tables (NRCS Tech Note 23A).
+0.127,N_soil_init_NH4,g_N_m-2,MEASURED: archive Init_conditions_Soil_layers icnh4 summed over 0-210 cm (1.3 kg N/ha)
+0.42,residue_C_frac,fraction,carbon fraction of residue dry mass (NRCS ~0.40-0.45)
+0.02,k_fast_ref,d-1,metabolic residue decomposition rate at T_ref_dec (Parton 1988; range 0.02-0.08)
+0.005,k_slow_ref,d-1,structural residue decomposition rate at T_ref_dec (Parton 1988; range 0.005-0.02)
+2.0,Q10_dec,-,decomposition Q10 (CENTURY/DayCent; range 1.8-2.5)
+20.0,T_ref_dec,C,reference soil temperature for decomposition
+0.30,theta_ref_dec,m3_m-3,soil moisture at which decomposition f_water=1 (~field capacity)
+0.25,e_mic,fraction,microbial carbon use efficiency (stoich ~0.34; range 0.25-0.55)
+12.0,CN_mic,-,microbial biomass C:N (CENTURY ~9; bacteria 7.4 - fungi 13.4; range 6-12)
+0.011,k_mic,d-1,microbial turnover rate at T_ref_dec (~95 d biomass turnover; range 0.005-0.02)
+15.0,presow_Tsoil,C,configurable pre-season mean soil temperature for pre-sowing decomposition
+0.7,presow_fwater,-,configurable pre-season moisture response for pre-sowing decomposition
+!
+! --- FIX V-1 / D-1: mechanistic NH3 volatilization + denitrification ---
+! WDF site values 2026-09-06: BD_surf MEASURED 1.63 (student, 10 cm topsoil);
+! pH_surf = 7.9 midpoint of the field-type range 7.5-8.3 (student) - range, not yet a plot measurement.
+7.9,pH_surf,-,NOT PUBLISHED in the Maricopa archive - DERIVED: soil is classified CALCAREOUS (Soils_meta CLASSIFICATION), so pH >= 7; 7.9 is the field-type 7.5-8.3 midpoint already used for 2_IN and the WDF25 template. DECLARED, NOT MEASURED
+3.0,Kd_NH4,L_kg-1,NH4+ solid/solution partition (measured 1-4 for loams; Venterea 2015)
+1.31,BD_surf,Mg_m-3,MEASURED: archive Soil_layers slbdm 0-5 cm
+0.05,z_surf_N,m,NH3 emission-layer thickness (Sommer 2004 sec III.B)
+0.035,Km_den,gN_L-1,Michaelis constant for denitrification (Murray et al. 1989)
+!
+! --- root-scaled active NO3 uptake (Module N-2 redesign; design + reviewer rulings:
+!     an internal design note (not distributed); APPENDED after all prior rows
+!     so existing positional indices keep their meaning) ---
+! Law: S_active = (u_max_fw*FW:DW*14e-6*24) * f_Nstatus * a_root(DAA) * W_root * NO3_rz/(Km_c+NO3_rz)  [g N m-2 d-1]
+! Units chain: 2.6 umol gFW-1 h-1 x 18.6 gFW/gDW = 48.36 umol gDW-1 h-1 x 14e-6 x 24 = 1.625e-2 g N gDW-1 d-1.
+! No temperature term (DECLARED GAP: Bloom & Chapin 1981 barley response is cultivar-sign-dependent - not adopted);
+! no CO2 term anywhere (CO2 reaches uptake only through transpiration mass-flow, Gojon B).
+2.6,u_max_fw,umol_NO3_gFW-1_h-1,wheat root HATS influx Vmax (Goyal & Huffaker 1986 Plant Physiol 82:1051 p.1055 from Fig.1c/d; DOI 10.1104/pp.82.4.1051; 25 C basis declared not adjusted)
+18.6,fw_dw_root,gFW_gDW-1,root fresh:dry mass ratio = 1/0.054 (Khan et al. 2024 Heliyon 10:e29042 Table 3 control: RFW 0.80 g / RDW 43 mg; DOI 10.1016/j.heliyon.2024.e29042; 35-d hydroponic - closest readable same-species basis FLAGGED)
+0.027,Km_c_no3,mol_m-3,HATS half-saturation on solution-concentration basis (Goyal & Huffaker 1986 p.1055 WHEAT); replaces pool-basis Km_N; field NO3_rz >> Km_c so the MM term ~1 except in the depleted tail (stated consequence)
+0.28,aroot_floor,-,living-root capacity floor held beyond 20 DAA (Zheng et al. 2022 Front Plant Sci 12:814658 Tables 2-3: lower bound of RLD_frac x TTC-activity_frac at 20 DAA; DOI 10.3389/fpls.2021.814658; conservative extrapolation declared)
+0.031,aroot_decline_d,d-1,post-anthesis a_root decline per DAY = (1-0.38)/20 (Zheng 2022 Tables 2-3 composite midpoint 0.38 at 20 DAA); DAA basis per ruling - Zheng reports NO site temperatures/GDD (M&M checked 2026-09-07: location + sowing/harvest dates only) so the thermal-time form is a DECLARED GAP
+!
+! --- f_Nstatus(NNI) nodes (REVISION 2026-09-07, an internal design note (not distributed)):
+!     the earlier root-N-status basis s=rootN_conc/init_rootN_frac (Siddiqi two-point) was FALSIFIED by the model's
+!     own numbers (root pins at the structural cap while the shoot is NNI-deficient - allocation artifact). Replaced
+!     by piecewise-linear f_Nstatus(NNI) through the four MEASURED Taulemesse wheat points, clamped outside. ---
+! Locus: Taulemesse et al. 2015 PLoS ONE 10(3):e0120291 DOI 10.1371/journal.pone.0120291 (textbook/Taulemesse2015_pone0120291.pdf):
+!   x = Table 1 (p.7) NNI at flowering for treatments N1/N4/N7/N10 (0.50/1.12/1.53/1.95 +-SE);
+!   y = printed sentence p.8 "Relative to N10 daily fluxes of NO3- uptake were 5.7- 5- and 2.4-times higher for N1 N4 and N7" normalized to N1: 5.7/5.7 5.0/5.7 2.4/5.7 1/5.7.
+! NNI computed daily as shoot[N]%/Nc% with the CRITICAL curve Nc% = 5.35 W^-0.442 (shoot DM W in 1.55-12 t/ha; plateau 4.4% below 1.55)
+!   [Justes et al. 1994 Ann Bot 74:397 DOI 10.1006/anbo.1994.1133 abstract-verified] - the CRITICAL curve (defines NNI); distinct from
+!   the Nmax cap curve (8.3 W^-0.44 / 6.6) the demand block keeps using unchanged.
+! DECLARED ASSUMPTIONS: (a) at-flowering measurements applied over the whole season; (b) Taulemesse's own caveat verbatim:
+!   "This index was developed for field crops, so it should be used carefully under our conditions" (semi-hydroponic system);
+!   (c) Justes 1996 erratum (Ann Bot 78:267) not retrievable/unverified.
+0.50,fNstat_nni1,-,NNI node 1 (Taulemesse 2015 Table 1 p.7 treatment N1 NNI at flowering)
+1.000,fNstat_f1,-,f_Nstatus at node 1 = 5.7/5.7 (Taulemesse 2015 p.8 flux sentence normalized to N1); f=1.000 clamped for NNI<=0.50
+1.12,fNstat_nni2,-,NNI node 2 (Taulemesse 2015 Table 1 p.7 treatment N4)
+0.877,fNstat_f2,-,f_Nstatus at node 2 = 5.0/5.7
+1.53,fNstat_nni3,-,NNI node 3 (Taulemesse 2015 Table 1 p.7 treatment N7)
+0.421,fNstat_f3,-,f_Nstatus at node 3 = 2.4/5.7
+1.95,fNstat_nni4,-,NNI node 4 (Taulemesse 2015 Table 1 p.7 treatment N10)
+0.175,fNstat_f4,-,f_Nstatus at node 4 = 1/5.7; f=0.175 clamped for NNI>=1.95
+!
+! --- LAYERED soil mineral N + NH4+ uptake (2026-09-07; design an internal design note (not distributed)
+!     + rider 20260907_1959; APPENDED after all prior rows so existing positional indices keep their meaning) ---
+! NH4+ uptake law: C_NH4 = (u_max_nh4_fw*FW:DW*14e-6*24) * f_Nstatus(NNI) * a_root(DAA) * W_root, per-layer via the
+!   EXISTING Jackson root-mass share and MM term [NH4]_l/(Km_nh4+[NH4]_l).
+! Units chain: 3.5 umol gFW-1 h-1 x 18.6 gFW/gDW (same Khan 2024 FW:DW as the NO3 row above) x 14e-6 x 24
+!   = 2.188e-2 g N gDW-1 d-1.
+! DECLARED (reviewer ruling): f_Nstatus and a_root (NO3-derived: Taulemesse; Zheng) applied to the NH4 system
+!   unchanged; Goyal & Huffaker report NH4 induction/kinetics distinct from NO3 but give no NNI/age modulation to source.
+! NH4 is NOT advected (cation-exchange immobility, sandy-soil archetype - DECLARED); NO3 advection is explicit upwind
+!   on the Richards inter-layer fluxes with NO dispersion term (DECLARED GAP, reviewer pre-approved); a single
+!   T_soil_day drives the k(T) laws in all layers (no soil-T profile state - DECLARED GAP).
+3.5,u_max_nh4_fw,umol_NH4_gFW-1_h-1,wheat root NH4+ transporter Vmax (Goyal & Huffaker 1986 Plant Physiol 82:1051-1056 p.1053 printed sentence "A Km value of 0.05 mM and a Vmax of 3.5 umol (g fresh weight h)-1 was calculated for the NH4+ transporter"; DOI 10.1104/pp.82.4.1051; same intact-wheat-seedling system as the NO3 rows)
+0.05,Km_nh4,mol_m-3,NH4+ transporter half-saturation (Goyal & Huffaker 1986 abstract p.1051 Km triple NO3/NO2/NH4 0.027/0.054/0.05 mM + p.1053; saturation ~0.3 mM Fig 3d is inside the MM form - no extra term)
+0.20,n_min_depth_m,m,depth span receiving background mineralization dz-weighted (FieldInfo: OM 0.4-0.55% is topsoil; DECLARED site item - constant N_mineral_rate itself unchanged and still a declared unsourced item)
+0.5,cfl_frac,-,CFL guard: max fraction of a layer's NO3 advected out per sub-step (pure numerics no physics; day sub-stepped as ceil(max_frac/cfl_frac))
+1,soilN_layered,-,MANDATORY SWITCH: 1 = layered NO3/NH4 states + upwind advection + per-layer+NH4 uptake; 0 = LEGACY single-pool law exactly as before (byte-identical outputs)
+! -------------------------------------------------------------------- !
+! rec 139 mode 3. Positions 65-67
+! (ARGI/CALC/NHUM(0), the soil-nitrogen item) are explicit PLACEHOLDER rows holding
+! the -1 'not supplied' sentinel (SHARED.f90 default) -- record 93
+! soil_n_mech is OFF on this deck, so these three are read but unused;
+! written explicitly (not omitted) so the positional sequence stays
+! aligned for positions 68-70 below. Design and source extraction are recorded in
+! internal design notes that are not part of this release;
+! an internal design note (not distributed) Sect.5.
+-1,stics_argi_pct,%,PLACEHOLDER (record 93 OFF on this deck) -- NOT a measurement, preserves positional alignment only
+-1,stics_calc_pct,%,PLACEHOLDER (record 93 OFF on this deck) -- NOT a measurement, preserves positional alignment only
+-1,stics_nhum0_gN_m2,gN_m-2,PLACEHOLDER (record 93 OFF on this deck) -- NOT a measurement, preserves positional alignment only
+0.34,clay_fraction,kg_kg-1,clay fraction (SLCLY), MEASURED, "Biomass Yield Area Phenology Management Weather Soil Moisture.ods" Soil_layers sheet, soil AZMC920001, "Trix Clay Loam", SHARED.f90
+0.31,silt_fraction,kg_kg-1,silt fraction (SLSIL), MEASURED, SAME sheet as clay (SLCLY+SLSIL=0.65, fractions), SHARED.f90
+1.28,bulk_density_topsoil_Mg_m3,Mg_m-3,topsoil bulk density, MEASURED, archive Soil_layers slbdm, depth-weighted 0-30 cm (driver_main.txt rec34 comment)

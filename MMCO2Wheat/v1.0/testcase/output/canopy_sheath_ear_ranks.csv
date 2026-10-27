@@ -1,0 +1,43 @@
+rank_abs,rank_inversed,sheath_length_cm,sheath_diam_cm,sheath_silhouette_cm2,internode_length_cm,sheath_below_cm,internode_exposed_cm
+1,11,   2.70000    ,  0.124000    ,  0.334800    ,   0.00000    ,   2.70000    ,   0.00000    
+2,10,   2.80000    ,  0.178333    ,  0.499333    ,   0.00000    ,   2.70000    ,   0.00000    
+3,9,   3.00000    ,  0.232667    ,  0.698000    ,   0.00000    ,   2.80000    ,   0.00000    
+4,8,   3.50000    ,  0.287000    ,   1.00450    ,   0.00000    ,   3.00000    ,   0.00000    
+5,7,   4.50000    ,  0.341333    ,   1.53600    ,   0.00000    ,   3.50000    ,   0.00000    
+6,6,   6.00000    ,  0.395667    ,   2.37400    ,   0.00000    ,   4.50000    ,   0.00000    
+7,5,   8.00000    ,  0.450000    ,   3.60000    ,   1.50000    ,   6.00000    ,   0.00000    
+8,4,   10.5000    ,  0.450000    ,   4.72500    ,   4.00000    ,   8.00000    ,   0.00000    
+9,3,   13.0000    ,  0.450000    ,   5.85000    ,   7.00000    ,   10.5000    ,   0.00000    
+10,2,   15.5000    ,  0.450000    ,   6.97500    ,   11.0000    ,   13.0000    ,   0.00000    
+11,1,   17.0000    ,  0.450000    ,   7.65000    ,   16.0000    ,   15.5000    ,  0.500000    
+
+axis_class,Sl_axis,sheath_green_cm2,sheath_dead_cm2,stem_exposed_cm2,ear_ped_cm2,ko_diameter_factor,density_m2
+MS,   11.0000    ,   13.7250    ,   10.2525    ,  0.192500    ,   15.0000    ,   1.00000    ,   200.000    
+T1,   7.87000    ,  0.566465    ,  0.401208    ,   0.00000    ,   15.0000    ,  0.954000    ,   29.5734    
+T2,   7.24700    ,  0.110749    ,  0.316997    ,   0.00000    ,   15.0000    ,  0.901000    ,   134.863    
+T3,   6.62400    ,  0.502298E-01,  0.283910    ,   0.00000    ,   15.0000    ,  0.848000    ,   194.930    
+T4,   6.00100    ,  0.479471E-02,  0.266166    ,   0.00000    ,   15.0000    ,  0.795000    ,   95.1816    
+T5,   5.37800    ,   0.00000    ,  0.235030    ,   0.00000    ,   15.0000    ,  0.702000    ,   6.25709    
+
+summary,value,units
+sheath_green_index_end,  0.278694    ,m2 m-2
+sheath_dead_pool_end,  0.218726    ,m2 m-2
+sheath_dead_instant_end,  0.218726    ,m2 m-2
+sheath_dip_days,0,days
+sheath_dip_max,   0.00000    ,m2 m-2
+sheath_green_n1_arm_end,  0.155952    ,m2 m-2
+sheath_green_n3_arm_end,  0.364548    ,m2 m-2
+sheath_green_nolag_arm_end,  0.278694    ,m2 m-2
+stem_exposed_index_end,  0.385000E-02,m2 m-2
+ear_ped_index_end,  0.991208    ,m2 m-2
+ear_ped_index_bracket,  0.660805    ,   1.32161    
+ear_only_index_measured_Zhang2023,  0.442740    ,m2 m-2
+nonlamina_over_lamina_end,   18.2584    ,-
+nonlamina_over_lamina_at_flowering,  0.489100    ,-
+PAIg_green_at_flowering,   4.47586    ,m2 m-2
+live_axes_at_flowering,   660.805    ,axes m-2
+PAIg_cm2_per_axis_at_flowering,   67.7334    ,cm2 axis-1
+PAI_LI2200C_basis_max,   6.03572    ,m2 m-2
+A_ep_used,   15.0000    ,cm2 per fertile culm
+ds2_used,  0.450000    ,cm
+persistence_rule_n_plus,2,ranks

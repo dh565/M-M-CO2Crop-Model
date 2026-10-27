@@ -1,0 +1,55 @@
+! D37 PHENOLOGY RE-DERIVATION (2026-10-18). Record 173 spac_sink_coupling = 1 cools the
+! canopy, so the canopy clock that drives cum_tdu moved and every threshold below was re-derived by
+! the cum_tdu bracket-midpoint rule of the calibration-variables rules (internal; not distributed) section 1 on the D37-A run
+! 20261018_1403_D37A_ON42, control deck WDF23_Ruta_aCO2.
+! Stages moved: 3_leaves 547.0 -> 540.0, Tillering 878.6 -> 860.7, Booting 1393.4 -> 1362.9, Heading 1479.1 -> 1445.9, Anthesis 1606.8 -> 1571.8, Grain_filling 1861.3 -> 1822.6, Maturity 2436.1 -> 2383.3.
+! Stages NOT moved: all 8 stages directly dated in input/decks_wdf23/the WDF23 observation table (internal; not distributed); the file's own header rule applies the aCO2 set to the eCO2 deck.
+! WDF23 PHENOLOGY RECALIBRATION: the 8 stage thresholds are
+! re-derived from WDF23's OWN dated stage calendar (input/decks_wdf23/the WDF23 observation tables (internal; not distributed) {cv}_aCO2.csv,
+! column 'Phenological stage'), by the cum_tdu bracket-midpoint rule of
+! the calibration-variables rules (internal; not distributed) item 1, on the D16+I4 baseline run
+! (output/MM_CO2CROP_20261012_1637_I4REPAIR_V1CFG_WDF23, exe 0bbde0b652397c5735bfa68dea7a65a6),
+! iterated to self-consistency (2 iterations, 0 d on all 8 stages). Calibration deck = this
+! cultivar's aCO2 deck; the same set is applied unchanged to its eCO2 deck. ONE cultivar, ONE set.
+1       GDD_Method
+0.0     T_Base_[TO-PIN_MW1997]
+25.0    T_Opt_Lower_[TO-PIN_MW1997]
+50.0    T_Opt_Upper
+60.0    T_Max
+0.0     Photo_Sens
+0.0     Vern_Factor
+221.1   	Emergence
+540.0   3_leaves
+860.7   Tillering
+1362.9  Booting
+1445.9  Heading
+1571.8  Anthesis
+1822.6  Grain_filling
+2383.3  Maturity
+2022    Sowing_Year
+12      Sowing_Month
+14      Sowing_Day
+12      Obs_Emergence_DAP
+0       Obs_2_leaves_DAP
+32      Obs_3_leaves_DAP
+51      Obs_Tillering_DAP
+85      Obs_Booting_DAP
+90      Obs_Heading_DAP
+98      Obs_Anthesis_DAP
+112     Obs_Grain_filling_DAP
+140     Obs_Maturity_DAP
+0.020   Init_Green_g_plant
+0.012   Init_Stem_g_plant
+0.015   Init_Root_g_plant
+0.000   Init_Storage_g_plant
+0.050   Init_LeafN_frac_gN_gDM
+0.020   Init_StemN_frac_gN_gDM
+0.020   Init_RootN_frac_gN_gDM
+0.015   Init_StorageN_frac_gN_gDM
+0       Use_Beta_Emerge
+73.9	Phyllochron_degCd	! D28 staging: compiled default (identity)
+20.8	Blade_L_max_cm	! D28 staging: compiled default (identity)
+1.45	Blade_W_max_cm	! D28 staging: compiled default (identity)
+17.0	Sheath_L_max_cm	! D28 staging: compiled default (identity)
+0.45	Sheath_D_cm	! D28 staging: compiled default (identity)
+4.000	Axes_max_per_plant	! axes plant-1 (0 = no cap); crop bound = value x plant density
