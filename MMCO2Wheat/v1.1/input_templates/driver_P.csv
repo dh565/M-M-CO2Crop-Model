@@ -20,6 +20,8 @@ induct_R,3.0,-,general,provisional: induced/replete Imax ratio
 k_deg_tr,1.0,d-1,general,provisional: transporter turnover
 c_cyt_star,6.5,mol m-3,general,Lee et al. 1990 JXB 41:1063 (maize root cytoplasm); CONFLICT Pratt et al. 2009 (0.06-0.08 mM)
 c_cyt_floor_frac,0.1,-,general,provisional
+v_water,4.0e-6,m3 g-1 DM,general,provisional (4 g water g-1 DM)
+c_tis_ref,5.6,mol m-3,general,replete tissue Pi from Veneklaas 2012 p.309 ratio Pi:nucleic-acid P = 1.4:2.0 (0.7 mg P g-1 DM over 4 g water g-1 DM)
 v_cyt,4.0e-7,m3 g-1 DM,general,provisional (4 g water g-1 DM x 10 % cytosol)
 K_TPT,1.0,mol m-3,general,provisional: order of feedback-limited stromal Pi (Sharkey & Vanderveer 1989 PP 91:679)
 fP_RNA,0.091,g P g-1 RNA,general,Raven 2013 Front Plant Sci 4:536 Table 1; verified-PDF

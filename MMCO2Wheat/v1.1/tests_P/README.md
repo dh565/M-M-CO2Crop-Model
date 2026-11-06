@@ -29,3 +29,12 @@ Against the field data of Rodriguez et al. (2000, Bray-1 5.5 mg kg-1: -70 % biom
   - eps = 1.0: P15 collapses. Wrong: Bray-1 15 is near-sufficient for wheat.
   - eps = 0.3: P15 and P8 are sufficient; P5 gives -28 % biomass at 61 DAE (field: -70 %, Rodriguez 2000). P40 then takes up 93 kg P/ha, an unrealistic luxury uptake: transporters are repressed only by cytosolic Pi, which stays at its set point while the vacuole fills.
 - Next: (1) vacuole-full feedback on transporter synthesis (whole-cell Pi signalling); (2) a measured eps for Bray-1 (isotopic E-value studies); (3) topsoil P stratification (the soil test is 0-20 cm); (4) mycorrhizal uptake (Li et al. 2006: >50 % of wheat P).
+
+## Revision: tissue-Pi feedback on transporter synthesis
+
+- Pht1 synthesis is now repressed by the tissue Pi (cytosol + vacuole). It was repressed by the clamped cytosolic Pi before.
+- The replete reference is 5.6 mM, from the Veneklaas 2012 pool ratio.
+- eps = 0.3, P40: uptake 93 -> 57 kg P ha-1 (plant P about 3.9 mg g-1 at maturity, high end of measured); P15 and P8 are unchanged (sufficient); P5: -2 % at 61 DAE, -41 % at 80 DAE.
+- eps = 1.0: almost unchanged (P40 22.6 kg ha-1).
+- The CO2 gain is unchanged where P is sufficient (9.6 %) and lost where P limits.
+- The timing at moderately low P still depends on the unmeasured eps.

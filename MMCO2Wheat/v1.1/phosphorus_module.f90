@@ -99,6 +99,10 @@ MODULE PHOSPHORUS_MODULE
   ! plant
   REAL(wp) :: c_cyt_star = 6.5_wp       ! mol m-3 cytosol; Lee et al. 1990 (maize roots); conflict with Pratt 2009 flagged
   REAL(wp) :: c_cyt_floor_frac = 0.1_wp ! lowest cytosolic Pi as a fraction of c* (provisional)
+  REAL(wp) :: v_water   = 4.0e-6_wp     ! m3 tissue water g-1 DM (provisional: 4 g water g-1 DM)
+  ! Replete tissue Pi: Veneklaas 2012 p.309 pool ratio Pi : nucleic-acid P = 1.4 : 2.0,
+  ! with nucleic-acid P 1.0 mg g-1 -> Pi 0.7 mg P g-1 DM = 0.7e-3/30.97/4e-6 = 5.6 mol m-3
+  REAL(wp) :: c_tis_ref = 5.6_wp        ! mol m-3 tissue water
   REAL(wp) :: v_cyt     = 4.0e-7_wp     ! m3 cytosol g-1 DM (provisional: 4 g water g-1 DM x 10 % cytosol)
   REAL(wp) :: K_TPT     = 1.0_wp        ! mol m-3; order of the feedback-limited stromal Pi, Sharkey & Vanderveer 1989 (provisional)
   REAL(wp) :: pP_struct_L = 5.5e-4_wp   ! g P g-1 DM in phospholipid + DNA of new lamina (provisional, Veneklaas 2012 Fig. 1)
@@ -215,6 +219,8 @@ CONTAINS
     CASE ('c_cyt_star'); c_cyt_star = v
     CASE ('c_cyt_floor_frac'); c_cyt_floor_frac = v
     CASE ('v_cyt');      v_cyt = v
+    CASE ('v_water');    v_water = v
+    CASE ('c_tis_ref');  c_tis_ref = v
     CASE ('K_TPT');      K_TPT = v
     CASE ('pP_struct_L'); pP_struct_L = v
     CASE ('pP_struct_S'); pP_struct_S = v
@@ -373,7 +379,7 @@ CONTAINS
     REAL(wp), INTENT(IN) :: trans_mm, theta, depth, W_root, T_soil, W_live
     REAL(wp) :: TK, Ka, th, Lv, dz, De, v0, w, Imax, Ucoef(NR), Q0(NR), Cs(NR), b(NR)
     REAL(wp) :: lo(NR), di(NR), up(NR), rh(NR), Hh(NR), a(0:NR), ahair, U0, dt, add, fnew
-    REAL(wp) :: Qtot_old, Qtot_new, Sfi, dSs, before, after, Cm
+    REAL(wp) :: Qtot_old, Qtot_new, Sfi, dSs, before, after, Cm, c_tis
     INTEGER  :: i, it, ih, k
     IF (.NOT. p_on) RETURN
     TK = T_soil + 273.15_wp
@@ -420,12 +426,17 @@ CONTAINS
       END DO
     END IF
 
-    ! --- transporter abundance: synthesis repressed by cytosolic Pi -------- !
-    ! dI/dt = k_deg [R K/(K + c) - I],  K = c*/(R-1), so I = 1 at c = c* and
-    ! I = R at c = 0 (fully induced). Implicit daily step.
+    ! --- transporter abundance: synthesis repressed by the plant's Pi status
+    ! (PHR1 regulon held off by SPX / inositol-pyrophosphate signalling, which
+    ! reads the whole cell's Pi, vacuole included). The signal is the tissue Pi
+    ! concentration c_tis (cytosol + vacuole over tissue water):
+    ! dI/dt = k_deg [R K/(K + c_tis) - I],  K = c_ref/(R-1), so I = 1 at the
+    ! replete tissue Pi c_ref, I = R when Pi-starved, and I -> 0 as the vacuole
+    ! fills (no unbounded luxury uptake). Implicit daily step.
+    c_tis = (Pcyt + Pvac) / (MP * v_water * MAX(W_live, 1.0e-6_wp))
     IF (induct_R > 1.0_wp) THEN
-      I_rel = (I_rel + k_deg_tr * induct_R * (c_cyt_star/(induct_R-1.0_wp)) / &
-              (c_cyt_star/(induct_R-1.0_wp) + c_cyt)) / (1.0_wp + k_deg_tr)
+      I_rel = (I_rel + k_deg_tr * induct_R * (c_tis_ref/(induct_R-1.0_wp)) / &
+              (c_tis_ref/(induct_R-1.0_wp) + c_tis)) / (1.0_wp + k_deg_tr)
     END IF
 
     ! --- radial Barber-Cushman, implicit, hourly ------------------------------ !
