@@ -18,4 +18,4 @@ Run outputs go OUTSIDE the repository (scratch), never into ~/Documents or ~/Des
 
 The loss of the CO2 gain under P shortage emerges; no CO2 x P term is coded.
 Mass balances: soil < 1e-13, plant < 1e-15 g P m-2.
-The collapse between 8 and 5 mg kg-1 is too steep compared with Rodriguez et al. (1998): not validated yet (provisional uptake and extraction parameters).
+Against the field data of Rodriguez et al. (2000, Bray-1 5.5 mg kg-1: -70 % biomass, -73 % LAI at 61 d after emergence), the model at 5 mg kg-1 gives -44 % biomass and -31 % LAI at 61 d and 0 % at 44 d. The effect comes too late, because the tiller and phyllochron routes (phase B) are not coded yet.
