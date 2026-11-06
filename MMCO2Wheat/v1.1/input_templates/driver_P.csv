@@ -22,12 +22,13 @@ c_cyt_star,6.5,mol m-3,general,Lee et al. 1990 JXB 41:1063 (maize root cytoplasm
 c_cyt_floor_frac,0.1,-,general,provisional
 v_cyt,4.0e-7,m3 g-1 DM,general,provisional (4 g water g-1 DM x 10 % cytosol)
 K_TPT,1.0,mol m-3,general,provisional: order of feedback-limited stromal Pi (Sharkey & Vanderveer 1989 PP 91:679)
-pP_struct_L,5.5e-4,g P g-1 DM,general,provisional (Veneklaas et al. 2012 Fig. 1 pools)
-pP_struct_S,2.0e-4,g P g-1 DM,general,provisional
-pP_struct_R,3.0e-4,g P g-1 DM,general,provisional
 fP_RNA,0.091,g P g-1 RNA,general,Raven 2013 Front Plant Sci 4:536 Table 1; verified-PDF
-kps_20,17.5,g protein g-1 RNA d-1,general,Raven 2013 p.5-6 (eukaryote max at 20 C); verified-PDF
-Q10_ps,2.0,-,general,Raven 2013 p.5; verified-PDF
+pP_NA_new,1.0e-3,g P g-1 new lamina DM,general,Veneklaas et al. 2012 New Phytol 195:306 p.309 (nucleic-acid P 0.3-2 mg g-1 DW; mid value); verified-PDF
+pP_lip,6.5e-4,g P g-1 new lamina DM,general,Veneklaas 2012 p.309 ratio lipid P : nucleic-acid P = 1.3 : 2.0; verified-PDF
+pP_ester,5.0e-4,g P g-1 new lamina DM,general,Veneklaas 2012 p.309 ratio P-esters : nucleic-acid P = 1 : 2.0; verified-PDF
+f_DNA,0.15,-,general,Veneklaas 2012 p.309 (RNA >= 85 % of nucleic acids); verified-PDF
+f_RNA_mature,0.25,-,general,Veneklaas 2012 (cytosolic rRNA drops < 75 % in mature leaves); verified-PDF
+k_RNA,0.1,d-1,general,provisional: RNA decay toward the mature level
 eta_P,0.5,-,general,Veneklaas 2012 ("remobilize at least 50 %"); verified-PDF
 grainP_conc,3.5e-3,g P g-1 DM,general,provisional
 # ---- site inputs (example soil: values inside the Boschetti et al. 1998 RBCS 22:95 Quadro 1 range) ----

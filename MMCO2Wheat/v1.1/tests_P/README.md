@@ -19,3 +19,13 @@ Run outputs go OUTSIDE the repository (scratch), never into ~/Documents or ~/Des
 The loss of the CO2 gain under P shortage emerges; no CO2 x P term is coded.
 Mass balances: soil < 1e-13, plant < 1e-15 g P m-2.
 Against the field data of Rodriguez et al. (2000, Bray-1 5.5 mg kg-1: -70 % biomass, -73 % LAI at 61 d after emergence), the model at 5 mg kg-1 gives -44 % biomass and -31 % LAI at 61 d and 0 % at 44 d. The effect comes too late, because the tiller and phyllochron routes (phase B) are not coded yet.
+
+## Revision, 6 Nov 2026 (later): measured tissue P composition, leaf appearance and tiller buds
+
+- The ribosome cost from the MAXIMUM protein-synthesis rate (Raven 2013) gave about 10x too little RNA against the measured nucleic-acid P (Veneklaas 2012 p.309, 0.3-2 mg P g-1 DW; Sulpice 2014 ribosome counts). It is replaced by the measured composition of new tissue (nucleic acids, lipid, esters, cytosolic Pi). RNA decays to 25 % as tissue matures. The organ cost scales with the organ's protoplasm N (one N:P).
+- Leaf appearance runs at the lamina P-paid fraction; tiller buds grow out in proportion to the P paid in their window.
+- P40 = P off (no regression). Grain loading no longer drains the leaf cytosol.
+- The supply side now decides everything. eps_test (the soil-test recovery of sorbed P) is unmeasured:
+  - eps = 1.0: P15 collapses. Wrong: Bray-1 15 is near-sufficient for wheat.
+  - eps = 0.3: P15 and P8 are sufficient; P5 gives -28 % biomass at 61 DAE (field: -70 %, Rodriguez 2000). P40 then takes up 93 kg P/ha, an unrealistic luxury uptake: transporters are repressed only by cytosolic Pi, which stays at its set point while the vacuole fills.
+- Next: (1) vacuole-full feedback on transporter synthesis (whole-cell Pi signalling); (2) a measured eps for Bray-1 (isotopic E-value studies); (3) topsoil P stratification (the soil test is 0-20 cm); (4) mycorrhizal uptake (Li et al. 2006: >50 % of wheat P).

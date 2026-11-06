@@ -38,16 +38,18 @@
 MODULE PHOSPHORUS_MODULE
   USE TYPES, ONLY: wp
   USE SHARED, ONLY: p_module_on, p_tpu_scale, nud_SRL, &
-                    n4_sln_target, csl_LMA, n4_stem_nmax, npg_build_R   ! the N gate's own tissue N targets
+                    n4_sln_target, csl_LMA, n4_stem_nmax, npg_build_R   ! the N gate's tissue N targets (protoplasm scale)
   IMPLICIT NONE
   PRIVATE
 
   PUBLIC :: p_on, read_p_params, p_soil_day, p_gate, p_plant_end_day, &
-            p_write_daily, p_close, p_pL, p_pS, p_pR, p_temp_today, p_report
+            p_write_daily, p_close, p_pL, p_pS, p_pR, p_temp_today, p_report, &
+            p_pL_last, p_pS_last
 
   LOGICAL  :: p_on = .FALSE.
   REAL(wp) :: p_temp_today = 20.0_wp        ! daily mean temperature for the growth gate, deg C (set by the caller)
   REAL(wp) :: p_pL = 1.0_wp, p_pS = 1.0_wp, p_pR = 1.0_wp   ! today's P-paid fractions
+  REAL(wp) :: p_pL_last = 1.0_wp, p_pS_last = 1.0_wp        ! paid fractions of the last gate day (read by leaf appearance and tiller buds)
 
   ! ---- physical constants ---------------------------------------------- !
   REAL(wp), PARAMETER :: MP   = 30.973762_wp      ! g P mol-1
@@ -103,7 +105,16 @@ MODULE PHOSPHORUS_MODULE
   REAL(wp) :: pP_struct_S = 2.0e-4_wp   ! g P g-1 DM, stem (provisional)
   REAL(wp) :: pP_struct_R = 3.0e-4_wp   ! g P g-1 DM, root (provisional)
   REAL(wp) :: fP_RNA    = 0.091_wp      ! g P g-1 RNA; Raven 2013 Table 1
-  REAL(wp) :: kps_20    = 17.5_wp       ! g protein g-1 RNA d-1 at 20 C (max, eukaryotes); Raven 2013 p.5-6
+  ! Composition of NEW tissue (design 6.2, revised 6 Nov 2026). Veneklaas et al.
+  ! 2012 New Phytol 195:306, p.309: nucleic-acid P 0.3-2 mg P g-1 DW, >= 85 % RNA;
+  ! pool ratio lipid P : nucleic-acid P : Pi : P-esters = 1.3 : 2.0 : 1.4 : 1.
+  REAL(wp) :: pP_NA_new = 1.0e-3_wp     ! g P g-1 new DM in nucleic acids (Veneklaas 2012 range 0.3-2 mg g-1; mid value)
+  REAL(wp) :: pP_lip    = 6.5e-4_wp     ! g P g-1 new DM in phospholipid = 1.3/2.0 x pP_NA_new (Veneklaas 2012 ratio)
+  REAL(wp) :: pP_ester  = 5.0e-4_wp     ! g P g-1 new DM in P-esters = 1/2.0 x pP_NA_new (Veneklaas 2012 ratio)
+  REAL(wp) :: f_DNA     = 0.15_wp       ! DNA share of nucleic acids (Veneklaas 2012: RNA >= 85 %)
+  REAL(wp) :: f_RNA_mature = 0.25_wp    ! RNA kept in mature tissue (Veneklaas 2012: cytosolic rRNA drops < 75 %)
+  REAL(wp) :: k_RNA     = 0.1_wp        ! d-1, RNA decay toward the mature level (provisional)
+  REAL(wp) :: kps_20    = 17.5_wp       ! NOT USED since 6 Nov 2026: the maximum rate gave ~10x too little RNA against Veneklaas 2012 / Sulpice 2014; kept for the record
   REAL(wp) :: Q10_ps    = 2.0_wp        ! Raven 2013 p.5
   REAL(wp) :: eta_P     = 0.5_wp        ! leaf P resorption; Veneklaas 2012 p.313 ("at least 50 %")
   REAL(wp) :: grainP_conc = 3.5e-3_wp   ! g P g-1 grain DM (provisional)
@@ -209,6 +220,12 @@ CONTAINS
     CASE ('pP_struct_S'); pP_struct_S = v
     CASE ('pP_struct_R'); pP_struct_R = v
     CASE ('fP_RNA');     fP_RNA = v
+    CASE ('k_RNA'); k_RNA = v
+    CASE ('f_RNA_mature'); f_RNA_mature = v
+    CASE ('f_DNA'); f_DNA = v
+    CASE ('pP_ester'); pP_ester = v
+    CASE ('pP_lip'); pP_lip = v
+    CASE ('pP_NA_new'); pP_NA_new = v
     CASE ('kps_20');     kps_20 = v
     CASE ('Q10_ps');     Q10_ps = v
     CASE ('eta_P');      eta_P = v
@@ -555,45 +572,32 @@ CONTAINS
   ! P payment gate (design 6.3). Called from n_payment_gate_apply on the
   ! carbon-side potentials, before the nitrogen is paid. Returns the paid
   ! fractions p_pL, p_pS, p_pR (module variables) and the scaled increments.
-  ! The nitrogen concentration of the new tissue (g N g-1 DM) is the model's
-  ! own N-gate target (lamina n4_sln_target/csl_LMA, stem n4_stem_nmax, root
-  ! npg_build_R); it sets the protein synthesis rate and so the ribosomes.
   ! ======================================================================= !
   SUBROUTINE p_gate(dw_L, dw_S, dw_R)
     REAL(wp), INTENT(INOUT) :: dw_L, dw_S, dw_R
-    REAL(wp) :: cN_L, cN_S, cN_R, W_live
-    REAL(wp) :: kps, cyt_req, avail, floor_cyt, payL, payS, payR, need, sh_tot, shL, shS, shR
+    REAL(wp) :: W_live
+    REAL(wp) :: cyt_req, req_g, avail, floor_cyt, payL, payS, payR, sS, sR
     p_pL = 1.0_wp ; p_pS = 1.0_wp ; p_pR = 1.0_wp
     paid_today = 0.0_wp ; req_today = 0.0_wp
     IF (.NOT. p_on .OR. .NOT. initialized) RETURN
     W_live = W_live_today
-    cN_L = n4_sln_target / csl_LMA ; cN_S = n4_stem_nmax ; cN_R = npg_build_R
-    ! ribosome turnover capacity at today's temperature (Raven 2013, Q10)
-    kps = kps_20 * Q10_ps**((p_temp_today - 20.0_wp) / 10.0_wp)
-    ! P per g of new DM: structural + the cytosolic Pi the new cells hold +
-    ! the rRNA needed to synthesize its protein within the day:
-    ! RNA (g) = protein made per day / kps, P = fP_RNA * RNA.
+    ! P per g of new DM (design 6.2): the measured composition of growing
+    ! tissue - phospholipid membranes, nucleic acids (mostly ribosomal RNA, the
+    ! growth-rate term: fast growth means much young, ribosome-rich tissue),
+    ! phosphate esters - plus the cytosolic Pi the new cells hold.
     cyt_req = c_cyt_star * v_cyt * MP
-    ! the ribosomes already standing are re-used: today's ribosome need is the
-    ! stock required for today's potential protein synthesis
-    Prna_req_today = fP_RNA * (dw_L*cN_L + dw_S*cN_S + dw_R*cN_R) * PROT_PER_N / kps
-    need = MAX(0.0_wp, Prna_req_today - Prna)      ! new ribosomes to build
-    ! available P: the vacuole, then the cytosol down to its floor
+    req_g = pP_lip + pP_NA_new + pP_ester + cyt_req
     floor_cyt = c_cyt_floor_frac * c_cyt_star * v_cyt * MAX(W_live, 1.0e-6_wp) * MP
-    avail = Pvac + MAX(0.0_wp, Pcyt - floor_cyt) + MAX(0.0_wp, Prna - Prna_req_today)
-    req_today = dw_L * (pP_struct_L + cyt_req) + dw_S * (pP_struct_S + cyt_req) + &
-                dw_R * (pP_struct_R + cyt_req) + need
+    avail = Pvac + MAX(0.0_wp, Pcyt - floor_cyt)
+    ! The composition above is that of lamina-like (protoplasm-rich) tissue. P,
+    ! like N, sits in protoplasm, not in cell walls, so each organ's cost is
+    ! scaled by its N construction concentration relative to the lamina (the
+    ! model's own N-gate targets): one protoplasm N:P for all organs.
+    sS = n4_stem_nmax / (n4_sln_target / csl_LMA)
+    sR = npg_build_R  / (n4_sln_target / csl_LMA)
+    payL = dw_L * req_g ; payS = dw_S * req_g * sS ; payR = dw_R * req_g * sR
+    req_today = payL + payS + payR
     IF (req_today <= 0.0_wp) RETURN
-    ! The ribosome stock serves all organs; the new-ribosome need is charged
-    ! to each organ in proportion to its share of protein synthesis.
-    sh_tot = dw_L*cN_L + dw_S*cN_S + dw_R*cN_R
-    shL = 0.0_wp ; shS = 0.0_wp ; shR = 0.0_wp
-    IF (sh_tot > 0.0_wp) THEN
-      shL = dw_L*cN_L/sh_tot ; shS = dw_S*cN_S/sh_tot ; shR = dw_R*cN_R/sh_tot
-    END IF
-    payL = dw_L * (pP_struct_L + cyt_req) + need * shL
-    payS = dw_S * (pP_struct_S + cyt_req) + need * shS
-    payR = dw_R * (pP_struct_R + cyt_req) + need * shR
     ! phloem priority: expanding blades, stem and chaff, root (design 6.3)
     IF (payL > 0.0_wp) p_pL = MIN(1.0_wp, avail / payL)
     avail = MAX(0.0_wp, avail - p_pL * payL)
@@ -602,15 +606,15 @@ CONTAINS
     IF (payR > 0.0_wp) p_pR = MIN(1.0_wp, avail / payR)
     dw_L = p_pL * dw_L ; dw_S = p_pS * dw_S ; dw_R = p_pR * dw_R
     paid_today = p_pL * payL + p_pS * payS + p_pR * payR
-    ! commit: draw the paid P from the free pools, then place it: structural P
-    ! in the organs, the new cells' cytosolic Pi in the cytosol, new ribosomes
-    ! in the ribosome stock. Exact by construction.
+    p_pL_last = p_pL ; p_pS_last = p_pS
+    ! commit: draw from the vacuole, then the cytosol above its floor; place the
+    ! P in membranes + DNA + esters (structural), RNA, and the new cytosol
     CALL draw(paid_today)
-    Pstr_L = Pstr_L + dw_L * pP_struct_L
-    Pstr_S = Pstr_S + dw_S * pP_struct_S
-    Pstr_R = Pstr_R + dw_R * pP_struct_R
-    Pcyt   = Pcyt + (dw_L + dw_S + dw_R) * cyt_req
-    Prna   = Prna + need * (p_pL*shL + p_pS*shS + p_pR*shR)
+    Pstr_L = Pstr_L + dw_L * (pP_lip + f_DNA*pP_NA_new + pP_ester)
+    Pstr_S = Pstr_S + dw_S * sS * (pP_lip + f_DNA*pP_NA_new + pP_ester)
+    Pstr_R = Pstr_R + dw_R * sR * (pP_lip + f_DNA*pP_NA_new + pP_ester)
+    Prna   = Prna + (dw_L + dw_S*sS + dw_R*sR) * (1.0_wp - f_DNA) * pP_NA_new
+    Pcyt   = Pcyt + (dw_L + dw_S*sS + dw_R*sR) * cyt_req
   END SUBROUTINE p_gate
 
   ! Draw P for construction: surplus ribosomes first, then vacuole, then cytosol.
@@ -618,7 +622,6 @@ CONTAINS
     REAL(wp), INTENT(IN) :: amount
     REAL(wp) :: rest, t
     rest = MAX(0.0_wp, amount)
-    t = MIN(rest, MAX(0.0_wp, Prna - Prna_req_today)) ; Prna = Prna - t ; rest = rest - t
     t = MIN(rest, Pvac) ; Pvac = Pvac - t ; rest = rest - t
     t = MIN(rest, Pcyt) ; Pcyt = Pcyt - t ; rest = rest - t
   END SUBROUTINE draw
@@ -645,22 +648,21 @@ CONTAINS
       Pdead = Pdead + lost
       Pvac  = Pvac + (rel - lost)
     END IF
-    ! ribosomes not needed for tomorrow's synthesis at today's rate are degraded
-    ! (RNase turnover) and their Pi returns to the vacuole
-    IF (Prna > Prna_req_today) THEN
-      Pvac = Pvac + (Prna - Prna_req_today) ; Prna = Prna_req_today
+    ! maturing tissue degrades part of its ribosomes (RNase); the Pi returns
+    ! to the vacuole and the mature tissue keeps f_RNA_mature of its RNA
+    t = (1.0_wp - f_DNA) * pP_NA_new * f_RNA_mature * W_live
+    IF (Prna > t) THEN
+      rel = (Prna - t) * (1.0_wp - EXP(-k_RNA))
+      Prna = Prna - rel ; Pvac = Pvac + rel
     END IF
     ! grain P (phytate) demand, met from the free pools; reported if unmet
     dg = MAX(0.0_wp, W_grain - W_grain_prev) ; W_grain_prev = W_grain
     dem = dg * grainP_conc
     t = MIN(dem, Pvac) ; Pvac = Pvac - t ; Pgrain = Pgrain + t
-    ! the cytosol gives only what it holds above its floor: cytosolic Pi is
-    ! homeostatic (design 6.1), so grain loading cannot empty it
-    IF (dem > t) THEN
-      ptot = MIN(dem - t, MAX(0.0_wp, Pcyt - c_cyt_floor_frac * c_cyt_star * v_cyt * MAX(W_live, 1.0e-6_wp) * MP))
-      Pcyt = Pcyt - ptot ; Pgrain = Pgrain + ptot
-      Pgrain_unmet = Pgrain_unmet + (dem - t - ptot)
-    END IF
+    ! grain phytate is loaded from the phloem-mobile Pi (vacuole, which also
+    ! receives the resorbed P of senescing tissue); the working cytosol of the
+    ! leaves is not drained (design 6.8). Unmet demand is reported.
+    Pgrain_unmet = Pgrain_unmet + (dem - t)
     CALL rebalance_cytosol(W_live)
     ! plant mass balance: everything in = seed + uptake
     ptot = Pstr_L + Pstr_S + Pstr_R + Prna + Pcyt + Pvac + Pgrain + Pdead

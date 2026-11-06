@@ -51,7 +51,7 @@
 !===============================================================================!
 MODULE GROWTH_MODULE
   USE TYPES, ONLY: wp
-  USE PHOSPHORUS_MODULE, ONLY: p_on, p_gate, p_pL, p_pS, p_pR   ! v1.1 P payment gate
+  USE PHOSPHORUS_MODULE, ONLY: p_on, p_gate, p_pL, p_pS, p_pR, p_pL_last, p_pS_last   ! v1.1 P payment gate
   USE SHARED, ONLY: SLN_min_N, k_remob_leaf_N, k_remob_stem_N, n_struct_stem_N, &
                     k_N_can, n_b_can, n_stru_grain, dvs_grain_stru_end, &
                     gParam_sla, sla_dvs0, sla_dvs2, sla_anchor, &
@@ -3913,11 +3913,26 @@ CONTAINS
       ! faster limb stays outside the Eq. 5 domain (Haun stage >= 2).
       ! --------------------------------------------------------------------------------- !
       rate_P = clr_phyllochron_Cd * clr_seed_ratio
-      clr_HS = clr_HS + dtau / rate_P
+      IF (p_on) THEN
+        clr_HS = clr_HS + p_pL_last * dtau / rate_P
+      ELSE
+        clr_HS = clr_HS + dtau / rate_P
+      END IF
     ELSE
       fC = (clr_HS / clr_fC_HS_ref) ** clr_fC_exp
-      clr_HS = clr_HS + dtau * fC / clr_phyllochron_Cd
+      IF (p_on) THEN
+        clr_HS = clr_HS + p_pL_last * dtau * fC / clr_phyllochron_Cd
+      ELSE
+        clr_HS = clr_HS + dtau * fC / clr_phyllochron_Cd
+      END IF
     END IF
+    ! v1.1 P module (design 6.5): the growing leaf is built from cells whose
+    ! membranes, DNA and ribosomes must be paid in P. The blade's paid fraction of
+    ! the last gate day (p_pL_last; 1 when P is not short) is the fraction of the
+    ! potential cell production that was built, so the leaf reaches the next Haun
+    ! increment at that fraction of the thermal-time rate (Rodriguez et al. 1998:
+    ! P deficiency lengthens the phyllochron through slower primordium initiation
+    ! and leaf elongation). Off: the v1.0 statements, unchanged.
     ! ----------------------------------------------------------------------------------- !
     ! A Haun-stage crossing IS a LIGULATION under the convention of Abichou (2016)
     ! PhD thesis (NNT tel-02316154) Eq. (1), HS = n + l/L with n the number of
@@ -4140,6 +4155,10 @@ CONTAINS
     INTEGER  :: c, nl_ms
     REAL(wp) :: t_open, t_close
     REAL(wp) :: nl_here
+    ! v1.1 P module (design 6.6): the mean P-paid fraction of the bud tier over
+    ! each bud's outgrowth window. P that is short is spent on completing whole
+    ! buds, so the paid fraction is the fraction of plants whose bud c grows out.
+    REAL(wp), SAVE :: pbud_sum(CT_MAXTIL) = 0.0_wp, pbud_n(CT_MAXTIL) = 0.0_wp
 
     IF (.NOT. clr_active) RETURN
     ct_active = .TRUE.
@@ -4189,6 +4208,10 @@ CONTAINS
         IF (clr_tau_Cd >= t_open .AND. clr_tau_Cd < t_close) THEN
           ct_win_sum(c) = ct_win_sum(c) + ct_fpar
           ct_win_n(c)   = ct_win_n(c) + 1.0_wp
+          IF (p_on) THEN
+            pbud_sum(c) = pbud_sum(c) + p_pS_last
+            pbud_n(c)   = pbud_n(c) + 1.0_wp
+          END IF
           IF (tiller_carbon_gate == 1) THEN         ! D2-1: SUM_window C_sur
             tcg_sup(c)  = tcg_sup(c) + tcg_csur_day
             tcg_nwin(c) = tcg_nwin(c) + 1.0_wp
@@ -4208,6 +4231,7 @@ CONTAINS
           ELSE
             ct_p_occ(c) = (ct_pint_p0 - ct_pint_win(c)) / (ct_pint_p0 - ct_pint_p1)
           END IF
+          IF (p_on .AND. pbud_n(c) > 0.0_wp) ct_p_occ(c) = MIN(ct_p_occ(c), pbud_sum(c) / pbud_n(c))   ! v1.1: P-paid buds
           ct_decided(c) = .TRUE.
         END IF
       END IF
