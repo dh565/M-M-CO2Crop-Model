@@ -78,8 +78,28 @@ MODULE PHOSPHORUS_MODULE
   REAL(wp) :: dH_a      = 0.0_wp        ! J mol-1, sorption enthalpy (site input)
   REAL(wp) :: k_slow    = 0.0_wp        ! d-1, pi^2 D_s/a_p^2 (site input; 0 = off)
   REAL(wp) :: beta_slow = 0.0_wp        ! interior/surface partition (site input)
+  ! Initial soil P (design 5.4, 6 Nov 2026). The first input present is used:
+  !   1. C_sol_uM     measured soil-solution P (e.g. 0.01 M CaCl2 or water extract)
+  !   2. labileP_mgkg measured fast-exchangeable P (isotopic E value or resin P)
+  !   3. soiltest_mgkg with a measured eps_test (> 0)
+  !   4. soiltest_mgkg with the default eps of test_method (eps_case -1/0/+1 = low/central/high)
+  REAL(wp) :: C_sol_uM  = -1.0_wp       ! umol L-1; < 0 = not measured
+  REAL(wp) :: labileP_mgkg = -1.0_wp    ! mg P kg-1; < 0 = not measured
   REAL(wp) :: soiltest_mgkg = 15.0_wp   ! soil-test P, mg P kg-1 (site input)
-  REAL(wp) :: eps_test  = 1.0_wp        ! recovery of fast-sorbed P by the soil test (site input)
+  REAL(wp) :: eps_test  = -1.0_wp       ! soil-test P / fast-exchangeable P; < 0 = not measured
+  INTEGER  :: test_method = 1           ! 1 Olsen, 2 Bray-1, 3 Mehlich-3, 4 ammonium lactate (AL)
+  INTEGER  :: eps_case  = 0             ! -1 low, 0 central, +1 high default eps
+  ! Default eps (low, central, high) per method: soil-test P over isotopically
+  ! exchangeable P. Olsen: Braun et al. 2018 Geoderma 337:350 (Olsen/E6d = 0.19
+  ! low-P, 0.52 high-P soils), Six et al. 2012 Plant Soil 359:267 Table 6/7
+  ! (0.36-0.65). Bray-1 and Mehlich-3: Six 2012 (0.33-0.85; 0.37-0.79).
+  ! AL: Braun 2018 (1.70, one mean). Provisional: few soils.
+  REAL(wp), PARAMETER :: eps_tab(3,4) = RESHAPE([ &
+       0.19_wp, 0.35_wp, 0.65_wp,  &   ! Olsen
+       0.33_wp, 0.55_wp, 0.85_wp,  &   ! Bray-1
+       0.37_wp, 0.60_wp, 0.79_wp,  &   ! Mehlich-3
+       1.40_wp, 1.70_wp, 2.00_wp ], [3,4])   ! AL (range provisional)
+  CHARACTER(LEN=80) :: init_source = ''
   REAL(wp) :: Pmin_g_m2_d = 0.0_wp      ! net organic-P mineralization, g P m-2 d-1 (site input)
   INTEGER, PARAMETER :: NFERT = 4
   INTEGER  :: fert_day(NFERT) = -1      ! model day index iD of each broadcast application
@@ -204,6 +224,10 @@ CONTAINS
     CASE ('beta_slow');  beta_slow = v
     CASE ('soiltest_mgkg'); soiltest_mgkg = v
     CASE ('eps_test');   eps_test = v
+    CASE ('C_sol_uM');   C_sol_uM = v
+    CASE ('labileP_mgkg'); labileP_mgkg = v
+    CASE ('test_method'); test_method = MIN(4, MAX(1, NINT(v)))
+    CASE ('eps_case');   eps_case = MIN(1, MAX(-1, NINT(v)))
     CASE ('Pmin_g_m2_d'); Pmin_g_m2_d = v
     CASE ('r0');         r0 = v
     CASE ('r_h');        r_h = v
@@ -340,11 +364,32 @@ CONTAINS
   ! ======================================================================= !
   SUBROUTINE p_initialize(th, TK, Lv, depth, W_live)
     REAL(wp), INTENT(IN) :: th, TK, Lv, depth, W_live
-    REAL(wp) :: Ka, Sf0, C0
+    REAL(wp) :: Ka, Sf0, C0, eps
+    CHARACTER(LEN=12), PARAMETER :: mname(4) = [CHARACTER(LEN=12) :: 'Olsen', 'Bray-1', 'Mehlich-3', 'AL']
     Ka  = Ka_T(TK)
-    ! soil_test = eps * Sf(C0) * MP * 1000 (mg kg-1); invert the Langmuir.
-    Sf0 = MIN(0.999_wp * S_max, soiltest_mgkg / (eps_test * MP * 1000.0_wp))
-    C0  = Sf0 / (Ka * (S_max - Sf0))
+    IF (C_sol_uM >= 0.0_wp) THEN
+      C0  = C_sol_uM * 1.0e-3_wp                 ! umol L-1 = 1e-3 mol m-3
+      Sf0 = S_max * Ka * C0 / (1.0_wp + Ka * C0)
+      init_source = 'measured solution P'
+    ELSE
+      IF (labileP_mgkg >= 0.0_wp) THEN
+        Sf0 = labileP_mgkg / (MP * 1000.0_wp)
+        init_source = 'measured exchangeable P'
+      ELSE
+        ! soil_test = eps * Sf(C0) * MP * 1000 (mg kg-1)
+        IF (eps_test > 0.0_wp) THEN
+          eps = eps_test
+          WRITE (init_source,'(A,F5.2)') 'soil test, measured eps = ', eps
+        ELSE
+          eps = eps_tab(eps_case + 2, test_method)
+          WRITE (init_source,'(A,A,A,F5.2)') 'soil test, default eps (', TRIM(mname(test_method)), ') = ', eps
+        END IF
+        Sf0 = soiltest_mgkg / (eps * MP * 1000.0_wp)
+      END IF
+      Sf0 = MIN(0.999_wp * S_max, Sf0)          ! invert the Langmuir
+      C0  = Sf0 / (Ka * (S_max - Sf0))
+    END IF
+    WRITE (*,'(A,A,A,F8.3,A)') ' P module initial soil: ', TRIM(init_source), ', C0 = ', C0 * 1.0e3_wp, ' uM'
     CALL build_grid(Lv)
     Cr = C0
     Ss = beta_slow * Sf0                       ! slow reaction at equilibrium
@@ -704,6 +749,7 @@ CONTAINS
   SUBROUTINE p_report()
     IF (.NOT. p_on) RETURN
     WRITE (*,'(A)') ' ---- P module season summary ----'
+    WRITE (*,'(A,A)')     '  initial soil P from         : ', TRIM(init_source)
     WRITE (*,'(A,F10.4)') '  P uptake, g P m-2           : ', U_cum
     WRITE (*,'(A,F10.4)') '  fertilizer P, g P m-2       : ', fert_cum
     WRITE (*,'(A,F10.4)') '  grain P, g P m-2            : ', Pgrain

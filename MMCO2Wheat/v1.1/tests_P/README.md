@@ -38,3 +38,25 @@ Against the field data of Rodriguez et al. (2000, Bray-1 5.5 mg kg-1: -70 % biom
 - eps = 1.0: almost unchanged (P40 22.6 kg ha-1).
 - The CO2 gain is unchanged where P is sufficient (9.6 %) and lost where P limits.
 - The timing at moderately low P still depends on the unmeasured eps.
+
+## 6 Nov 2026: soil-P initialization hierarchy and default eps
+
+Initial soil P now comes from the first input present: measured solution P
+(`C_sol_uM`), measured exchangeable P (`labileP_mgkg`), the soil test with a
+measured `eps_test`, or the soil test with the default eps of `test_method`
+(`eps_case` -1/0/+1 = low/central/high). The run log names the option used.
+Defaults (soil-test P / isotopically exchangeable P): Olsen 0.19/0.35/0.65
+(Braun et al. 2018 Geoderma; Six et al. 2012 Plant Soil), Bray-1 0.33/0.55/0.85
+and Mehlich-3 0.37/0.60/0.79 (Six 2012), AL 1.4/1.7/2.0 (Braun 2018). Few soils: provisional.
+
+Bray-1 defaults (METHOD=2), biomass at 550 ppm, g m-2 (P off = 1601):
+
+| eps | P40 | P15 | P8 | P5 | P3 |
+|---|---|---|---|---|---|
+| 0.33 low | 1601 | 1601 | 1601 | 356 | 125 |
+| 0.55 central | 1601 | 1601 | 318 | 125 | 74 |
+| 0.85 high | 1601 | 549 | 136 | 81 | 54 |
+
+P off and P40 stay identical to v1.0 (CO2 gain 9.6 % biomass, 12.3 % grain).
+Issue: the response is a sharp switch (full growth or collapse) between two
+soil-test levels, while field data (Rodriguez 2000) show graded losses. To fix next.
