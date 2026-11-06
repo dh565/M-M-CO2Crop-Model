@@ -51,6 +51,7 @@
 !===============================================================================!
 MODULE GROWTH_MODULE
   USE TYPES, ONLY: wp
+  USE PHOSPHORUS_MODULE, ONLY: p_on, p_gate, p_pL, p_pS, p_pR   ! v1.1 P payment gate
   USE SHARED, ONLY: SLN_min_N, k_remob_leaf_N, k_remob_stem_N, n_struct_stem_N, &
                     k_N_can, n_b_can, n_stru_grain, dvs_grain_stru_end, &
                     gParam_sla, sla_dvs0, sla_dvs2, sla_anchor, &
@@ -756,7 +757,13 @@ CONTAINS
       ! p_L and remove the unpaid area from the standing green area this evening.
       ! Driver record 179 reads green_biomass read-only, to form the lamina
       ! PHOTOSYNTHETIC nitrogen on the Bertheloot basis.
-      IF (lai_n_arrest >= 1) CALL lamina_n_arrest_commit(npg_p_L, green_biomass)
+      IF (lai_n_arrest >= 1) THEN
+        IF (p_on) THEN
+          CALL lamina_n_arrest_commit(npg_p_L * p_pL, green_biomass)   ! v1.1: area at the N- and P-paid fraction
+        ELSE
+          CALL lamina_n_arrest_commit(npg_p_L, green_biomass)
+        END IF
+      END IF
     END IF
 
     ! Record 100 mode 1 is the only mode that changes the dry-matter gain; the
@@ -926,6 +933,7 @@ CONTAINS
     REAL(wp) :: want, want_R, room, s_next, ident
     REAL(wp) :: lnr_excess, lnr_rem_avail, lnr_rem_left, lnr_gap, lnr_take   ! rec 141
     REAL(wp) :: nsc_pfloor_L, nsc_pfloor_S, nsc_pfloor_R                    ! rec 143: floor-only counterfactual paid fractions
+    REAL(wp) :: p_pot0_L, p_pot0_S, p_pot0_St, p_pot0_R, p_dws              ! v1.1: carbon-side potentials before the P gate
 
     npg_dw_leaf_pot = dw_leaf ; npg_dw_stem_pot = dw_stem
     npg_dw_stor_pot = dw_storage ; npg_dw_root_pot = dw_root
@@ -951,6 +959,20 @@ CONTAINS
     IF (dvs2 >= 1.0_wp) RETURN
     npg_live_today = .TRUE.
     npg_days_live  = npg_days_live + 1
+
+    ! v1.1 P payment gate (design 6.3): the P atoms for membranes, DNA, the new
+    ! cells' cytosolic Pi and the ribosomes are paid first; nitrogen is then
+    ! paid on the P-paid increments. The carbon of the P-unpaid part joins the
+    ! unpaid carbon below. Off: this block is skipped and v1.0 is unchanged.
+    IF (p_on) THEN
+      p_pot0_L = dw_leaf ; p_pot0_S = dw_stem ; p_pot0_St = dw_storage ; p_pot0_R = dw_root
+      p_dws = dw_stem + dw_storage
+      CALL p_gate(dw_leaf, p_dws, dw_root)
+      dw_stem = p_pS * dw_stem ; dw_storage = p_pS * dw_storage
+      npg_dw_leaf_pot = dw_leaf ; npg_dw_stem_pot = dw_stem
+      npg_dw_stor_pot = dw_storage ; npg_dw_root_pot = dw_root
+      npg_dw_leaf = dw_leaf ; npg_dw_stem = dw_stem ; npg_dw_stor = dw_storage ; npg_dw_root = dw_root
+    END IF
 
     ! Tier concentrations, g N g-1 DM of the increment. Under driver record 128
     ! the first pass always pays the FLOOR, independent of the record-121 mode:
@@ -1330,6 +1352,9 @@ CONTAINS
     END IF
     npg_unpaid_ch2o_day = g_leaf * (npg_dw_leaf_pot - dw_leaf) + g_stem * (npg_dw_stem_pot - dw_stem) + &
                           g_storage * (npg_dw_stor_pot - dw_storage) + g_root * (npg_dw_root_pot - dw_root)
+    IF (p_on) npg_unpaid_ch2o_day = npg_unpaid_ch2o_day + &
+        g_leaf * (p_pot0_L - npg_dw_leaf_pot) + g_stem * (p_pot0_S - npg_dw_stem_pot) + &
+        g_storage * (p_pot0_St - npg_dw_stor_pot) + g_root * (p_pot0_R - npg_dw_root_pot)   ! v1.1: P-unpaid carbon
 
     ! Fate of the unpaid carbon: the stem water-soluble-carbohydrate reserve first
     ! (the record-101 closed form on wsc_cap_frac, the stored fructan raising the

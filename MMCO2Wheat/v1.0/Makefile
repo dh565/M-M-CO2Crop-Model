@@ -2,7 +2,7 @@
 PROG = mmco2crop
 
 # Object files (TYPES.o must be first as others depend on it)
-OBJS = TYPES.o SHARED.o csv_file.o radiation_module.o soil_heat_module.o energy_balance_module.o CANOPY_MODEL.o growth_module.o mineral_module.o soiln_module.o phenology_module.o main_MMCO2Crop.o count_lines.o th.o meteo.o solar.o hydro.o assim.o
+OBJS = TYPES.o SHARED.o csv_file.o radiation_module.o soil_heat_module.o energy_balance_module.o CANOPY_MODEL.o phosphorus_module.o growth_module.o mineral_module.o soiln_module.o phenology_module.o main_MMCO2Crop.o count_lines.o th.o meteo.o solar.o hydro.o assim.o
 
 # Compiler and Flags
 FC     = gfortran
@@ -20,11 +20,12 @@ radiation_module.o: radiation_module.f90 SHARED.o TYPES.o
 soil_heat_module.o: soil_heat_module.f90 SHARED.o TYPES.o
 energy_balance_module.o: energy_balance_module.f90 SHARED.o TYPES.o radiation_module.o soil_heat_module.o
 CANOPY_MODEL.o: CANOPY_MODEL.f90 SHARED.o TYPES.o assim.o th.o meteo.o solar.o energy_balance_module.o
-growth_module.o: growth_module.f90 TYPES.o SHARED.o
+phosphorus_module.o: phosphorus_module.f90 TYPES.o SHARED.o
+growth_module.o: growth_module.f90 TYPES.o SHARED.o phosphorus_module.o
 mineral_module.o: mineral_module.f90 TYPES.o
 soiln_module.o: soiln_module.f90 TYPES.o SHARED.o
 phenology_module.o: phenology_module.f90 TYPES.o
-main_MMCO2Crop.o: main_MMCO2Crop.f90 SHARED.o TYPES.o csv_file.o CANOPY_MODEL.o energy_balance_module.o soil_heat_module.o growth_module.o mineral_module.o soiln_module.o phenology_module.o
+main_MMCO2Crop.o: main_MMCO2Crop.f90 phosphorus_module.o SHARED.o TYPES.o csv_file.o CANOPY_MODEL.o energy_balance_module.o soil_heat_module.o growth_module.o mineral_module.o soiln_module.o phenology_module.o
 th.o: th.f90 SHARED.o TYPES.o
 meteo.o: meteo.f90 SHARED.o TYPES.o
 solar.o: solar.f90 SHARED.o TYPES.o

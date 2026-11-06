@@ -4304,6 +4304,13 @@ REAL(wp) :: f_t
   INTEGER  :: gcl_days_pool    = 0        ! days the labile Ca pool bounded the law (raw > pool)
 
   ! ======================================================================== !
+  ! v1.1 phosphorus module (PHOSPHORUS_MODULE). p_module_on is .TRUE. only when
+  ! input/driver_P.csv is present with p_module_switch = 1; p_tpu_scale is the
+  ! leaf-cytosolic-Pi scale of the TPU capacity, exactly 1 at the cytosolic set
+  ! point. Neither is read by any v1.0 path when the module is off.
+  LOGICAL  :: p_module_on = .FALSE.
+  REAL(wp) :: p_tpu_scale = 1.0_wp
+
 CONTAINS
 
   SUBROUTINE sync_hydro_step_state()

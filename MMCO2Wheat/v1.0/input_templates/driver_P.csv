@@ -1,0 +1,50 @@
+name,value,unit,scope,source_page_status
+# v1.1 phosphorus module. Copy to <case>/input/driver_P.csv to switch the module on. Absent file = off (v1.0 identical).
+# Full source list with DOIs: v1.1_P_module/PARAMETERS_P_module.csv (Google Drive).
+p_module_switch,1,-,switch,1 = on
+# ---- general constants ----
+pKa2_298,7.20,-,general,standard thermodynamic tables; to verify
+dH2,3600,J mol-1,general,design 2.1; to verify
+D_H2PO4,8.46e-10,m2 s-1,general,Li & Gregory 1974 GCA 38:703 Table 1 p.707 (8.46e-6 cm2 s-1 at 25 C); verified-PDF
+D_HPO4,7.34e-10,m2 s-1,general,Li & Gregory 1974 Table 1 p.707; verified-PDF
+r0,8.0e-5,m,general,Gahoonia et al. 1997 Plant Soil 191:181 Table 2 (wheat root diam. 0.15-0.17 mm); verified-PDF
+r_h,6.0e-6,m,general,Gahoonia 1997 p.181 (hair diam. 12 um); verified-PDF
+l_h,8.0e-4,m,general,Gahoonia 1997 Table 2 (wheat 0.49-1.27 mm; mid value); verified-PDF
+n_h,3.0e4,m-1,general,Gahoonia 1997 Table 2 (24-38 mm-1); Bole 1973 CJSS 53:169 (45-80 mm-1); verified-PDF
+Imax_ind_g,9.5,umol h-1 g-1 root DM,general,Otani et al. 1996 SSPN 42:553 Table 1 p.556 (P-starved rice/sorghum 5.9-13.1 at 25 C; no wheat value yet); verified-PDF
+K_m,0.017,mol m-3,general,Otani 1996 Table 1 (cereals 13.7-21.3 uM); verified-PDF
+C_min,1.8e-3,mol m-3,general,Otani 1996 Table 1 (cereals 1.70-1.95 uM); verified-PDF
+T_upt_ref,25,C,general,Otani 1996 p.555 (growth chamber 25 C)
+Q10_upt,2.0,-,general,provisional
+induct_R,3.0,-,general,provisional: induced/replete Imax ratio
+k_deg_tr,1.0,d-1,general,provisional: transporter turnover
+c_cyt_star,6.5,mol m-3,general,Lee et al. 1990 JXB 41:1063 (maize root cytoplasm); CONFLICT Pratt et al. 2009 (0.06-0.08 mM)
+c_cyt_floor_frac,0.1,-,general,provisional
+v_cyt,4.0e-7,m3 g-1 DM,general,provisional (4 g water g-1 DM x 10 % cytosol)
+K_TPT,1.0,mol m-3,general,provisional: order of feedback-limited stromal Pi (Sharkey & Vanderveer 1989 PP 91:679)
+pP_struct_L,5.5e-4,g P g-1 DM,general,provisional (Veneklaas et al. 2012 Fig. 1 pools)
+pP_struct_S,2.0e-4,g P g-1 DM,general,provisional
+pP_struct_R,3.0e-4,g P g-1 DM,general,provisional
+fP_RNA,0.091,g P g-1 RNA,general,Raven 2013 Front Plant Sci 4:536 Table 1; verified-PDF
+kps_20,17.5,g protein g-1 RNA d-1,general,Raven 2013 p.5-6 (eukaryote max at 20 C); verified-PDF
+Q10_ps,2.0,-,general,Raven 2013 p.5; verified-PDF
+eta_P,0.5,-,general,Veneklaas 2012 ("remobilize at least 50 %"); verified-PDF
+grainP_conc,3.5e-3,g P g-1 DM,general,provisional
+# ---- site inputs (example soil: values inside the Boschetti et al. 1998 RBCS 22:95 Quadro 1 range) ----
+soil_pH,6.5,-,site,
+rho_b,1300,kg m-3,site,
+phi_tot,0.50,-,site,
+S_max,6.0e-3,mol P kg-1,site,example (= 186 mg P kg-1; Boschetti 1998 Quadro 1 range 46-716)
+K_0,8.0,m3 mol-1,site,example (= 0.26 L mg-1; Boschetti 1998 Quadro 1 range 0.11-0.76)
+pH_0,6.5,-,site,pH of the isotherm
+z_eff,1.5,-,site,
+m_psi,0.0,V per pH,site,0 = no pH correction
+dH_a,0.0,J mol-1,site,
+k_slow,0.0,d-1,site,0 = slow reaction off (needs a time-series isotherm)
+beta_slow,0.0,-,site,
+soiltest_mgkg,25,mg P kg-1,site,soil test P
+eps_test,1.0,-,site,extractant recovery (to measure)
+Pmin_g_m2_d,0.0,g P m-2 d-1,site,net organic P mineralization
+seedP_g_m2,0.04,g P m-2,site,seed P
+fert_day_1,-1,model day,site,broadcast P application day (iD); -1 = none
+fert_gP_m2_1,0,g P m-2,site,

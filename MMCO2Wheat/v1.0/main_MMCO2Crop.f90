@@ -75,6 +75,8 @@ USE GROWTH_MODULE, ONLY: initialize_growth_state, bootstrap_emergence_state, boo
   bgn_set_spike_demand, &                  ! record 98, flag spike_sink_mech (rec 98)
   sdm4_set_demand, &                       ! rec 100 MODE 4, SHARED (recs 103/104)
   inl_advance                              ! rec 109 internode height law, SHARED (recs 110-113)
+USE PHOSPHORUS_MODULE, ONLY: p_on, read_p_params, p_soil_day, p_plant_end_day, p_write_daily, &
+  p_close, p_temp_today, p_report   ! v1.1 phosphorus module (off unless input/driver_P.csv)
 USE MINERAL_MODULE, ONLY: NMIN, mineral_names, read_mineral_params, init_mineral_pools, &
   update_minerals_daily, M_soil_labile, M_root, M_leaf, M_stem, M_chaff, M_grain, &
   M_uptake_mf, M_uptake_ac, M_remob_grain, M_balance_resid, M_cap_binding, &
@@ -5967,6 +5969,7 @@ BLOCK
   INTEGER :: ios_min, ncols_min
   INTEGER :: i_min_g          ! rec 180: Ca-row search counter
   CALL read_mineral_params('input/driver_minerals.csv', ios_min, ncols_min)
+  CALL read_p_params('input/driver_P.csv')   ! v1.1: absent file = P module off, v1.0 identical
   IF (ios_min /= 0) THEN
     WRITE(*,*) ' WARNING: input/driver_minerals.csv not read fully; mineral pools may be zero.'
   ELSE
@@ -10299,6 +10302,17 @@ END DO
   ! IDENTICAL basis the live nitrogen-nutrition-index term uses, for the
   ! deposition law inside the allocation. Nothing executes and nothing is read at
   ! record 172 = 0.
+  ! v1.1 P module: today's soil P chemistry and root uptake on yesterday's roots,
+  ! before the growth gate pays the P of today's increments.
+  IF (p_on .AND. W_root > 0.0_wp) THEN
+    p_temp_today = t_leaf_growth_mean
+    IF (ALLOCATED(Tsoil_prof)) THEN
+      CALL p_soil_day(iD, trans_act, vwc_root, root_dep, W_root, Tsoil_prof(MIN(2, SIZE(Tsoil_prof))), &
+                      W_green + W_stem + W_root)
+    ELSE
+      CALL p_soil_day(iD, trans_act, vwc_root, root_dep, W_root, t_leaf_growth_mean, W_green + W_stem + W_root)
+    END IF
+  END IF
   CALL allocate_daily_biomass(dvs2_growth, t_leaf_growth_mean, An_growth_day, W_green, W_dead, W_stem, W_root, W_storage, &
     rm_growth_day, rg_growth_day)
   dW_storage_day = MAX(0.0_wp, W_storage - W_storage_prev_day)   ! daily reproductive DM gain (g m-2)
@@ -10399,6 +10413,10 @@ END DO
       MAX(0.0_wp, W_root - W_root_prev_day), MAX(0.0_wp, W_green - W_green_prev_day), &
       MAX(0.0_wp, W_stem - W_stem_prev_day), MAX(0.0_wp, W_chaff - W_chaff_prev_day), dW_grain_day, &
       dW_grain_day)
+  IF (p_on .AND. W_root > 0.0_wp) THEN   ! v1.1 P module: resorption, ribosome turnover, grain P, output
+    CALL p_plant_end_day(W_green, W_stem, W_root, W_dead, W_grain)
+    CALL p_write_daily(iD, vwc_root, t_leaf_growth_mean)
+  END IF
   ! Record 131, on only: the daily mineral-supply trace. Nothing here is read by
   ! any physics path.
   IF (mineral_supply_law == 1) THEN
@@ -12016,6 +12034,8 @@ END IF
 CLOSE(unit_wbdiag)
 CLOSE(unit_hydroledger)
 CLOSE(unit_soilprof)
+CALL p_report()
+CALL p_close()
 
 OPEN (newunit=unit_swc,file='output/daily_swc_water.csv',status='replace',action='write')
 WRITE (unit_swc,'(A)') 'day,water_supply_mm_d,swc_total_mm,swc_root_mm,avail_water_mm'

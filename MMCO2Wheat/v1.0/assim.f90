@@ -440,6 +440,9 @@ alpha_s = 0.0_wp
 ! al. (2018) p.48 is not expressed by this formulation.
 !----------------------------------------------------------------------!
 TPU  = 0.11_wp * Vc_max
+! v1.1 P module (design 6.7): TPU capacity follows leaf cytosolic Pi through the
+! triose-phosphate/Pi translocator; p_tpu_scale = 1 at the cytosolic set point.
+IF (p_module_on) TPU = TPU * p_tpu_scale
 !----------------------------------------------------------------------!
 ! Under triose-phosphate limitation alpha_g and alpha_s follow Busch et al.
 ! (2018) Eq. 14, which carries the production of amino acids.
