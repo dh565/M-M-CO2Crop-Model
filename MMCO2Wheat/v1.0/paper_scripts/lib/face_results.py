@@ -335,7 +335,7 @@ class Obs(object):
 
     # -- WDF25 harvest organ DM, all 8 decks (t/ha x 100 -> g m-2); grain minerals; LAI series
     def _wdf25_organs(self):
-        mapping = [("Stem", "W_stem"), ("Leaf", "W_leaf_tot"), ("Spike (head)", "spike"),
+        mapping = [("Stem", "W_stem"), ("Leaf", "W_leaf_tot"), ("Spike", "spike"),
                    ("Chaff", "chaff"), ("Grain", "grain_yield")]
         for dk in [d for d in DECKS if DECKS[d]["site"] == "WDF25"]:
             cv, co2, wat = dk.split("_")[1:4]

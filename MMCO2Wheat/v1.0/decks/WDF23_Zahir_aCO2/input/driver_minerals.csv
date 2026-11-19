@@ -1,33 +1,25 @@
+! Grain-mineral calibration step: column 17 avail_A_mgL_CAL rescaled by obs/model on control deck WDF23_Ruta_aCO2, closed-form rule (minerals are MG0-isolated, grain conc linear in avail_A):
+!   Zn model 15.5406 obs 15.0800 factor 0.97036 cap_binding_days 3 old 0.02516712 new 0.0244212
+!   Cu model 2.2772 obs 2.2500 factor 0.98806 cap_binding_days 0 old 0.0128353 new 0.01268204
+!   Mn model 16.5399 obs 16.3133 factor 0.98630 cap_binding_days 0 old 0.1226657 new 0.1209852
 ! ===========================================================================================
-! WDF23 SEASON-SPECIFIC OVERRIDE (2026-10-15) of the WDF25-calibrated site mineral availability.
-! Class: site soil chemistry unmeasured (the calibration-variables rules (internal; not distributed), record 131 section).
-! Season-specific soil parameters are used where agronomically justified.
-! Justification: WDF23 = bare soil, no amendment; WDF25 = compost + residue burial before sowing
-! (internal note on the WDF field management history; not distributed). Calibration deck WDF23_Ruta_aCO2 (control), method
-! identical to the WDF25 one: linear rescale X_new = X_old * (target/model_old), valid because the
-! mass-flow term is exactly linear in the parameter (sweep an internal sensitivity sweep (not distributed),
-! factors 0.5/0.3/0.2/0.1: grain content scales 1:1). TARGET = observed grain mineral CONTENT
-! (mg m-2 = observed mg/kg x observed grain 173.1 g m-2), NOT concentration: the WDF23 grain mass
-! is itself 0.61 of observed (N-supply shortfall, an internal design note (not distributed)), and a
-! soil parameter must not absorb a grain-mass error. Concentrations therefore stay high by 1/0.61
-! until that error is fixed; contents land on the observation at the control deck. Transfer decks:
-! WDF23_Ruta_eCO2, WDF23_Zahir_aCO2, WDF23_Zahir_eCO2 (evaluation only).
-!   column            WDF25 value -> WDF23 value   (factor = obs content / model content at WDF25 value)
-!   Fe avail_A_mgL_CAL   0.331942 -> 0.0493141    (1.95 / 13.14 mg m-2 = 0.149)
-!   Zn avail_A_mgL_CAL   0.290504 -> 0.0237152    (2.61 / 32.02      = 0.082)
-!   Cu avail_A_mgL_CAL   0.032131 -> 0.00749281   (0.39 / 1.67       = 0.233)
-!   Mn avail_A_mgL_CAL   0.306067 -> 0.0819906    (2.82 / 10.53      = 0.268)
-!   Mg pool_mg_kg        668.0    -> 112.909      (88.6 / 524.3      = 0.169)  (Mg is pool/Kd driven: avail_A = 0)
-!   Ca xylem_Ca_mgL_CAL  842.0246 -> 654.339      (52.3 / 67.26      = 0.777)
-! Every other column is the WDF25 file verbatim (below).
+! WDF23 SEASON-SPECIFIC VALUES of the site mineral availability: WDF23 = bare soil, no amendment; WDF25 = compost
+! + residue burial before sowing (internal note on the WDF field management history; not distributed). Calibration
+! deck WDF23_Ruta_aCO2 (control); transfer decks WDF23_Ruta_eCO2, WDF23_Zahir_aCO2, WDF23_Zahir_eCO2 (evaluation only).
+! Values in the data rows below:
+!   avail_A_mgL_CAL   Fe 0.0574339, Zn 0.0244212, Cu 0.01268204, Mn 0.1209852 mg/L (Zn, Cu and Mn as set by the
+!                     grain-mineral calibration step above, tools/croptimizr_face/recentre.py)
+!   pool_mg_kg        Mg 151.8605 mg/kg
+!   xylem_Ca_mgL_CAL  Ca 15.0 mg/L
+! Every other column equals the WDF25 file.
 ! ===========================================================================================
 ! ==================================================================================================
 ! Mineral parameters — PHYSICALLY BASED REBUILD (design recorded in internal design notes that are
-! not part of this release, incl. amendments A1-A4 + A1-COMPLETED pool/Kd table) + a 2026-09-08 review (David v23PROV
-! review, 2026-09-08): Ca and Mn RESTORED AS MODELLED (they pre-dated the redesign; the redesign's
+! not part of this release, incl. amendments A1-A4 + A1-COMPLETED pool/Kd table) + a review (David v23PROV
+! review): Ca and Mn MODELLED (the redesign's
 ! sentinel A4/R3 gaps are overruled — provisional constants enter TAGGED, never silently).
 ! Every value below is PINNED to a readable primary (locus + DOI) or explicitly PROVISIONAL/flagged.
-! The previous file's unsourced buffer/vmax/km/max_veg/max_grain/phloem/kremob rows are RETIRED
+! Unsourced buffer/vmax/km/max_veg/max_grain/phloem/kremob rows are NOT USED
 ! (diagnosis the minerals diagnosis note (internal; not distributed): all unsourced; caps and mobility multipliers were
 ! the grain-loading double-block).
 ! Reader: positional, one row per mineral in the FIXED order Fe,Zn,Ca,Cu,Mg,Mn; '!' lines and the
@@ -53,10 +45,10 @@
 !                    of a labile pool — see the per-element rows.
 !  vmax_hats_nmol_gFW_h, km_hats_mg_L, vmax_lats_nmol_gFW_h, km_lats_mg_L
 !                    Generic HATS + LATS Michaelis kinetics columns — ALL ZERO in this release
-!                    (2026-09-08, adopted): the only user was Zn, whose Hacisalihoglu 2001
+!                    (adopted): the only user was Zn, whose Hacisalihoglu 2001
 !                    seedling short-term influx Vmax applied to whole-crop root DM was FALSIFIED at
 !                    canopy scale (grain Zn 50-80x high, pre-registered structural prediction;
-!                    progress 20260907_2348). Hacisalihoglu et al. 2001 [Plant Physiol 125:456,
+!                    see below). Hacisalihoglu et al. 2001 [Plant Physiol 125:456,
 !                    Table II, DOI 10.1104/pp.125.1.456] stays cited in the Zn row as transporter
 !                    IDENTITY/Km EVIDENCE ONLY. Code machinery retained (converts nmol gFW-1 h-1 ->
 !                    mg m-2 d-1 with 24 h, fw_dw_root, W_root, a_root, atomic mass); never fires
@@ -93,7 +85,7 @@
 !                    / 51.6 mg (same grain positions/seasons) = 0.749 / 0.789 / 0.750. [PINNED,
 !                    source read; lower-bound status DECLARED]
 !  field_rate_mg_gDW_d
-!                    the route-(b) formulation (adopted 2026-09-08, explicitly PROVISIONAL —
+!                    the route-(b) formulation (adopted, explicitly PROVISIONAL —
 !                    tag verbatim: "provisional, no soil-supply dependence; expected ~3x low"):
 !                    field-anchored ACTIVE-uptake rate, mg element per g LIVING root DW per day,
 !                    applied as rate x W_root x a_root (the living-root state — the SAME basis
@@ -123,7 +115,7 @@
 !      target -- the grain remobilization shares 13.0% (Fe) and 42.6% (Zn) -- is Table 2 of the
 !      SAME paper, row "Potting mix 56 DAA", Control, i.e. it comes from THIS experiment. Taking
 !      the coefficient and the target from one experiment is what makes the test self-consistent.
-!      BASIS CHANGE 2026-10-18 (repair R5b): the shipped 0.15 was the TOTAL VEGETATIVE
+!      BASIS CHANGE (repair R5b): the shipped 0.15 was the TOTAL VEGETATIVE
 !      column of this same Table 1 (-14.7%, prose p.4266: "Total vegetative Fe content (the sum
 !      of all non-grain organs) decreased between anthesis and maturity ... in the control line
 !      (14.7%, P=0.36)") -- a whole-season integral over ALL non-grain organs: a basis mismatch.
@@ -136,7 +128,7 @@
 !      alkaline pH 8.3, DOI 10.3390/soilsystems7010016] -> initial soln 7.8 ug/L vs measured
 !      4.4-7.8 [Duffner Table 2].
 !      ACTIVE UPTAKE = field_rate 2.36e-3 mg Zn gDW-1 d-1 (= 36 nmol gDW-1 d-1) on the LIVING
-!      root W_root x a_root [the route-(b) formulation, adopted 2026-09-08; PROVISIONAL — tag
+!      root W_root x a_root [the route-(b) formulation, adopted; PROVISIONAL — tag
 !      verbatim: "provisional, no soil-supply dependence; expected ~3x low"]. Derivation
 !      (convention PRE-REGISTERED; the zinc uptake basis is stated here): whole-season whole-plant
 !      uptake of the CONTROL (0 Zn) treatment = shoot Zn at maturity 259 g/ha (Table 6) + root Zn
@@ -154,7 +146,7 @@
 !      wheat HATS/LATS — HATS Vmax 9.0-30.9 nmol gFW-1 h-1, Km 0.6-2.3 nM; LATS Vmax 143-521,
 !      Km 1.9-4.9 uM [DOI 10.1104/pp.125.1.456]. Applying these seedling short-term influx
 !      capacities to whole-crop root DM gave grain Zn 50-80x obs (pre-registered structural
-!      prediction CONFIRMED, progress 20260907_2348): Vmax columns ZEROED 2026-09-08 (0.0 =
+!      prediction CONFIRMED, see below): Vmax columns ZEROED (0.0 =
 !      structural off); Km columns set to the inert placeholder 1.0 (STRUCTURAL, never evaluated
 !      while Vmax = 0 — same convention as every other mass-flow-only row). The transport-system
 !      identity and Km values stand as evidence, the capacity numbers are not a field flux (field
@@ -165,7 +157,7 @@
 !      in full: soil-grown potting mix, cv Bobwhite, growth chamber, flag leaf, anthesis to
 !      maturity (0-56 DAA); and the same reason for choosing it -- the 42.6% grain Zn
 !      remobilization target this model is tested against is Table 2 of this same experiment.
-!      BASIS CHANGE 2026-10-18 (repair R5b) from the shipped 0.61 = the TOTAL
+!      BASIS CHANGE (repair R5b) from the shipped 0.61 = the TOTAL
 !      VEGETATIVE column of this same Table 1 (prose p.4266: "Total vegetative Zn decreased only
 !      in the control line (60.9%, P <0.001)"). ALTERNATIVE TESTED AND REJECTED: the hydroponic
 !      flag-leaf value -48.3 (prose p.4268). CAVEAT: one cultivar, one controlled experiment].
@@ -207,13 +199,13 @@
 !      (design M2). export 0.39 [Tiryakioglu et al. 2014, Turk J Agric For 38:488, p.493: Mg
 !      remobilization to grain 38.9%; DOI 10.3906/tar-1306-83; metric from ZGS 72, caveat
 !      recorded in design].
-!  Mn  MODELLED (restored; standard divalent pathway, mass flow only). pool 3.8 DTPA
-!      [Schenkeveld Table 2.1 p.33, Hofuf; PINNED — re-read 2026-09-08]. Kd 1907 from the
+!  Mn  MODELLED (standard divalent pathway, mass flow only). pool 3.8 DTPA
+!      [Schenkeveld Table 2.1 p.33, Hofuf; PINNED — re-read]. Kd 1907 from the
 !      pH regression log10(Kd) = -0.330 + 0.457 x pH [Sheppard, Long & Sanipelli 2009, SKB report
 !      R-09-27 "Solid/liquid partition coefficients (Kd) for selected soils and sediments at
 !      Forsmark and Laxemar-Simpevarp", Table 5-29 Mn row + Sec. 5.3.11: stepwise regression on
 !      318 NTE-Canadian + Thibault values plus 84 recent literature values, desorption/sorption
-!      dummy = 0.5, residual GSD 12, r2 0.32; SOURCE READ 2026-09-08], evaluated at Hofuf
+!      dummy = 0.5, residual GSD 12, r2 0.32; SOURCE READ], evaluated at Hofuf
 !      pH-CaCl2 7.9 [Schenkeveld Table 2.1] -> 10^3.2803 = 1907 L/kg. [PINNED equation; DECLARED
 !      application: (i) regression pH scale unstated in the report — pH-CaCl2 7.9 used (pH-water
 !      ~8.2-8.4 would give Kd 2600-3200); (ii) wide residual GSD 12.] CORROBORATION: EMRAS 2008
@@ -234,8 +226,8 @@
 !                    Provenance rule (plan Sect. 11; Part 1 Sect. 2.8): the upper range of grain concentrations measured
 !                    across N and genotype trials (Fan et al. 2008, J Trace Elem Med Biol 22:315, DOI 10.1016/j.jtemb.2008.07.002;
 !                    Zhao et al. 2009, J Cereal Sci 49:290, DOI 10.1016/j.jcs.2008.11.007; Cakmak 2008, Plant Soil 302:1,
-!                    DOI 10.1007/s11104-007-9466-3). STATUS 2026-10-06: none of the three is on disk and their abstracts
-!                    (read 2026-10-06 via Europe PMC / Semantic Scholar) carry no numeric range -> ALL SIX VALUES = 0,
+!                    DOI 10.1007/s11104-007-9466-3). STATUS: none of the three is on disk and their abstracts
+!                    (read via Europe PMC / Semantic Scholar) carry no numeric range -> ALL SIX VALUES = 0,
 !                    DECLARED ABSENT until the full texts are read first hand (plan Sect. 12 evidence gap). The mechanism
 !                    is proven on a TEST-ONLY input set (Batch 6 note Sect. 3), never a model arm.
 !
@@ -257,7 +249,7 @@
 !                    need (the supply-law evidence note (internal; not distributed) Sect. (b)). BRACKET START (pre-calibration; see calibration log for
 !                    the final value and the run-by-run bracket): the mode-0 pool/Kd- or ceiling-implied solution
 !                    concentration -- Fe 0.119 (= the existing ceiling), Zn 5.03/645=0.0078, Cu 2.3/1200=0.0019,
-!                    Mn 3.8/1907=0.0020 mg/L -- informed BY, but never equal to, the retired Hofuf analogue.
+!                    Mn 3.8/1907=0.0020 mg/L -- informed BY, but never equal to, the Hofuf analogue.
 !  xylem_Ca_mgL_CAL  rec 131 (OPTIONAL 18th column, read only when driver record 131 = 1): Ca xylem-sap
 !                    concentration entering the grain-water-import route, mg L-1-equivalent. SITE-LEVEL CALIBRATION
 !                    PARAMETER, same status as avail_A_mgL_CAL above: replaces the borrowed 54.9 mg/L
@@ -296,8 +288,8 @@
 !                    low wheat grain Zn concentration, whereas optimal N supply achieves high grain Zn
 !                    concentration, but excess N supply does not further increase grain Zn, grain N, or
 !                    protein concentrations").  0 = NO BOUND.
-!                    VALUE, SOURCED AT FIRST HAND 2026-10-18 (follow-up; the 2026-10-18 morning
-!                    "DECLARED ABSENT" status is SUPERSEDED -- both primaries are now on disk):
+!                    VALUE, SOURCED AT FIRST HAND
+!                    (both primaries read at first hand):
 !                    PELEG, Saranga, Yazici, Fahima, Ozturk & Cakmak 2008, Plant Soil 306:57-67,
 !                    DOI 10.1007/s11104-007-9417-z, TABLE 3 p.62 ("Grain Zn, Fe and protein
 !                    concentration of 22 wild emmer wheat accessions and two durum wheat cultivars
@@ -307,7 +299,7 @@
 !                    samples.  Conversion printed by the same paper at p.59: "Grain nitrogen
 !                    concentration was multiplied by 5.7 to obtain grain protein concentration (GPC)",
 !                    so grain N (g/kg) = GPC/5.7 is the SOURCE's OWN factor, not an assumption, and it
-!                    is the same Jones 5.7 this model already carries at main_ExCROP.f90
+!                    is the same Jones 5.7 this model already carries at main_MMCO2Crop.f90
 !                    grain_protein_pct.  The four printed rows and the arithmetic:
 !                      Svevo dry  Zn 49 Fe 33 GPC 165 -> N 28.947 -> r_Zn 1.6927  r_Fe 1.1400
 !                      Svevo wet  Zn 53 Fe 47 GPC 165 -> N 28.947 -> r_Zn 1.8309  r_Fe 1.6236
@@ -343,7 +335,7 @@
 !                    route, and Mn shows no net remobilization (Garnett & Graham 2005 Table 3), so a
 !                    grain-protein sink is not the mechanism for either.
 ! -------------------------------------------------------------------------------------------------
-! RECORD 183 `mineral_buffer_power_basis` (2026-10-18) -- WHAT IT DOES TO THIS FILE.
+! RECORD 183 `mineral_buffer_power_basis` -- WHAT IT DOES TO THIS FILE.
 ! (a) COLUMN 19 `buffer_power_b` IS NOT READ by the diffusion coefficient when driver_main.txt
 !     record 183 = 1.  It stays at 1.0 on every row below (that is what makes record 183 = 0
 !     byte-identical), but at mode 1 the Barber-Cushman coefficient divides by the LINEAR-ISOTHERM
@@ -373,11 +365,11 @@
 !     an internal design note (not distributed).
 ! -------------------------------------------------------------------------------------------------
 name,modelled,pool_mg_kg,kd_L_kg,ceiling_mg_L,vmax_hats_nmol_gFW_h,km_hats_mg_L,vmax_lats_nmol_gFW_h,km_lats_mg_L,ps_rate_nmol_gDW_d,ps_rate_def_nmol_gDW_d,fe_def_switch,export_frac,xylem_route,grain_h2o_g_gDM,field_rate_mg_gDW_d,grain_max_mg_kg,avail_A_mgL_CAL,xylem_Ca_mgL_CAL,buffer_power_b,grain_eN_mg_gN
-! ---- rec 181 (2026-10-18): THE Mg ROW'S COLUMN 17 ----------------------
-!  avail_A_mgL_CAL was 0.0 on the Mg row on every deck, because the record-131 solution branch read it
-!  for Fe/Zn/Cu/Mn ONLY and magnesium alone kept the LINEAR Kd PARTITION [M] = (pool_mg_kg)/Kd
+! ---- rec 181: THE Mg ROW'S COLUMN 17 ----------------------
+!  avail_A_mgL_CAL on the Mg row: the record-131 solution branch reads this column
+!  for Fe/Zn/Cu/Mn ONLY and magnesium alone uses the LINEAR Kd PARTITION [M] = (pool_mg_kg)/Kd
 !  (mineral_module.f90).  Under driver_main.txt record 181 = 1 this cell IS the soil-solution
-!  Mg concentration, in mg L-1, and the Kd partition is NOT read for Mg.  It is now 11.4.
+!  Mg concentration, in mg L-1, and the Kd partition is NOT read for Mg.  It is 11.4.
 !  SOURCE, READ AT FIRST HAND: Barakat, M. A. et al. (2025) Scientific Reports 15:44670,
 !  DOI 10.1038/s41598-025-29041-y, Table 2 printed p.3 ("Some chemical and physical properties of the
 !  soil under study. Data were average +- standard error (SE)."), row quoted VERBATIM:
@@ -385,9 +377,9 @@ name,modelled,pool_mg_kg,kd_L_kg,ceiling_mg_L,vmax_hats_nmol_gFW_h,km_hats_mg_L,
 !  on a soil of 922 +- 8.48 g kg-1 sand, 16 +- 5.65 g kg-1 clay, texture "Sand", pH (1:1) 7.83 +- 0.35,
 !  CaCO3 195 +- 4.24 g kg-1 -- a CALCAREOUS SAND, the WDF textural/carbonate analogue.  The SAME table
 !  row already pins this module's calcite Ca ceiling (Soluble Ca 1.37 +- 0.06 mmol kg-1 -> 54.9 mg L-1,
-!/record 166), so Mg now uses the convention Ca already used: NO new convention.
+!/record 166), so Mg uses the same convention as Ca: NO new convention.
 !  0.47 mmol kg-1 x 24.305 g mol-1 = 11.4 mg L-1; range from the table's own +- 1 SE
-!  0.32..0.62 mmol kg-1 -> 7.7776..15.0691 mg L-1, ENFORCED in main_ExCROP.f90 with the owner's 10 %
+!  0.32..0.62 mmol kg-1 -> 7.7776..15.0691 mg L-1, ENFORCED in main_MMCO2Crop.f90 with the owner's 10 %
 !  margin rule (ERROR STOP outside the margin, run.log WARNING inside it).
 !  UNIT CONVENTION, DECLARED AND FLAGGED: the table's unit is mmol kg-1 of AIR-DRIED SOIL from a 1:1
 !  soil:water extract (printed p.4: "50 g sample of air-dried soil ... addition of 50 mL of distilled
@@ -406,8 +398,8 @@ name,modelled,pool_mg_kg,kd_L_kg,ceiling_mg_L,vmax_hats_nmol_gFW_h,km_hats_mg_L,
 !  ALGEBRAICALLY UNCHANGED.
 ! ---------------------------------------------------------------------------------------------------
 Fe,1,6.7,0.0,0.119,0.0,1.0,0.0,1.0,0.1827,242.8,0,0.328,0,0.0,0.0,0.0,0.0574339,0.0,1.0,1.2626
-Zn,1,5.03,645.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.717,0,0.0,2.36e-3,0.0,0.0290847,0.0,1.0,1.8406
+Zn,1,5.03,645.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.717,0,0.0,2.36e-3,0.0,0.0244212,0.0,1.0,1.8406
 Ca,1,24026.0,0.0,54.9,0.0,1.0,0.0,1.0,0.0,0.0,0,0.0,1,0.7625,0.0,0.0,0.0,15.0,0.0,0.0
-Cu,1,2.3,1200.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.52,0,0.0,0.0,0.0,0.0121082,0.0,1.0,0.0
+Cu,1,2.3,1200.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.52,0,0.0,0.0,0.0,0.01268204,0.0,1.0,0.0
 Mg,1,151.8605,60.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.39,0,0.0,0.0,0.0,11.4,0.0,1.0,0.0
-Mn,1,3.8,1907.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.0,0,0.0,0.0,0.0,0.1160791,0.0,1.0,0.0
+Mn,1,3.8,1907.0,0.0,0.0,1.0,0.0,1.0,0.0,0.0,0,0.0,0,0.0,0.0,0.0,0.1209852,0.0,1.0,0.0

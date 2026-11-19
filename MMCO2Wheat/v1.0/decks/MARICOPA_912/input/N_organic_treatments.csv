@@ -1,4 +1,7 @@
-! Maricopa FACE TRNO 912 initial surface residue - archive Init_conditions
-! icpcr=OAT icrag=500 kg/ha icrn=1.00 %N icdat=1995-12-18
-1
-cereal_residue,3,500.0,1.000,40.0,-1,4,Maricopa initial residue (previous crop OAT)
+! Maricopa FACE TRNO 912 residue of the previous crop - archive yield.ods Init_conditions
+! icdat=1995-12-18 icpcr=OAT icrag=500 kg/ha icrt=500 kg/ha (roots) icrn=1.0 %N icrip=100 % icrdp=10 cm
+! In-season event at DAS 3 (age 0).
+! Root residue: N % NOT in the archive -> derived from the cereal_residue C:N (80) at C 40 % (0.50 % N), FLAGGED ESTIMATE.
+2
+cereal_residue,3,500.0,1.000,40.0,-1,0,Maricopa residue (previous crop OAT) archive icrag/icrn
+cereal_residue,3,500.0,-1,40.0,-1,0,Maricopa root residue of previous crop archive icrt (N from C:N 80 ESTIMATE)

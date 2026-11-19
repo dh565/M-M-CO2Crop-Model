@@ -26,15 +26,16 @@ wheat FACE experiments in Part 2.
 
 | path | what it is |
 |---|---|
-| `*.f90`, `Makefile` | the model: 19 source files and the only build file |
+| `*.f90`, `Makefile` | the model: 20 source files (19 compiled units and one `include` body) and the only build file |
 | `INPUT_GUIDE.md` | the input manual — every input file, its format and units, and every driver record |
-| `testcase/` | the Part 1 reference simulation, with its inputs, its 88 expected outputs and its checksums |
-| `tools/compare_outputs.py` | compares your results against the shipped expected ones |
-| `scripts/release_acceptance.py` | the 42-deck release acceptance harness |
+| `testcase/` | the Part 1 reference simulation, with its inputs, its 90 expected outputs and its checksums |
+| `testcase/compare.py` | the acceptance check of a run against the shipped expected results (IDENTICAL / PASS / DIFFERENT-DIAGNOSTIC / FAIL) |
+| `tools/compare_outputs.py` | a detailed per-column report of the differences between your results and the shipped expected ones |
+| `scripts/release_acceptance.py` | the deck-by-deck acceptance harness (compares a run of every deck against a reference arm) |
 | `scripts/render_architecture.py` | regenerates `docs/ARCHITECTURE.png` from `docs/ARCHITECTURE.dot` |
 | `docs/MODULES.md` | per-module reference |
 | `docs/ARCHITECTURE.png`, `.dot` | the module call and data-flow diagram and its source |
-| `docs/FILE_INVENTORY.md` | every file that ships, every input, and all 88 outputs, one line each |
+| `docs/FILE_INVENTORY.md` | every file that ships, every input, and all 90 outputs, one line each |
 | `docs/V1_KNOWN_LIMITATIONS.md` | the optional diagnostics that v1.0 cannot produce, with the record and the file name of each |
 | `LICENSE`, `CITATION.cff` | licence and machine-readable citation |
 
@@ -48,14 +49,14 @@ pandas, no netCDF, no MPI, no external library of any kind.
 
 | dependency | needed for | version this release was built and tested with |
 |---|---|---|
-| gfortran | the model | **GNU Fortran (Homebrew GCC 9.3.0) 9.3.0** at `/usr/local/bin/gfortran`; an x86_64 binary, so on this arm64 host it runs under Rosetta 2 and emits x86_64 code |
+| gfortran | the model | **GNU Fortran (Homebrew GCC 16.2.0) 16.2.0**, native arm64 |
 | make | the build | **GNU Make 3.81** |
-| python3 | `tools/compare_outputs.py`, `scripts/release_acceptance.py` | **Python 3.7.7** (both tools need 3.6 or newer) |
-| operating system | — | **macOS 26.6.2 (build 25G83)**, `uname -m` = `arm64` (Apple silicon), the compiler running under **Rosetta 2** |
+| python3 | `tools/compare_outputs.py`, `scripts/release_acceptance.py` | **Python 3.15.2** (both tools need 3.6 or newer) |
+| operating system | — | **macOS 27.2**, `uname -m` = `arm64` (Apple silicon) |
 
 Every version above was read from the tools themselves on the release machine
-(`gfortran --version`, `make --version`, `python3 --version`, `sw_vers`, `uname -m`,
-`file $(which gfortran)`) on 2026-10-21, not quoted from a note.
+(`gfortran --version`, `make --version`, `python3 --version`, `sw_vers`, `uname -m`)
+on 2026-11-18, not quoted from a note.
 
 Not installed on that machine, and therefore not required: Graphviz, matplotlib, PyYAML.
 Where one of them would normally have been used, the substitute is stated in place — see
@@ -74,8 +75,13 @@ executable `mmco2crop` in the current directory, with the flags the `Makefile` s
 this release was tested with:
 
 ```
-switch = -O3 -Wall      FFLAGS = -I/usr/local/include      FLINK = -L/usr/local/lib
+switch = -O3 -Wall      FFLAGS = -I/usr/local/include -ffree-line-length-none      FLINK = -L/usr/local/lib
 ```
+
+`-ffree-line-length-none` lets gfortran read source lines longer than the 132 characters of
+the Fortran standard (four statements of the source are longer). Without it, gfortran 13.3
+(Ubuntu 24.04, x86-64) stops at the first such line. It does not change the code that is
+generated: with gfortran 16.2.0 the executable is the same with and without it.
 
 The build takes well under a minute. **Compiler warnings are normal and expected** —
 unused variables, unused dummy arguments, and linker notes about duplicate system
@@ -103,7 +109,7 @@ mkdir -p run && cp -R testcase/input run/ && mkdir -p run/output \
   && tail -1 run/run.log
 ```
 
-The last line printed should be `exit=0`; the run takes well under a minute and writes 88
+The last line printed should be `exit=0`; the run takes well under a minute and writes 90
 files into `run/output/`.
 
 Two things about that command are not optional. The model opens its inputs by the
@@ -120,6 +126,14 @@ run the executable from inside it. What `input/` must contain is in `INPUT_GUIDE
 ## Verifying a run
 
 ```
+python3 testcase/compare.py run/output testcase/output
+```
+
+This is the acceptance check: per file IDENTICAL, PASS, DIFFERENT-DIAGNOSTIC or FAIL, and
+`OVERALL: PASS` or `OVERALL: FAIL`. Its fixed tolerances and the listed diagnostic
+columns are in `testcase/README.md`, section "Compare it".
+
+```
 python3 tools/compare_outputs.py run/output testcase/output
 ```
 
@@ -129,19 +143,18 @@ row at which each maximum occurs; then a summary table ordered worst first and a
 verdict class. In a matched environment it ends with:
 
 ```
-88 of 88 expected file(s) byte-identical.
+90 of 90 expected file(s) byte-identical.
 VERDICT: byte-identical reproduction of the reference case.
 ```
 
-The console log can be compared as well, with `cmp run/run.log testcase/run.log`. Note
-that `testcase/run.log` was produced by the current build and differs from the frozen
-reference run by exactly 24 removed debug lines; `testcase/README.md` explains why.
+The console log can be compared as well, with `cmp run/run.log testcase/run.log`;
+`testcase/README.md` explains the one line that differs.
 
-There is also a 42-deck acceptance harness, `scripts/release_acceptance.py`, which runs
-every release deck of a sealed reference package and reports how many output files are
-identical, differing, missing or extra. It is the gate every release commit had to pass
-and needs that sealed package, so it is of use mainly to someone re-verifying the release
-itself.
+There is also a deck-by-deck acceptance harness, `scripts/release_acceptance.py`, which
+runs every deck of a reference arm (a directory of deck folders, each holding `input/`,
+`output/` and `run.log`) and reports how many output files are identical, differing,
+missing or extra. It needs such a reference arm, so it is of use mainly to someone
+re-verifying the release itself.
 
 ### The two tolerance statements
 
@@ -150,26 +163,23 @@ These are two different claims and must never be blurred into one.
 **1. In a matched environment, reproduction is byte-for-byte, and that was measured
 here.** A matched environment means the same compiler, the same compiler version, the
 same optimization flags and the same platform — concretely, the row of versions in
-"Dependencies" above. In that environment all 88 output files of the reference case are
-reproduced byte for byte. This is not an expectation: it is the result of the release
-acceptance gate, which required all 42 release decks to exit 0 and all 3 696 output files
-to be byte-identical to the frozen reference package, and which was re-run on every
-commit of the release clean-up.
+"Dependencies" above. In that environment all 90 output files of the reference case are
+reproduced byte for byte. This is not an expectation: on 18 Nov 2026 this package was
+extracted to an empty directory, built with the shipped `Makefile` (the executable has md5
+`ae912216adbb5164fc3b11767694b7d1`), the test case was run, and
+`tools/compare_outputs.py` reported 90 of 90 files byte-identical.
 
 **2. On a different compiler, compiler version, optimization level or platform, byte
 identity is NOT expected.** Different
 compilers and versions legitimately reorder floating-point operations, contract
 multiply-add pairs differently and evaluate intrinsics to different last bits; in a
-season-long iterative simulation those last-bit differences grow. **No measured
-general cross-platform tolerance can be quoted for this model**: one further
-platform has been measured, and a single second platform does not define a tolerance.
-That measurement is reported in Part 1, Sect. 13.3: the frozen source compiled with
-gfortran 13.3 on Linux x86-64 reproduces the reference package produced here on macOS
-(Apple silicon) with 55 of the 88 output tables byte-identical, the harvest states of
-yield components, nitrogen and minerals agreeing to print precision, the conservation
-residuals differing at the 10^-15 level, and two diagnostic columns differing on single
-days at the 1 % level. Treat that as one data point on compiler sensitivity, not as a
-tolerance to test against. `tools/compare_outputs.py` exists precisely
+season-long iterative simulation those last-bit differences grow. One other
+platform has been measured: Ubuntu 24.04, gfortran 13.3, x86-64 (19 Nov 2026). Of the 90
+output files, 57 were byte-identical, 31 within the tolerances of `testcase/compare.py`, and
+2 differed only in the listed diagnostic columns (`OVERALL: PASS`); grain yield, biomass
+and LAI (`daily_growth.csv`) were byte-identical. The tolerances of `testcase/compare.py`
+define what counts as a reproduction; they are not a measured bound for every platform.
+`tools/compare_outputs.py` exists precisely
 to quantify whatever difference you actually get: run it and read the numbers it prints.
 A difference it reports on a different compiler is information about compiler
 sensitivity, not evidence that your installation is wrong, and the right response is to
@@ -179,14 +189,14 @@ report the numbers rather than to adjust anything.
 
 ## The source files
 
-Nineteen files are compiled. `TYPES.f90` and `SHARED.f90` carry declarations only;
+Twenty source files ship and nineteen are compiled. `TYPES.f90` and `SHARED.f90` carry declarations only;
 `csv_file_1d.f90` is an `include` body rather than a separate program unit. Build order is
 the `OBJS` line of the `Makefile`.
 
 | file | what it does |
 |---|---|
 | `TYPES.f90` | declares the working-precision kinds `wp` and `ik` with which every model variable is declared |
-| `SHARED.f90` | the single global store: physical constants, measured parameters with their sources, the 183 driver switches, every prognostic pool and diagnostic ledger, and six small helper routines |
+| `SHARED.f90` | the single global store: physical constants, measured parameters with their sources, the 198 driver switches, every prognostic pool and diagnostic ledger, and six small helper routines |
 | `csv_file.f90` | minimal CSV writer; a reduced form of Arjen Markus's public-domain module, keeping only the double-precision routines the model calls |
 | `csv_file_1d.f90` | the `include` body of that module's array write routine |
 | `count_lines.f90` | counts an input file's records so the daily arrays can be allocated before reading |
@@ -196,6 +206,7 @@ the `OBJS` line of the `Makefile`.
 | `radiation_module.f90` | component shortwave split by Beer's law and gray-body sky-canopy-soil longwave radiosity; net radiation of canopy and of soil |
 | `soil_heat_module.f90` | one-dimensional soil heat conduction with de Vries heat capacity and Johansen conductivity; backward Euler solved by the Thomas algorithm |
 | `soiln_module.f90` | residue and microbial carbon-nitrogen turnover; whether each pool's decay mineralizes or immobilizes nitrogen |
+| `nitrogen_radial_module.f90` | radial Barber-Cushman nitrate and ammonium uptake at the root surface, per soil layer (driver record 189) |
 | `assim.f90` | leaf gas exchange for one leaf class in one hour: Farquhar-Busch photosynthesis, Leuning conductance, optional leaf water potential |
 | `energy_balance_module.f90` | the three-node canopy / soil / canopy-airspace energy balance, solved by damped Newton iteration on a numerical 3x3 Jacobian |
 | `hydro.f90` | mixed-form Richards soil water over ten layers in adaptive implicit sub-steps, with Jackson root distribution and Feddes uptake reduction |
@@ -203,25 +214,25 @@ the `OBJS` line of the `Makefile`.
 | `phenology_module.f90` | thermal time with vernalization and photoperiod, the eight stage dates, and the continuous 0-2 development stage the growth laws run on |
 | `CANOPY_MODEL.f90` | the hourly canopy integration: a bracketed canopy-temperature root-find around a nested assimilation / conductance / vapour-deficit fixed point |
 | `growth_module.f90` | the daily carbon and nitrogen economy: partition, respiration, leaf area, the stem reserve, nitrogen payment and turnover, grain number and kernel mass, root descent |
-| `main_MMCO2Crop.f90` | `PROGRAM mmco2crop`: reads the decks, refuses retired driver options, runs the daily loop and its closures, writes the 88 output files and the season summary |
+| `main_MMCO2Crop.f90` | `PROGRAM mmco2crop`: reads the decks, refuses retired driver options, runs the daily loop and its closures, writes the 90 output files and the season summary |
 
 Each file carries a release header stating the same thing, plus what it calls, what calls
 it, what it produces and which module consumes each product. `docs/MODULES.md` collects
-all nineteen.
+all twenty.
 
 ---
 
 ## Inputs
 
-A run reads up to thirteen files from its `input/` directory, nine of them mandatory. The run-control file
-`input/driver_main.txt` is **positional**: 183 records, one value per line followed by an
+A run reads the files below from its `input/` directory; nine of them are mandatory. The run-control file
+`input/driver_main.txt` is **positional**: 198 records, one value per line followed by an
 optional `!` comment, and record 1 names the weather file. Never delete or renumber a
 record — retired records keep their position and are marked RESERVED, because removing one
 silently reassigns every switch below it.
 
 | file | what it carries |
 |---|---|
-| `input/driver_main.txt` | the 183 positional run-control records: site, canopy, soil, CO2, and every process switch |
+| `input/driver_main.txt` | the 198 positional run-control records: site, canopy, soil, CO2, and every process switch |
 | the weather file named by record 1 | daily weather: year, month, day, sunrise hour, Tmax, Tmin, RHmax, RHmin, wind, precipitation, irrigation, radiation |
 | `input/driver_swtr.txt` | soil-profile setup: hydraulic file path, Richards sub-steps, initial root depth, water-table flag, layer count, initial water content and layer boundaries |
 | `input/SoilLayer_vgm.csv` | per-layer van Genuchten-Mualem parameters |
@@ -233,10 +244,11 @@ silently reassigns every switch below it.
 | `input/N_fertilizer.csv` | fertilizer applications, with an optional form keyword |
 | `input/N_organic_treatments.csv` | organic residue and amendment events, including pre-sowing ones. Optional: absent, or a count of 0, is the no-residue baseline |
 | `input/cultivar_partition.csv` | the leaf partition window. Optional: absent means the WOFOST baseline defaults, and the run says so |
+| `input/soilN_init_profile.csv`, `input/soilN_measured_state.csv`, `input/presow_daily.csv` | optional: measured initial mineral N by layer, mineral N reset on a measurement day, and the daily pre-run soil temperature and water factor for pre-sowing residue decomposition (`INPUT_GUIDE.md`, section 13) |
 
 **`INPUT_GUIDE.md` is the manual**: it gives each file's exact format and units, says which
 entries are mandatory and which have a documented default and where that default comes
-from, and lists every one of the 183 driver records with the values v1.0 accepts. Read it
+from, and lists every one of the 198 driver records with the values v1.0 accepts. Read it
 before building a deck of your own. A value whose code the release does not contain is
 refused at startup with the record number, the record name, the offending value and the
 implemented set, and a non-zero exit status — the model never falls through to a different
@@ -246,7 +258,7 @@ mechanism.
 
 ## Outputs
 
-A run writes **88 CSV files** into `output/`, each with a header row, plus the season
+A run writes **90 CSV files** into `output/`, each with a header row, plus the season
 summary on standard output (the run command above captures it as `run.log`). They cover
 the daily and hourly energy balance, radiation and aerodynamics; the soil water profile,
 its ledger and the Richards solver trace; gas exchange and leaf temperature; phenology,
@@ -254,7 +266,7 @@ carbon partition and growth; the organ-level canopy chronology; the stem reserve
 number, kernel mass and grain filling; the soil and plant nitrogen economy; and the
 six-element grain minerals.
 
-`docs/FILE_INVENTORY.md` lists all 88 with one line each on content and units, grouped by
+`docs/FILE_INVENTORY.md` lists all 90 with one line each on content and units, grouped by
 topic, together with the input files and everything else that ships.
 
 Seven optional diagnostic files cannot be produced by v1.0, because the driver settings
@@ -267,7 +279,8 @@ in `docs/V1_KNOWN_LIMITATIONS.md`.
 
 ![Module call and data-flow graph](docs/ARCHITECTURE.png)
 
-`docs/ARCHITECTURE.png` shows the nineteen modules as boxes grouped into bands by time step
+`docs/ARCHITECTURE.png` shows nineteen of the twenty source files as boxes (it does not
+include `nitrogen_radial_module.f90`, which is called from `main_MMCO2Crop.f90` only) grouped into bands by time step
 — no time step, season, daily, hourly, the hourly energy-balance sub-step, and the
 adaptive Richards sub-step — with arrows for data flow labelled with the main variables
 that cross them.
@@ -293,37 +306,40 @@ If you use this software, or results obtained with it, cite both companion paper
 
 > Helman, D. (2026). M&M-CO2Wheat v1.0: A fully mechanistic coupled
 > carbon–nitrogen–water–energy wheat model with a closed canopy energy balance — Part 1:
-> Model description. *Geoscientific Model Development* (submitted; **DOI pending**).
+> Model description. Submitted to Geoscientific Model Development.
 >
 > Helman, D. (2026). M&M-CO2Wheat v1.0 — Part 2: Model evaluation against three wheat
-> free-air CO2 enrichment (FACE) experiments. *Geoscientific Model Development*
-> (submitted; **DOI pending**).
+> free-air CO2 enrichment (FACE) experiments. Submitted to Geoscientific Model Development.
 
 The WheatDryFACE experiment and its measurements:
 
 > Mulero, G., Bonfil, D., Lerner, G., Tamata, E., Egorov, F., Harris, Y., Michael, Y., Usenko, D.,
 > and Helman, D. (2026a). WheatDryFACE: Design, performance, and insights from a multifaceted
-> Mediterranean dryland wheat free-air carbon dioxide enrichment (FACE) platform. *Field Crops
-> Research*, in review; preprint https://doi.org/10.2139/ssrn.6719421.
+> Mediterranean dryland wheat free-air carbon dioxide enrichment (FACE) platform. Manuscript under review.
 >
 > Mulero, G., Bonfil, D. J., and Helman, D. (2026b). Where does the carbon go? Elevated CO2
 > amplifies photosynthesis under high nitrogen but not yield in dryland Mediterranean wheat.
-> *Plant, Cell & Environment*, under review; preprint https://doi.org/10.2139/ssrn.6879639.
+> Manuscript under review.
 >
 > Helman, D., Mulero, G., and Tamata, E. (2026). Elevated CO2 increases leaf temperature
-> independently of stomatal regulation. Research Square [preprint],
-> https://doi.org/10.21203/rs.3.rs-9493050/v1.
+> independently of stomatal regulation. Manuscript under review.
+>
+> Helman, D., and Mulero, G. (2026a). WheatDryFACE free-air CO2 enrichment experiment, Israel, 2022/23–2024/25: processed observations in ICASA format. Zenodo [data set],
+> https://doi.org/10.5281/zenodo.24352317.
+>
+> Helman, D., and Mulero, G. (2026b). WheatDryFACE free-air CO2 enrichment experiment, Israel, 2022/23–2024/25: raw sensor and image data. Zenodo [data set],
+> https://doi.org/10.5281/zenodo.24352486.
 
-Zenodo records: this package https://doi.org/10.5281/zenodo.23687586; the reference outputs of
-the 38 decks https://doi.org/10.5281/zenodo.23688770; the WheatDryFACE observation tables read by `paper_scripts/` https://doi.org/10.5281/zenodo.23688951.
+Zenodo records: this package https://doi.org/10.5281/zenodo.23687586; the reference outputs of the 38 decks
+https://doi.org/10.5281/zenodo.24373926; the WheatDryFACE observations in ICASA format, Helman and Mulero (2026a),
+https://doi.org/10.5281/zenodo.24352317, and the raw sensor and image data, Helman and Mulero (2026b),
+https://doi.org/10.5281/zenodo.24352486; the WheatDryFACE observation tables in the layout read by
+`paper_scripts/` (`OBS_DIR`) https://doi.org/10.5281/zenodo.23688951.
 
-`CITATION.cff` carries the same information in machine-readable form, with `doi: TBD` on
-both entries and a note on each saying that the string is a placeholder to be replaced
-with the assigned DOI on acceptance. PyYAML is not installed on the release machine, so
-the file could not be validated with it; it was parsed instead by a hand-written check of
-the YAML subset it uses (indentation-based block mappings and sequences, quoted scalars,
-no tabs, no CRLF, no duplicate keys), which reports 18 top-level keys and the required CFF
-fields present.
+`CITATION.cff` carries the same information in machine-readable form. The two companion
+papers are listed as submitted to Geoscientific Model Development, without a DOI; the DOI of this
+package is 10.5281/zenodo.23687586. The file was parsed with Ruby's YAML
+parser, which accepted it (PyYAML is not installed on the release machine).
 
 ---
 
@@ -346,20 +362,22 @@ not one carries a plot, ring or replicate identifier column.
 | `paper_scripts/observations/obs_registry_braunschweig_maricopa.csv`, `consolidated_obs_braunschweig_maricopa.csv` | the observed scalars the evaluation registers for those two sites | treatment means with standard deviation and the source of each row |
 
 **Provenance and licence of these files.** The WheatDryFACE observations are described by
-Mulero et al. (2026a, 2026b) and are archived as a separate Zenodo data set **under CC BY
-4.0**; that record, not this one, is the citable source, and it holds the complete processed
-set for every variable of Part 2, Table 2 — including the LI-600 porometer record. No
+Mulero et al. (2026a, 2026b) and are archived at Zenodo **under CC BY 4.0** as ICASA-format workbooks (Helman and Mulero, 2026a,
+https://doi.org/10.5281/zenodo.24352317) and as the raw sensor and image data behind them (Helman and Mulero, 2026b,
+https://doi.org/10.5281/zenodo.24352486); those records, not this one, are the
+citable source, and the workbooks hold the complete processed set for every variable of Part 2, Table 2 — including the LI-600 porometer record. No
 WheatDryFACE observation file is added by `paper_scripts/`: the scripts read them from the
-`OBS_DIR` the reader supplies from that deposit (the porometer record is read there for
+`OBS_DIR` the reader supplies, in the layout of the deposit https://doi.org/10.5281/zenodo.23688951 (the porometer record is read there for
 Supplement S2, Fig. S8). The 23 files under `paper_scripts/observations/` are the
 Braunschweig and Maricopa tables only, derived from the two open data sets named below and
 documented file by file in `paper_scripts/observations/README_observations.md`. The Maricopa observations are the open data
 set of Kimball et al. (2017) with its associated workbooks; the Braunschweig observations are
 the open data set of Manderscheid et al. (2020).
 
-**Plot-level data are under embargo until 1 January 2029** and are available from the author
-on reasonable request before that date. They are deliberately absent here, and nothing in
-this archive should be read as releasing them.
+**Plot-level data** (ring values) and the raw sensor and image data are open in the
+WheatDryFACE records of Helman and Mulero (2026a, full workbooks, https://doi.org/10.5281/zenodo.24352317) and
+(2026b, raw data, https://doi.org/10.5281/zenodo.24352486), under CC BY 4.0.
+They are not part of this archive.
 
 ---
 

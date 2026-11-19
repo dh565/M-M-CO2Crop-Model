@@ -27,7 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from paperfigs import letter, save, W2, W1, CM, GRAY, C_OBS, C_SIM, C_A, C_E
 
-INK = "#333333"; BAR = "#4d4d4d"
+INK = "#333333"; BAR = "#4d4d4d"; BAR_LIGHT = "#bdbdbd"
 TRUNC = {"T-2", "co2_550_T-2", "P_thermal_time_thresholds_x1.2", "P550_thermal_time_thresholds_x1.2"}  # runs that do not reach maturity before the end of the weather record
 M = {}
 ctrl = {}
@@ -265,8 +265,20 @@ def fig4(OUT, metrics=None):
     fig, axes = plt.subplots(1, 3, figsize=(W2, 0.36 * W2), sharey=True)
     cols = {"yield_g_m2": "#1a1a1a", "AGB_g_m2": "#7f7f7f", "ET_mm": "#b0b0b0", "grain_N_pct": "#4d4d4d"}
     for k, (ax, (xl, items)) in enumerate(zip(axes, panels)):
-        ax.axhspan(10, 20, color="#e8e8e8", lw=0, zorder=0)
-        if k == 0: ax.text(0.5, 0.955, "shaded: range of mean wheat FACE yield\nresponses at ~550 µmol mol$^{-1}$ (+10 to +20 %)", transform=ax.transAxes, fontsize=5.4, color=GRAY, ha="center", va="top")
+        # Measured wheat grain-yield response for THIS step (420 -> 550), from Broberg et al. 2019, Agronomy 9:243
+        # (doi 10.3390/agronomy9050243), Table 1, grain yield, 173 field obs. (FACE/OTC/tunnel; 13 outliers removed):
+        # y = % yield change relative to 350 ppm, x = CO2 (ppm);
+        #   linear    y = -17.5 + 0.062 x                -> y(420) =  8.54, y(550) = 16.60
+        #   quadratic y = -142.9 + 0.576 x - 0.00049 x^2 -> y(420) = 12.58, y(550) = 25.68 (AICc probability >99.99 %)
+        # Effect of 550 vs 420 on the same axis as the model (Y550/Y420 - 1):
+        #   linear (1.1660/1.0854 - 1) = +7.43 %; quadratic (1.25675/1.12584 - 1) = +11.63 %  -> band +7.4 to +11.6 %.
+        # Band = 95 % confidence intervals of these two fits, refitted to Broberg's Supplementary Database
+        # (agronomy-497566-supplementary.xlsx; per-experiment linear fit sets 0 % at 350 ppm; 15 largest residuals of the
+        # quadratic fit removed): linear +7.3 % (95 % CI 5.5-9.1), quadratic +11.3 % (9.4-13.2) -> band +5.5 to +13.2 %.
+        # With 13 removed (Broberg's count): 5.8-9.5 and 9.7-13.7.
+        BAND_LO, BAND_HI = 5.5, 13.2
+        ax.axhspan(BAND_LO, BAND_HI, color="#e8e8e8", lw=0, zorder=0)
+        if k == 0: ax.text(0.66, 0.24, "shaded: measured wheat yield\nresponse, 420 → 550 µmol mol$^{-1}$\n(95 %% CI, +%.1f to +%.0f %%;\nBroberg et al. 2019)" % (BAND_LO, BAND_HI), transform=ax.transAxes, fontsize=5.4, color=GRAY, ha="center", va="top")
         for q, lab, mk in outs:
             ok = [(x, a, e) for x, a, e in items if a in M and e in M and M[a][q]]; xv = [x for x, a, e in ok]; yv = [100 * (M[e][q] / M[a][q] - 1) for x, a, e in ok]
             ax.plot(xv, yv, mk + "-", color=cols[q], ms=3.6, lw=0.9, mfc="white" if q in ("ET_mm",) else cols[q], label=lab)
@@ -280,10 +292,9 @@ def fig4(OUT, metrics=None):
     save(fig, OUT, "P1_Fig04_CO2_interactions")
 
 
-def _vik():
-    """The diverging 'vik' colour map of Crameri (cmcrameri package)."""
-    from cmcrameri import cm as cmc
-    return cmc.vik
+def _rdbu():
+    """Diverging map: red for negative, white at 0, blue for positive (matplotlib RdBu)."""
+    return plt.get_cmap("RdBu")
 
 
 # ------------------------------------------------------------ Fig 5 alt: sensitivity matrix + yield tornado
@@ -303,7 +314,7 @@ def fig5(OUT, metrics=None):
     Z = np.array([[np.nanmean([S(pn, q, 0.8), S(pn, q, 1.2)]) for q, _ in SOUT] for pn, _ in PARAMS])
     disp = Z.copy(); disp[:, SOUT.index(("dT_midday_K", "Canopy − air"))] *= 1.0
     norm = TwoSlopeNorm(vmin=-1.3, vcenter=0, vmax=1.3)
-    im = ax.imshow(np.clip(disp, -1.3, 1.3), cmap=_vik(), norm=norm, aspect="auto")
+    im = ax.imshow(np.clip(disp, -1.3, 1.3), cmap=_rdbu(), norm=norm, aspect="auto")
     for i in range(len(PARAMS)):
         for j in range(len(SOUT)):
             v = Z[i, j]
@@ -323,7 +334,7 @@ def fig5(OUT, metrics=None):
     y = np.arange(len(rows))
     for yi, (lab, lo, hi) in zip(y, rows):
         # same sign: draw the longer bar first so the shorter one stays visible on top
-        pairs = [(hi, C_SIM, "+20 %"), (lo, "#4d4d4d", "−20 %")]
+        pairs = [(hi, BAR, "+20 %"), (lo, BAR_LIGHT, "−20 %")]
         pairs.sort(key=lambda t: -abs(t[0]))
         for v, c, l in pairs:
             bx.barh(yi, v, color=c, height=0.6, label=l if yi == 0 else None, zorder=3 if abs(v) == min(abs(hi), abs(lo)) else 2)

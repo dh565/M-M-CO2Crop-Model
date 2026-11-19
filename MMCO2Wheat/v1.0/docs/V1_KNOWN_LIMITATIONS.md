@@ -15,7 +15,7 @@ refused, and the writer is not present. The affected file names, the records and
 released values are listed here, so that a user meets them in the documentation rather
 than as a file that never appears.
 
-None of this affects the 88 output files a v1.0 run writes, the physics, or any published
+None of this affects the 90 output files a v1.0 run writes, the physics, or any published
 result. Every setting listed below is off in the released configuration.
 
 ## 1. Seven settings whose diagnostic writer is not present
@@ -26,18 +26,18 @@ unit-number declaration that survives in the source for the absent writer.
 
 | # | driver record | record variable | unavailable setting | released value | diagnostic file that is unavailable | unit-number declaration in the source |
 |---|---|---|---|---|---|---|
-| 1 | 99 | `tiller_survival_mech` | mode 2 | 4 | `output/daily_tiller_afford.csv` | `main_MMCO2Crop.f90:388` (`unit_tca`) |
-| 2 | 134 | `n_afford_priority_law` | 1 (and above) | 0 | `output/daily_n_afford_priority.csv` | `main_MMCO2Crop.f90:239` (`unit_nap`) |
-| 3 | 135 | `n_payment_luxury_pass2` | 1 (and above) | 0 | `output/daily_n_payment_luxury_pass2.csv` | `main_MMCO2Crop.f90:241` (`unit_npl2`) |
-| 4 | 136 | `n_afford_standing_basis` | 1 (and above) | 0 | `output/daily_n_afford_standing_basis.csv` | `main_MMCO2Crop.f90:243` (`unit_nsb`) |
-| 5 | 137 | `floret_n_law` | 1 (and above) | 0 | `output/daily_floret_n.csv` | `main_MMCO2Crop.f90:245` (`unit_fnl`) |
-| 6 | 139 | `n_uptake_diffusion` | mode 2 | 1 | `output/daily_n_uptake_bound.csv` | `main_MMCO2Crop.f90:251` (`unit_nub`) |
-| 7 | 139 | `n_uptake_diffusion` | mode 3 | 1 | `output/daily_n_uptake_mode3.csv` | `main_MMCO2Crop.f90:253` (`unit_nuc`) |
+| 1 | 99 | `tiller_survival_mech` | mode 2 | 4 | `output/daily_tiller_afford.csv` | `main_MMCO2Crop.f90:404` (`unit_tca`) |
+| 2 | 134 | `n_afford_priority_law` | 1 (and above) | 0 | `output/daily_n_afford_priority.csv` | `main_MMCO2Crop.f90:255` (`unit_nap`) |
+| 3 | 135 | `n_payment_luxury_pass2` | 1 (and above) | 0 | `output/daily_n_payment_luxury_pass2.csv` | `main_MMCO2Crop.f90:257` (`unit_npl2`) |
+| 4 | 136 | `n_afford_standing_basis` | 1 (and above) | 0 | `output/daily_n_afford_standing_basis.csv` | `main_MMCO2Crop.f90:259` (`unit_nsb`) |
+| 5 | 137 | `floret_n_law` | 1 (and above) | 0 | `output/daily_floret_n.csv` | `main_MMCO2Crop.f90:261` (`unit_fnl`) |
+| 6 | 139 | `n_uptake_diffusion` | mode 2 | 1 | `output/daily_n_uptake_bound.csv` | `main_MMCO2Crop.f90:267` (`unit_nub`) |
+| 7 | 139 | `n_uptake_diffusion` | mode 3 | 1 | `output/daily_n_uptake_mode3.csv` | `main_MMCO2Crop.f90:269` (`unit_nuc`) |
 
 Record 139 mode 1 — the released value — still writes `output/daily_n_uptake_terms.csv`,
-which is one of the 88 files; only its mode-2 and mode-3 companions are unavailable.
+which is one of the 90 files; only its mode-2 and mode-3 companions are unavailable.
 Record 99 mode 4 — the released value — still writes
-`output/daily_tiller_afford4.csv`, also one of the 88; only the mode-2 file is
+`output/daily_tiller_afford4.csv`, also one of the 90; only the mode-2 file is
 unavailable.
 
 Setting any of these seven values does not produce an empty file and does not fall

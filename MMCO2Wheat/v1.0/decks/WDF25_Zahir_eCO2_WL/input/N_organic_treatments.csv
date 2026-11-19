@@ -17,4 +17,5 @@
 !
 ! EXAMPLE (commented = INACTIVE). WheatDryFACE: previous immature wheat smashed/incorporated ~3 months pre-sow:
 ! immature_cereal, 0, 4000, 1.0, 42, 0.35, 90, last season wheat that did not reach grain harvest
-0
+1
+immature_cereal, 0, 6200, 2.1, 42, 0.47, 258, WDF24 wheat (no grain) crushed and buried ~5 Mar 2024 (D. Helman). Dry mass = measured WDF24 LAI 3.1 (8 Feb 2024, mean of 7 treatments) x 200 g DM per unit LAI at heading (simulated WDF25 shoot dry mass per unit LAI at heading, Ruta 222 / Zahir 179; MODEL RATIO, flagged); herbicide damage in Jan 2024 makes the true mass uncertain (roots not counted). N 2.1 % (green wheat at heading, Hoogmoed & Sadras 2018 Front Plant Sci 9:406 Table 1); C 42 % (40-43 %, Geisseler 2026 Table 1); fast fraction 0.47 = centre of the measured soluble fraction 0.35-0.59 (Geisseler 2026 Table 1). Age 258 d to the run start; daily pre-run soil T and water in presow_daily.csv. Compost applied before WDF24 not entered: 1-7 % of compost N mineralizes in 12-24 wk (Hartz 2000 HortSci 35:209), negligible 1.5 yr later.

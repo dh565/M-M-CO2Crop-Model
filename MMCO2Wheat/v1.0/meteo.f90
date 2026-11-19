@@ -369,7 +369,7 @@ dTs     = dTa                               ! assume surface T = air T
 dLW_out = sur_emiss * const_SB * (dTs** 4)  ! sur_emiss = 1, a black body
 
 ! -----------------------------------------------------------------------------!
-! Bulk incoming longwave. The physics_mode >= 1 branch is INACTIVE in v1.0:
+! Bulk incoming longwave. The physics_mode >= 1 branch is INACTIVE:
 ! physics_mode is held at 0 (main_MMCO2Crop.f90), so the branch taken is always
 ! the ELSE below. The active component longwave path uses sky_emiss_comp above.
 ! Sources of the inactive branch:

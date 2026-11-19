@@ -1,31 +1,26 @@
-! D37 PHENOLOGY RE-DERIVATION (2026-10-18). Record 173 spac_sink_coupling = 1 cools the
-! canopy, so the canopy clock that drives cum_tdu moved and every threshold below was re-derived by
-! the cum_tdu bracket-midpoint rule of the calibration-variables rules (internal; not distributed) section 1 on the D37-A run
-! 20261018_1403_D37A_ON42, control deck WDF23_Ruta_aCO2.
-! Stages moved: 3_leaves 547.0 -> 540.0, Tillering 878.6 -> 860.7, Booting 1393.4 -> 1362.9, Heading 1479.1 -> 1445.9, Anthesis 1606.8 -> 1571.8, Grain_filling 1861.3 -> 1822.6, Maturity 2436.1 -> 2383.3.
-! Stages NOT moved: all 8 stages directly dated in input/decks_wdf23/the WDF23 observation table (internal; not distributed); the file's own header rule applies the aCO2 set to the eCO2 deck.
-! WDF23 PHENOLOGY RECALIBRATION: the 8 stage thresholds are
-! re-derived from WDF23's OWN dated stage calendar (input/decks_wdf23/the WDF23 observation tables (internal; not distributed) {cv}_aCO2.csv,
-! column 'Phenological stage'), by the cum_tdu bracket-midpoint rule of
-! the calibration-variables rules (internal; not distributed) item 1, on the D16+I4 baseline run
-! (output/MM_CO2CROP_20261012_1637_I4REPAIR_V1CFG_WDF23, exe 0bbde0b652397c5735bfa68dea7a65a6),
-! iterated to self-consistency (2 iterations, 0 d on all 8 stages). Calibration deck = this
-! cultivar's aCO2 deck; the same set is applied unchanged to its eCO2 deck. ONE cultivar, ONE set.
+! Cultivar phenology and early-growth inputs: cv. Ruta, WheatDryFACE 2022/23, deck WDF23_Ruta_eCO2.
+! Rows are positional (value first, label second); '!' lines and blank lines are skipped (INPUT_GUIDE.md section 6).
+! Stage thresholds (Emergence to Maturity) are cumulative thermal development units, degC d. Anthesis and the
+! anthesis-to-maturity interval were calibrated with CroptimizR on control deck WDF23_Ruta_aCO2 to its observed anthesis
+! and maturity days (tools/croptimizr_face, phase phen); 3_leaves, Tillering, Booting and Heading are scaled with
+! Anthesis, and Grain_filling keeps its share of the anthesis-to-maturity interval (face_run.py, pheno_params).
+! The same thresholds are used on every deck of the group: WDF23_Ruta_aCO2, WDF23_Ruta_eCO2.
+! Obs_*_DAP rows: observed stage dates in days after planting; 0 = not observed.
 1       GDD_Method
-0.0     T_Base_[TO-PIN_MW1997]
-25.0    T_Opt_Lower_[TO-PIN_MW1997]
+0.0     T_Base
+25.0    T_Opt_Lower
 50.0    T_Opt_Upper
 60.0    T_Max
 0.0     Photo_Sens
 0.0     Vern_Factor
 221.1   	Emergence
-540.0   3_leaves
-860.7   Tillering
-1362.9  Booting
-1445.9  Heading
-1571.8  Anthesis
-1822.6  Grain_filling
-2383.3  Maturity
+537.453   3_leaves
+866.395   Tillering
+1368.714  Booting
+1451.025  Heading
+1577.127  Anthesis
+1829.142  Grain_filling
+2373.349  Maturity
 2022    Sowing_Year
 12      Sowing_Month
 14      Sowing_Day
@@ -47,9 +42,9 @@
 0.020   Init_RootN_frac_gN_gDM
 0.015   Init_StorageN_frac_gN_gDM
 0       Use_Beta_Emerge
-73.9	Phyllochron_degCd	! D28 staging: compiled default (identity)
-20.8	Blade_L_max_cm	! D28 staging: compiled default (identity)
-1.45	Blade_W_max_cm	! D28 staging: compiled default (identity)
-17.0	Sheath_L_max_cm	! D28 staging: compiled default (identity)
-0.45	Sheath_D_cm	! D28 staging: compiled default (identity)
+73.9	Phyllochron_degCd	! compiled default (McMaster et al. 2003 Ann Bot 91:697-705, Table 2 p.701)
+17.011	Blade_L_max_cm	! CroptimizR-calibrated (tools/croptimizr_face, phase cult) to control-deck peak LAI within the measured field range of Ruta and Zahir, 17-26 cm (Kumar 2024 TAG Table 1, Jia 2025 BMC Genomics Table 1)
+1.90	Blade_W_max_cm	! center of the field range 1.6-2.2 cm (Jia 2025 BMC Genomics Table 1; Kumar 2024 TAG Table 1); the 2.7 cm measured by D. Helman is a greenhouse flag-leaf mean, not a field value
+17.0	Sheath_L_max_cm	! compiled default (Abichou 2016 Ch.2 Fig. 3b p.67)
+0.45	Sheath_D_cm	! compiled default (Abichou 2016 Ch.2 Table S2 p.87)
 4.000	Axes_max_per_plant	! axes plant-1 (0 = no cap); crop bound = value x plant density

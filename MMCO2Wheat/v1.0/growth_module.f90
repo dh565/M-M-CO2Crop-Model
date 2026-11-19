@@ -51,7 +51,9 @@
 !===============================================================================!
 MODULE GROWTH_MODULE
   USE TYPES, ONLY: wp
-  USE SHARED, ONLY: SLN_min_N, k_remob_leaf_N, k_remob_stem_N, n_struct_stem_N, &
+  USE SHARED, ONLY: resp_temp_basis
+  USE SHARED, ONLY: anthesis_event_interp, ani_frac, ani_frac_used, ani_open_frac, &
+                    SLN_min_N, k_remob_leaf_N, k_remob_stem_N, n_struct_stem_N, &
                     k_N_can, n_b_can, n_stru_grain, dvs_grain_stru_end, &
                     gParam_sla, sla_dvs0, sla_dvs2, sla_anchor, &
                     fruiting_efficiency, TKW_potential, chaff_share, ear_end_dvs2, &
@@ -155,6 +157,9 @@ MODULE GROWTH_MODULE
                     tca_days_skip, tca_frozen, tca_hs, tca_L, tca_sax, tca_dax, &
                     tca_ltot, tca_sum_s, tca_ident, tca_taun, &
                     tca4_theta, tca4_delta, tca4_U, tca4_F, tca4_target, tca4_endpoint_day, &
+                    tiller_full_demand, tfd_stem_mg, tfd_ear_dm_day, tfd_root_cost_day, &
+                    tfd_root_cost_prev, tfd_tau_prev, tfd_tau_on, tfd_dvs2_prev, &
+                    tfd_dem_stem_ms, tfd_dem_ear_ax, tfd_dem_lam_ms, &
                     stem_demand_mech, sdm_dens, sdm_h_pot, sdm_h_pot_prev, &
                     sdm_dvs2_flag, sdm_f_ped, sdm_h_collar, sdm_h_real, &
                     sdm_Lped_pot, sdm_Lped_emerg, sdm_dh_day, sdm_frac_real, &
@@ -209,6 +214,7 @@ MODULE GROWTH_MODULE
                     npg_dw_leaf_pot, npg_dw_stem_pot, npg_dw_stor_pot, npg_dw_root_pot, &
                     npg_dw_leaf, npg_dw_stem, npg_dw_stor, npg_dw_root, &
                     npg_unpaid_ch2o_day, npg_dw_wsc_day, npg_resid_day, npg_lamina_unpaid_day, npg_lamina_unpaid_cum, &
+                    unpaid_lamina_root_fate, ulr_dw_root_day, ulr_dw_root_cum, ulr_n_day, ulr_n_cum, &   ! rec 193
                     npg_unpaid_ch2o_cum, npg_wsc_cum, npg_resid_cum, npg_paid_cum_L, npg_paid_cum_S, npg_paid_cum_R, &
                     npg_days_live, npg_days_bind_L, npg_days_bind_S, npg_days_bind_R, npg_ident_N_max, &
                     npg_N_leaf => N_leaf, npg_N_stem => N_stem, npg_N_root => N_root, npg_N_storage => N_storage, &
@@ -228,7 +234,7 @@ MODULE GROWTH_MODULE
                     nap_phi_standing_testday, nap_m_testday, nap_gate3_open_testday, &   ! rec 134 stale-cap fix
                     nap_tier3_cap_testday, nap_tier3_cap_declared_inert, &
                     root_front_law, rfl_z0, rfl_rz_mode, rfl_rz, rfl_days_emerged, &   ! rec 124
-                    rfl_z_legacy, rfl_z_new, rfl_z_max, &
+                    rfl_z_legacy, rfl_z_new, rfl_z_max, rfl_tt_a, rfl_tt_b, rfl_tsum, &
                     kernel_potential_law, kpt_env_min, kpt_env_max, kpt_tt, kpt_sup_cum, kpt_tsum, &   ! rec 125
                     repro_surplus_fate, rsf_resid_day, rsf_resid_cum, rsf_label_cum, rsf_surplus_cum, rsf_days, &   ! rec 127
                     sink_full_carbon_fate, cfo_surplus_day, cfo_wsc_day, cfo_wsc_cum, &   ! rec 129
@@ -279,7 +285,7 @@ MODULE GROWTH_MODULE
                     gfb_tt, gfb_day0, gfb_day_end, gfb_days, gfb_end_bound, &
                     gfb_tsum, gfb_demand_tot, gfb_supplied_tot, gfb_unmet_tot, gfb_reserve_end, &
                     gfb_rate_max, gfb_cm_min, gfb_cm_max, gfb_cm_clamped, &
-                    grainN_sink_mech, gnf_ng0_per_ear, gnf_g_rate, gnf_tau_degCd, &   ! (rec 86), SHARED.f90-
+                    grainN_sink_mech, gnf_ng0_per_ear, gnf_g_rate, gnf_tau_degCd, grain_n_source_phase, &   ! (rec 86), SHARED.f90-
                     gnf_snap, gnf_ng0, gnf_tt, gnf_pot_cum, gnf_sink_day, &
                     gnf_supply_day, gnf_draw_lam, gnf_draw_stem, gnf_draw_chaff, &
                     gnf_cum_lam, gnf_cum_stem, gnf_cum_chaff, gnf_cum_assim, &
@@ -339,7 +345,7 @@ MODULE GROWTH_MODULE
                     lamina_expansion_n_limit, lnl_a_slope, lnl_b_max, lnl_c_icpt, &   ! rec 179
                     lnl_maxNpha, lnl_Nph_day, lnl_slnph_day, lnl_minNpha_day, &
                     lnl_a_sup_day, lnl_allow_day, lnl_fN_day, lnl_refused_day, &
-                    lnl_refused_cum, lnl_days_refuse, lnl_live_today, &
+                    lnl_refused_cum, lnl_days_refuse, lnl_live_today, lnl5_flam, lnl5_p, lnl5_sln_a, lnl5_sln_b, lnl5_shoot_W, lnl5_r_day, &
                     lnl_gai_max_min, lnl_days_maxupd, lnl_gai_at_maxupd, &   ! rec 179 green-area guard on maxN^ph,a
                     wsc_fate_law, wfl_a_refused_day, wfl_a_refused_cum, wfl_a_days, &   ! rec 148
                     wfl_b_released_day, wfl_b_released_cum, wfl_b_days, &
@@ -621,7 +627,13 @@ CONTAINS
     END IF
     ! Q10 temperature correction of the maintenance term, Teh (2006) Listing 8.7
     ! p.194 with Eq. [7.3] p.145.
-    maint_factor = q10_maint ** ((temp_day - 25.0_wp) / 10.0_wp)
+    IF (resp_temp_basis == 1) THEN
+      ! Driver record 186: Q10 falling with temperature as measured on whole
+      ! wheat plants (Gifford 1995 Table 4), integrated from 25 C (SHARED.f90).
+      maint_factor = maint_temp_factor_measured(temp_day)
+    ELSE
+      maint_factor = q10_maint ** ((temp_day - 25.0_wp) / 10.0_wp)
+    END IF
     rm_day = maint_raw * maint_factor
     ! Eq. [7.4], p. 145: maintenance decreases with green/total leaf fraction.
     IF (leaves_total > 0.0_wp) rm_day = rm_day * (green_biomass / leaves_total)
@@ -633,6 +645,7 @@ CONTAINS
     ! Driver record 99 modes 2 and 4: export today's supply in the growth currency.
     ! It is read as G(t-1) by tomorrow's update_canopy_tillering and moves no carbon.
     IF (tiller_survival_mech == 4) tca_gsup_day = growth_supply
+    tfd_root_cost_day = 0.0_wp      ! rec 196: set below from the realized root increment
 
     ! No structural allocation at or beyond physiological maturity (dvs2 >= 2, the
     ! phenology's own maturity). Post-maturity net assimilate of the residual green
@@ -756,7 +769,10 @@ CONTAINS
       ! p_L and remove the unpaid area from the standing green area this evening.
       ! Driver record 179 reads green_biomass read-only, to form the lamina
       ! PHOTOSYNTHETIC nitrogen on the Bertheloot basis.
-      IF (lai_n_arrest >= 1) CALL lamina_n_arrest_commit(npg_p_L, green_biomass)
+      IF (lai_n_arrest >= 1) THEN
+        lnl5_shoot_W = green_biomass + dead_biomass + stem_biomass + storage_biomass + W_dead_stem   ! rec 179 mode 5
+        CALL lamina_n_arrest_commit(npg_p_L, green_biomass)
+      END IF
     END IF
 
     ! Record 100 mode 1 is the only mode that changes the dry-matter gain; the
@@ -799,7 +815,7 @@ CONTAINS
                                      g_root * dw_root + g_storage * dw_storage)
     sdm_ident_max = MAX(sdm_ident_max, ABS(sdm_ident_day))
     IF (n_payment_gate >= 1) THEN
-      ! rec 121: the identity now carries the gate's unpaid carbon as well
+      ! rec 121: the identity carries the gate's unpaid carbon as well
       sdm_close_max = MAX(sdm_close_max, ABS(sdm_ident_day - sdm_refused_day - npg_unpaid_ch2o_day))
     ELSE
     sdm_close_max = MAX(sdm_close_max, ABS(sdm_ident_day - sdm_refused_day))
@@ -865,7 +881,38 @@ CONTAINS
       ! Driver record 172 makes the deposition SHARE a function of the nitrogen
       ! nutrition index instead of a constant (van Herwaarden 1997 PhD thesis Ch.4).
       ! ================================================================ !
-      IF (stem_demand_mech == 1 .OR. stem_demand_mech == 3 .OR. stem_demand_mech == 4 .OR. n_payment_gate >= 1) THEN
+      IF (stem_reserve_deposition_n_basis >= 1) THEN
+        BLOCK
+          REAL(wp) :: vhw_w_tha, vhw_n_sh, vhw_nc_crit, vhw_nni, vhw_f
+          ! Same AGB and shoot-N basis as the live nni_up term, published by main
+          ! just before this call.
+          vhw_w_tha = vhw_w_tha_in
+          vhw_n_sh  = vhw_n_sh_in
+          vhw_nni   = 0.0_wp
+          IF (vhw_w_tha > 1.0e-6_wp) THEN
+            IF (vhw_w_tha <= 1.55_wp) THEN
+              vhw_nc_crit = 4.4_wp
+            ELSE
+              vhw_nc_crit = 5.35_wp * vhw_w_tha**(-0.442_wp)
+            END IF
+            vhw_nni = (vhw_n_sh / vhw_w_tha) / vhw_nc_crit
+          END IF
+          vhw_f = (vhw_a_mgg + vhw_b_mgg * vhw_nni) * 0.001_wp   ! mg g-1 -> g g-1
+          IF (vhw_f > 0.35_wp) THEN                              ! the existing rec-56 clamp
+            vhw_f = 0.35_wp ; vhw_days_clamp_hi = vhw_days_clamp_hi + 1
+          ELSE IF (vhw_f < 0.0_wp) THEN
+            vhw_f = 0.0_wp  ; vhw_days_clamp_lo = vhw_days_clamp_lo + 1
+          END IF
+          IF (stem_demand_mech == 1 .OR. stem_demand_mech == 3 .OR. stem_demand_mech == 4 .OR. n_payment_gate >= 1) THEN
+            wsc_bank = vhw_f * dw_stem
+          END IF
+          vhw_nni_last  = vhw_nni
+          vhw_frac_last = vhw_f
+          vhw_frac_min  = MIN(vhw_frac_min, vhw_f)
+          vhw_frac_max  = MAX(vhw_frac_max, vhw_f)
+          vhw_days_live = vhw_days_live + 1
+        END BLOCK
+      ELSE IF (stem_demand_mech == 1 .OR. stem_demand_mech == 3 .OR. stem_demand_mech == 4 .OR. n_payment_gate >= 1) THEN
         wsc_bank = stem_reserve_frac * dw_stem      ! rec 121: the REALIZED stem increment (same rule as rec 100 ON)
       END IF
       IF (stem_wsc_mech == 1 .OR. stem_wsc_mech == 2 .OR. stem_wsc_mech == 4) THEN
@@ -883,6 +930,7 @@ CONTAINS
       END IF
     END IF
     root_biomass = root_biomass + dw_root
+    tfd_root_cost_day = g_root * MAX(0.0_wp, dw_root)   ! rec 196: the roots' claim on today's growth supply
     storage_biomass = storage_biomass + dw_storage
 
     ! The reserve/stem ratio is read AFTER the record-55 bank, because that bank
@@ -902,7 +950,7 @@ CONTAINS
       ! This statement is OUTSIDE the record-100 guard, so modes 0 and 2 evaluate the
       ! same expression as before.
       IF (stem_demand_mech == 1 .OR. stem_demand_mech == 3 .OR. stem_demand_mech == 4 .OR. n_payment_gate >= 1) THEN
-        gnx_dagb_day   = dw_leaf + dw_stem + dw_storage   ! rec 121: realized increments (dm_gain now carries WSC)
+        gnx_dagb_day   = dw_leaf + dw_stem + dw_storage   ! rec 121: realized increments (dm_gain carries WSC)
       ELSE
         gnx_dagb_day   = dm_gain * (1.0_wp - f_root)
       END IF
@@ -1126,6 +1174,32 @@ CONTAINS
       take = MIN(pool_root, npg_D_R) ; pool_root = pool_root - take
       npg_paid_R_root = take
     END IF
+    ! ==================================================================== !
+    ! Driver record 193: the carbon of lamina the shoot N pool cannot pay is not
+    ! lost; under N shortage it is exported to the roots, and the roots have
+    ! first call on the N they reduce (Brouwer 1962; Ericsson 1995 Plant Soil
+    ! 168:205; Andrews et al. 1999 PCE 22:949; Hermans et al. 2006 TIPS 11:610).
+    ! The extra root X (g DM) is paid at npg_c_R from the root-reduced N BEFORE
+    ! it is exported, which lowers the shoot pool and so the lamina payment. X is
+    ! the closed-form fixed point of "X carries exactly the carbon of the lamina
+    ! left unpaid after X is paid" (luxury stem N ignored):
+    !   g_root X = g_leaf (D_L - P0 + c_R X) / c_L
+    ! capped by the root N left after the root's own tier. Any lamina carbon still
+    ! unpaid keeps [NPG-4] (WSC, then residual).
+    ! ==================================================================== !
+    ulr_dw_root_day = 0.0_wp ; ulr_n_day = 0.0_wp
+    IF (unpaid_lamina_root_fate == 1 .AND. npg_c_L > 0.0_wp .AND. npg_c_R > 0.0_wp) THEN
+      want   = npg_pool_mobile_in + npg_n_assim_shoot_in + pool_root          ! P0, shoot pool if all root N were exported
+      want_R = 1.0_wp - g_leaf * npg_c_R / (g_root * npg_c_L)                ! 1 - k
+      IF (npg_D_L > want .AND. want_R > 0.0_wp) THEN
+        ulr_dw_root_day = g_leaf * (npg_D_L - want) / (g_root * npg_c_L) / want_R
+        ulr_dw_root_day = MIN(ulr_dw_root_day, pool_root / npg_c_R)
+        ulr_n_day       = npg_c_R * ulr_dw_root_day
+        pool_root       = pool_root - ulr_n_day
+        ulr_dw_root_cum = ulr_dw_root_cum + ulr_dw_root_day
+        ulr_n_cum       = ulr_n_cum + ulr_n_day
+      END IF
+    END IF
     npg_root_export = pool_root
     ! step (2): the shoot pool pays lamina -> stem/chaff (luxury stem N last resort)
     pool = npg_pool_mobile_in + npg_n_assim_shoot_in + npg_root_export
@@ -1137,6 +1211,19 @@ CONTAINS
       END IF
       npg_p_L = take / npg_D_L ; npg_paid_L = take
       IF (npg_p_L < 1.0_wp) npg_days_bind_L = npg_days_bind_L + 1
+    END IF
+    ! rec 193: the extra root may carry no more carbon than the lamina actually
+    ! left unpaid (the luxury stem N can pay part of the lamina, which the closed
+    ! form ignores); the N of any trimmed root returns to the shoot pool here.
+    IF (ulr_dw_root_day > 0.0_wp) THEN
+      want = g_leaf * (1.0_wp - npg_p_L) * dw_leaf / g_root
+      IF (ulr_dw_root_day > want) THEN
+        take = npg_c_R * (ulr_dw_root_day - want)
+        pool = pool + take
+        ulr_n_day = ulr_n_day - take ; ulr_n_cum = ulr_n_cum - take
+        ulr_dw_root_cum = ulr_dw_root_cum - (ulr_dw_root_day - want)
+        ulr_dw_root_day = want
+      END IF
     END IF
 
     ! ==================================================================== !
@@ -1173,6 +1260,9 @@ CONTAINS
       IF (npg_p_R < 1.0_wp) npg_days_bind_R = npg_days_bind_R + 1
     END IF
     npg_pool_out = pool
+    ! rec 193: book the extra root's N (root-own share, never from the shoot pool).
+    npg_paid_R_root = npg_paid_R_root + ulr_n_day
+    npg_paid_R      = npg_paid_R + ulr_n_day
 
     ! ==================================================================== !
     ! Driver record 141: pre-anthesis lamina nitrogen remobilization, the last
@@ -1315,7 +1405,7 @@ CONTAINS
     dw_leaf    = npg_p_L * npg_dw_leaf_pot
       dw_stem    = npg_p_S * npg_dw_stem_pot
       dw_storage = npg_p_S * npg_dw_stor_pot
-    dw_root    = npg_p_R * npg_dw_root_pot
+    dw_root    = npg_p_R * npg_dw_root_pot + ulr_dw_root_day   ! rec 193: + root built from refused lamina carbon
     npg_dw_leaf = dw_leaf ; npg_dw_stem = dw_stem ; npg_dw_stor = dw_storage ; npg_dw_root = dw_root
     ! The realized construction concentration, i.e. the nitrogen percentage of the
     ! tissue actually built today, and the cumulative lamina dry matter built below
@@ -1330,6 +1420,7 @@ CONTAINS
     END IF
     npg_unpaid_ch2o_day = g_leaf * (npg_dw_leaf_pot - dw_leaf) + g_stem * (npg_dw_stem_pot - dw_stem) + &
                           g_storage * (npg_dw_stor_pot - dw_storage) + g_root * (npg_dw_root_pot - dw_root)
+    ! rec 193: dw_root already holds the extra root, so the term above has subtracted its carbon g_root*ulr_dw_root_day.
 
     ! Fate of the unpaid carbon: the stem water-soluble-carbohydrate reserve first
     ! (the record-101 closed form on wsc_cap_frac, the stored fructan raising the
@@ -1457,6 +1548,21 @@ CONTAINS
         lnl_minNpha_day = lnl_a_slope * MIN(lnl_maxNpha, lnl_b_max) + lnl_c_icpt
         lnl_a_sup_day   = 0.0_wp
         IF (lnl_minNpha_day > 0.0_wp) lnl_a_sup_day = lnl_Nph_day / lnl_minNpha_day
+      CASE (5)   ! canopy lamina-N law; constants and sources at lnl5_* in SHARED.f90
+        BLOCK
+          REAL(wp) :: wt, nc_pct, nlc, laic
+          wt     = MAX(0.0_wp, lnl5_shoot_W) * 0.01_wp           ! t ha-1
+          nc_pct = 4.4_wp
+          IF (wt >= 1.55_wp) nc_pct = 5.35_wp * wt**(-0.442_wp)
+          nlc    = lnl5_flam * nc_pct * 0.01_wp * MAX(0.0_wp, lnl5_shoot_W)
+          lnl5_r_day = 1.0_wp
+          IF (nlc > 1.0e-9_wp) lnl5_r_day = MIN(1.0_wp, MAX(0.0_wp, npg_N_leaf) / nlc)
+          laic   = 0.0_wp
+          IF (nlc > 0.0_wp) laic = (nlc / lnl5_sln_a)**(1.0_wp / (1.0_wp + lnl5_sln_b))
+          lnl_a_sup_day   = laic * lnl5_r_day**lnl5_p
+          lnl_minNpha_day = 0.0_wp
+          IF (lnl_a_sup_day > 1.0e-9_wp) lnl_minNpha_day = npg_N_leaf / lnl_a_sup_day
+        END BLOCK
       CASE DEFAULT   ! 4 = ATTRIBUTION ARM: Yin & Schapendonk 2004 App. 2 p.424 l_N
         lnl_minNpha_day = lar_nb_leaf
         lnl_a_sup_day   = 0.0_wp
@@ -1611,7 +1717,16 @@ CONTAINS
       rfl_rz       = rfl_rz_mode(MIN(3, MAX(1, root_front_law)))
       IF (dvs2 > 0.0_wp) rfl_days_emerged = rfl_days_emerged + 1
       rfl_z_max  = MIN(root_max_depth, depth_limit)
-      root_depth = MIN(rfl_z_max, MAX(rfl_z0, rfl_z0 + rfl_rz * 1.0e-3_wp * REAL(rfl_days_emerged, wp)))
+      IF (root_front_law == 4) THEN
+        ! Thermal-time front (Thorup-Kristensen et al. 2009 Fig. 4), held from anthesis on.
+        IF (dvs2 < 1.0_wp) THEN
+          root_depth = MIN(rfl_z_max, MAX(rfl_z0, rfl_tt_a + rfl_tt_b * rfl_tsum))
+        ELSE
+          root_depth = MIN(rfl_z_max, MAX(rfl_z0, rfl_z_new))
+        END IF
+      ELSE
+        root_depth = MIN(rfl_z_max, MAX(rfl_z0, rfl_z0 + rfl_rz * 1.0e-3_wp * REAL(rfl_days_emerged, wp)))
+      END IF
       rfl_z_new  = root_depth
     END IF
   END SUBROUTINE update_root_depth
@@ -2148,6 +2263,11 @@ CONTAINS
               sink           = gnc_room_day
             END IF
             gnf_pot_cum = MIN(gnf_pot_cum, gnc_cap)
+            ! rec 195: after the cell-division phase the sink is the whole room under the per-kernel
+            ! ceiling, so the import is set by the source (Martre et al. 2003 Plant Physiol 133:1959 p.1963).
+            IF (grain_n_source_phase == 1 .AND. gnf_tt > gnf_tau_degCd) THEN
+              sink = gnc_room_day ; gnf_pot_cum = gnc_cap
+            END IF
           END IF
           pot_stem  = n2_delta_TT * MAX(0.0_wp, N_stem  - n2_struct_stem * MAX(0.0_wp, W_stem))     * dtt_f
           pot_chaff = n2_delta_TT * MAX(0.0_wp, N_chaff - MAX(n2_struct_chaff_use * MAX(0.0_wp, W_chaff_gN), cnr_floor_gN)) * dtt_f
@@ -2870,6 +2990,7 @@ CONTAINS
     ! Driver record 117: the day reproductive stream AFTER the chaff sink has been
     ! paid. On mode 0 it is dW_repro and is never decremented.
     REAL(wp) :: dW_repro_use
+    REAL(wp) :: ani_clock_w   ! rec 192: share of today on the grain-filling clock
     ! B1: the day's two cross-boundary fluxes, g DM m-2 d-1 (see the W_storage note above).
     REAL(wp) :: b1_repro_to_stem, b1_reserve_to_grain
 
@@ -2892,6 +3013,7 @@ CONTAINS
     ! ------------------------------------------------------------------------------- !
     fnl_step_today = .FALSE.
     dW_repro_use = dW_repro
+    ani_clock_w = 1.0_wp
     cgs_post_today = .FALSE.
     ! ------------------------------------------------------------------------------- !
     ! Mode 0 keeps the original control flow (an early return on a zero increment).
@@ -2925,6 +3047,19 @@ CONTAINS
     ELSE
       ! Grain-number set once at ear_end (fruiting efficiency x ear DW).
       IF (.NOT. grain_number_set) THEN
+
+        ! Driver record 192: the part of today before the anthesis crossing is still spike
+        ! construction (Slafer et al. 2015 p.95: all reproductive DM before anthesis is spike);
+        ! only the remainder follows the post-anthesis route below (dW_repro_use).
+        IF (anthesis_event_interp == 1 .AND. dW_repro > 0.0_wp) THEN
+          to_chaff = ani_frac * dW_repro
+          W_chaff  = W_chaff + to_chaff
+          mnp_dw_chaff_day = to_chaff
+          dW_repro_use = dW_repro - to_chaff
+          wsc_c_in = wsc_c_in + to_chaff
+          ani_frac_used = ani_frac
+          ani_clock_w = 1.0_wp - ani_frac
+        END IF
 
         ! Driver record 89 modes 1 and 3: grain number is PREDICTED from the spike
         ! carbon each axis actually accrued, through the two measured components of
@@ -2966,7 +3101,7 @@ CONTAINS
         ! duration are derived from that table by the reciprocal-duration method of
         ! Fischer (1985) J Agric Sci Camb 105:447-461, Table 6.
         ! --------------------------------------------------------------------------- !
-        IF (gfb_end_bound == 0) gfb_tt = gfb_tt + MAX(0.0_wp, t_air_day_in - gfb_tbase)
+        IF (gfb_end_bound == 0) gfb_tt = gfb_tt + ani_clock_w * MAX(0.0_wp, t_air_day_in - gfb_tbase)
         gfb_x  = gfb_tt / gfb_dfill
         gfb_cm = MAX(0.0_wp, gfb_cm_ref + gfb_cm_slope * (t_air_day_in - gfb_t_ref))
         IF (gfb_cm <= 0.0_wp) gfb_cm_clamped = .TRUE.
@@ -3441,7 +3576,7 @@ CONTAINS
       cres_sink_unfilled = room
       ! ------------------------------------------------------------------------------- !
       ! Driver record 91 ledger. On this path the room is a daily FLUX, so the stock
-      ! "sink room left" of the incumbent path has no meaning and is replaced by the
+      ! "sink room left" of the mode-0 path has no meaning and is replaced by the
       ! flux form.
       ! ------------------------------------------------------------------------------- !
       IF (grain_fill_mech >= 1) THEN
@@ -3523,6 +3658,11 @@ CONTAINS
     REAL(wp), INTENT(IN) :: dtdu_day      ! today's thermal-development increment
 
     gnx_day_now = iday
+    ! Driver record 196: today's potential spike growth per axis, the rec 98 rate
+    ! (Fischer 1985) on the open window, up to anthesis.
+    tfd_ear_dm_day = 0.0_wp
+    IF (tiller_full_demand == 1 .AND. gnx_win_open .AND. tfd_dvs2_prev < 1.0_wp) &
+      tfd_ear_dm_day = bgn_r_spike * MAX(0.0_wp, tair_day - gnx_tt_base_C)
     gnx_sum_tdu  = gnx_sum_tdu  + MAX(0.0_wp, dtdu_day)
     gnx_sum_cd45 = gnx_sum_cd45 + MAX(0.0_wp, tair_day - gnx_tt_base_C)
     IF (gnx_sum_tdu > 0.0_wp) gnx_tt_ratio = gnx_sum_cd45 / gnx_sum_tdu
@@ -3532,6 +3672,10 @@ CONTAINS
       gnx_win_open     = .TRUE.
       gnx_win_open_day = iday
       gnx_tdu_rem_open = tdu_rem
+      ! rec 192: the part of today after the remaining thermal time fell to the window length
+      ani_open_frac = 1.0_wp
+      IF (anthesis_event_interp == 1 .AND. dtdu_day > 0.0_wp .AND. gnx_tt_ratio > 0.0_wp) &
+        ani_open_frac = MIN(1.0_wp, MAX(0.0_wp, (gnx_tt_ref_Cd / gnx_tt_ratio - tdu_rem) / dtdu_day))
     END IF
   END SUBROUTINE update_spike_window
   ! --------------------------------------------------------------------------------- !
@@ -3560,7 +3704,11 @@ CONTAINS
     IF (dvs2 >= 1.0_wp) RETURN                 ! the spike growth period ENDS at anthesis
 
     gnx_win_days   = gnx_win_days + 1
+    IF (anthesis_event_interp == 1 .AND. gnx_win_open_day == iday) THEN
+      gnx_win_tt45 = gnx_win_tt45 + ani_open_frac * MAX(0.0_wp, tair_day - gnx_tt_base_C)   ! rec 192: opening day, in-window part
+    ELSE
     gnx_win_tt45   = gnx_win_tt45   + MAX(0.0_wp, tair_day - gnx_tt_base_C)   ! REPORTED vs Fischer's 300 degCd
+    END IF
     gnx_win_dagb   = gnx_win_dagb   + gnx_dagb_day
     gnx_win_dspike = gnx_win_dspike + gnx_dspike_day
 
@@ -3809,6 +3957,7 @@ CONTAINS
       IF (dvs2 < 1.0_wp) THEN
         IF (gnx_win_open) THEN
           f_storage = gnx_spike_part * (1.0_wp - f_root)
+          IF (anthesis_event_interp == 1 .AND. gnx_win_open_day == gnx_day_now) f_storage = f_storage * ani_open_frac
         ELSE
           f_storage = 0.0_wp
         END IF
@@ -3871,7 +4020,22 @@ CONTAINS
       ! Driver record 174: the culm final leaf number is predicted here, on the
       ! emergence day, from the continuous solution of the same two-limb
       ! leaf-appearance law.
+      ! It is predicted here, at tau = 0, because the canopy-clock reading at which
+      ! the anchored booting stage will be declared is already known: the main
+      ! program has just set clr_tau_boot_target = stage_thresh(4) - tdu_at_emerge,
+      ! and under record 162 = 1 with record 161 = 0 the canopy clock IS
+      ! cum_tdu - tdu_at_emerge exactly. Predicting it here is what lets a blade's
+      ! final dimensions be fixed once, from the culm's own final leaf number,
+      ! instead of being rewritten retroactively at the booting freeze. Floored at
+      ! 1 and capped at the profile arrays' own length. Mode 0 leaves clr_FLN_pred
+      ! at 0 and the whole block is skipped, so the mode-0 path is unchanged.
       ! --------------------------------------------------------------------------------- !
+      IF (canopy_fln_prediction >= 1) THEN
+        IF (clr_tau_boot_target > 0.0_wp) THEN
+          cfp_HS_pred   = clr_HS_at_tau(clr_tau_boot_target)
+          clr_FLN_pred  = MIN(MAX(INT(cfp_HS_pred), 1), SIZE(cba_l_irank))
+        END IF
+      END IF
       RETURN
     END IF
 
@@ -3973,8 +4137,16 @@ CONTAINS
       END IF
       ! -------------------------------------------------------------------------------- !
       ! Driver record 174: booting CONFIRMS the prediction, it never rewrites it. The
-      ! emergent final leaf number is still read off exactly as before.
-      ! -------------------------------------------------------------------------------- !      
+      ! emergent final leaf number is still read off exactly as before - the
+      ! senescence chronology, the tillering windows and the sheath and ear ranks all
+      ! consume it - but when it disagrees with the prediction the DIFFERENCE IS
+      ! RECORDED and the blade dimensions are left alone. A finished blade keeps its
+      ! final length and width by construction.
+      ! -------------------------------------------------------------------------------- !
+      IF (canopy_fln_prediction >= 1 .AND. clr_FLN_pred >= 1) THEN
+        cfp_FLN_realized = clr_FLN
+        cfp_mismatch     = clr_FLN - clr_FLN_pred
+      END IF
     END IF
   END SUBROUTINE update_canopy_leaf_ranks
 
@@ -4027,8 +4199,23 @@ CONTAINS
   ! Driver record 174: how many blades does this culm carry? One answer, used by
   ! every routine that loops over ranks, so that the chronology, the areas and
   ! the senescence cannot disagree about the top rank.
+  ! Before this record the same expression
+  ! MERGE(clr_FLN, cba_Nl_fit, clr_frozen .AND. clr_FLN >= 1) was written out at
+  ! every call site, so ALL of them switched from the provisional panel median to
+  ! the emergent final leaf number on the booting day. Repairing only the
+  ! blade-area site leaves a residual one-day discontinuity in the REALIZED canopy
+  ! (BRAUNSCHWEIG_103: dLAI +0.875 m2 m-2 on the booting day, 29 % of peak LAI,
+  ! carried by the axis-population and lamina-ramp sites while A_shoot_pot is
+  ! already flat). The law is one law: at mode 1 the culm's top is its OWN
+  ! predicted final leaf number from emergence, and it never changes afterwards.
+  ! Mode 0 leaves clr_FLN_pred at 0, so this function returns the provisional-
+  ! then-frozen top bit for bit at every call site.
   INTEGER FUNCTION cfp_n_top_culm()
+    IF (canopy_fln_prediction >= 1 .AND. clr_FLN_pred >= 1) THEN
+      cfp_n_top_culm = clr_FLN_pred
+    ELSE
       cfp_n_top_culm = MERGE(clr_FLN, cba_Nl_fit, clr_frozen .AND. clr_FLN >= 1)
+    END IF
   END FUNCTION cfp_n_top_culm
 
   ! Potential and realized blade area per main-stem rank (driver record 65). It
@@ -4053,7 +4240,22 @@ CONTAINS
       ! --- potential dimensions (final, rank-fixed) --------------------- !
       ! Both dimension profiles are indexed by INVERSED rank, counted down from the
       ! flag leaf, which is the convention of the measured profiles.
-      IF (clr_frozen .AND. clr_FLN >= 1) THEN
+      IF (canopy_fln_prediction >= 1 .AND. clr_FLN_pred >= 1) THEN
+        ! Driver record 174: ONE index for the whole life of the blade; n_top is
+        ! clr_FLN_pred on every day, before and after the booting freeze, so irank
+        ! for a given absolute rank never moves and no blade whose expansion is
+        ! over is ever re-dimensioned.
+        irank = n_top - n + 1
+        ! Mode 2: Abichou (2016) Ch.2: the shifted inversed-rank profile holds for
+        ! the phytomers with ELONGATED internodes only ("generally 4 to 5"); the
+        ! lower blades are anchored from the BASE (constant first blade, Eqn T2.7a),
+        ! and juvenile size is uncorrelated with adult size (Dornbusch). A culm with
+        ! fewer leaves than the panel median (cba_Nl_fit) therefore keeps the panel's
+        ! lower blades by absolute rank instead of inheriting upper-canopy sizes. At
+        ! n_top >= cba_Nl_fit the MAX returns the mode-1 index, bit for bit.
+        IF (canopy_fln_prediction == 2 .AND. n < n_top - ct_internodes_elong) &
+          irank = MAX(irank, cba_Nl_fit - n + 1)
+      ELSE IF (clr_frozen .AND. clr_FLN >= 1) THEN
         irank = clr_FLN - n + 1
       ELSE
         irank = cba_Nl_fit - n + 1
@@ -4315,14 +4517,28 @@ CONTAINS
     ! Driver record 99: tiller survival and the fertile-ear population, by
     ! per-axis light competition over the measured mortality phase of Abichou
     ! (2016) Ch.1 Table 4.
+    ! Driver record 196: today's per-class structural stem demand, evaluated on
+    ! every day so that the internode onsets are latched as the clock passes them.
+    IF (tiller_full_demand == 1) THEN
+      CALL tfd_stem_demand(MERGE(clr_tau_Cd - tfd_tau_prev, 0.0_wp, tfd_tau_prev >= 0.0_wp))
+      tfd_tau_prev = clr_tau_Cd
+    END IF
     IF (tiller_survival_mech == 4 .AND. canopy_blade_area == 1 .AND. &
              ct_tau_sm >= 0.0_wp .AND. ct_tau_em > ct_tau_sm .AND. .NOT. tca_frozen) THEN
       BLOCK
         INTEGER  :: cc, ii, jj, ord(0:CT_MAXTIL)
-        REAL(wp) :: lab, rem, take, sup_ax, dem_ax, da_ax, f_abs(0:CT_MAXTIL)
+        REAL(wp) :: lab, rem, take, sup_ax, dem_ax, da_ax, f_abs(0:CT_MAXTIL), gsup_sh
         ! the supply shared out today is yesterday's growth_supply.
         tca_gsup_prev = tca_gsup_day
-        IF (clr_tau_Cd >= ct_tau_em) THEN
+        ! rec 196: the shoots share what the roots did not take of it (allocation
+        ! runs after this call, so the root cost held here is yesterday's).
+        gsup_sh = tca_gsup_prev
+        IF (tiller_full_demand == 1) THEN
+          tfd_root_cost_prev = tfd_root_cost_day
+          gsup_sh = MAX(0.0_wp, tca_gsup_prev - tfd_root_cost_prev)
+        END IF
+        IF ((tiller_full_demand == 0 .AND. clr_tau_Cd >= ct_tau_em) .OR. &
+            (tiller_full_demand == 1 .AND. tfd_dvs2_prev >= 1.0_wp)) THEN
 
           ! The window has closed: the shape factor becomes one and the matured estimate
           ! of the eventual deaths is removed in full, youngest first.
@@ -4365,6 +4581,8 @@ CONTAINS
           ! The normalized mortality clock of Abichou (2016) Ch.1 Table 4, read here
           ! (below 1 inside the window by the branch condition, 0 on window day 1).
           tca_taun = (clr_tau_Cd - ct_tau_sm) / (ct_tau_em - ct_tau_sm)
+          ! rec 196: the window runs on past tau_em to anthesis; the clock is reported only.
+          IF (tiller_full_demand == 1) tca_taun = MIN(1.0_wp, tca_taun)
           ! Per-cohort development state and leaf area index.
           tca_ltot = 0.0_wp
           DO cc = 0, CT_MAXTIL
@@ -4408,16 +4626,25 @@ CONTAINS
             DO cc = 0, CT_MAXTIL
               tca_sax(cc) = 0.0_wp ; tca_dax(cc) = 0.0_wp
               IF (ct_dens(cc) <= 0.0_wp) CYCLE
-              sup_ax = tca_share(cc) * tca_gsup_prev / ct_dens(cc)
+              sup_ax = tca_share(cc) * gsup_sh / ct_dens(cc)
               da_ax  = MAX(0.0_wp, ct_area_axis_real(cc) - tca_area_prev(cc))
               dem_ax = da_ax * 1.0e-4_wp * csl_LMA * g_leaf
+              ! rec 196: the axis also owes its stem and its ear.
+              IF (tiller_full_demand == 1) THEN
+                IF (cc == 0) THEN
+                  tfd_dem_lam_ms  = dem_ax
+                  tfd_dem_stem_ms = 1.0e-3_wp * tfd_stem_mg(0) * g_stem
+                  tfd_dem_ear_ax  = tfd_ear_dm_day * g_storage
+                END IF
+                dem_ax = dem_ax + 1.0e-3_wp * tfd_stem_mg(cc) * g_stem + tfd_ear_dm_day * g_storage
+              END IF
               tca_S(cc)   = tca_S(cc) + sup_ax
               tca_D(cc)   = tca_D(cc) + dem_ax
               tca_sax(cc) = sup_ax
               tca_dax(cc) = dem_ax
-              tca_ident   = tca_ident + tca_share(cc) * tca_gsup_prev
+              tca_ident   = tca_ident + tca_share(cc) * gsup_sh
             END DO
-            tca_ident = tca_ident - tca_gsup_prev
+            tca_ident = tca_ident - gsup_sh
             DO cc = 0, CT_MAXTIL
               tca_phi(cc) = 1.0_wp
               IF (tca_D(cc) > 0.0_wp) tca_phi(cc) = MIN(1.0_wp, tca_S(cc) / tca_D(cc))
@@ -4427,7 +4654,7 @@ CONTAINS
             ! demand is the cohort's own lamina increment, dA times the lamina mass per area,
             ! priced at the construction concentration of driver record 121.
             tna_step_today = .FALSE.
-            IF (tiller_n_afford >= 1) THEN
+            IF (tiller_n_afford >= 1 .AND. tiller_full_demand == 0) THEN
               tna_step_today = .TRUE.
               tna_days_step  = tna_days_step + 1
               tna_pL_used    = MIN(1.0_wp, MAX(0.0_wp, npg_p_L))
@@ -4460,6 +4687,7 @@ CONTAINS
               tca4_U = tca4_U + tca_dens_pre(cc) * (1.0_wp - tca_phi(cc))
             END DO
             tca4_F      = 1.0_wp - EXP(-tca4_theta * tca_taun / (tca4_delta - tca_taun))
+            IF (tiller_full_demand == 1) tca4_F = 1.0_wp   ! rec 196: no fitted shape; the ledger alone decides
             tca4_target = tca4_F * tca4_U
 
             ! Driver record 134: by default the target is a monotone running maximum; when
@@ -4508,6 +4736,57 @@ CONTAINS
     END IF
   END SUBROUTINE update_canopy_tillering
 
+  ! Driver record 196: today's potential structural stem demand of each axis
+  ! class, mg DM axis-1 d-1. It is the per-internode law of record 100 mode 4
+  ! (here evaluated per axis class):
+  ! every internode rank whose elongation window is open demands the Kirby (1988)
+  ! ceiling rate (record 104 member) over the degree-days of today inside its
+  ! window (record 103 duration, Fournier 2003 collar onset), the axis sum capped
+  ! at the Kirby whole-stem rate. Ranks whose onset precedes the start of the
+  ! mortality phase do not elongate (the record 100 mode 4 floral-transition proxy).
+  SUBROUTINE tfd_stem_demand(dtau)
+    REAL(wp), INTENT(IN) :: dtau
+    INTEGER  :: nl_ms, c, x, nl_c, islot, ip
+    REAL(wp) :: tau, t_on, t_end, ov, sum_c, a_rate, nl_axis
+
+    tfd_stem_mg = 0.0_wp
+    IF (.NOT. clr_active) RETURN
+    nl_ms = cfp_n_top_culm()
+    IF (nl_ms < 1) RETURN
+    nl_ms = MIN(nl_ms, CLR_MAXRANK)
+    tau = clr_tau_Cd
+    ip  = CLR_MAXRANK + 1
+    DO c = 0, CT_MAXTIL
+      IF (.NOT. ct_appeared(c)) CYCLE
+      IF (ct_dens(c) <= 0.0_wp) CYCLE
+      IF (c == 0) THEN
+        nl_c   = nl_ms
+        a_rate = 0.0_wp
+      ELSE
+        nl_axis = ct_nl_tiller(c, nl_ms)
+        nl_c    = MIN(MAX(1, NINT(nl_axis)), CLR_MAXRANK)
+        a_rate  = 0.0_wp
+        IF (ct_tau_em > ct_tau_birth(c)) a_rate = nl_axis / (ct_tau_em - ct_tau_birth(c))
+      END IF
+      sum_c = 0.0_wp
+      DO x = 1, nl_c + 1
+        islot = MERGE(ip, x, x == nl_c + 1)
+        IF (tfd_tau_on(c, islot) < 0.0_wp) THEN
+          t_on = sdm4_onset_proj(x, c, nl_c, a_rate)
+          IF (t_on >= 0.0_wp .AND. tau >= t_on) tfd_tau_on(c, islot) = t_on
+        END IF
+        t_on = tfd_tau_on(c, islot)
+        IF (t_on < 0.0_wp) CYCLE
+        IF (ct_tau_sm < 0.0_wp) CYCLE
+        IF (t_on < ct_tau_sm) CYCLE
+        t_end = t_on + sdm4_dur_Cd
+        ov    = MAX(0.0_wp, MIN(tau, t_end) - MAX(tau - dtau, t_on))
+        sum_c = sum_c + sdm4_r_mg * ov
+      END DO
+      tfd_stem_mg(c) = MIN(sum_c, sdm4_cap_mg * dtau)
+    END DO
+  END SUBROUTINE tfd_stem_demand
+
   ! Final leaf number of primary tiller c on a main stem carrying nl_ms leaves.
   ! Abichou (2016) Ch.1 Table 3 Eqn T3.5, Nl_Ti = alpha Nl_MS - beta Nc_Ti.
   REAL(wp) FUNCTION ct_nl_tiller(c, nl_ms)
@@ -4541,7 +4820,9 @@ CONTAINS
     INTEGER,  INTENT(IN) :: c, nl_ms
     REAL(wp) :: w1, wflg, nlt
     INTEGER  :: ir1
-    ir1  = MIN(MAX(nl_ms, 1), SIZE(cba_w_irank))   ! inversed rank of main-stem leaf 1
+    ir1  = nl_ms                                    ! inversed rank of main-stem leaf 1
+    IF (canopy_fln_prediction == 2) ir1 = MAX(nl_ms, cba_Nl_fit)   ! rec 174 mode 2: base-anchored leaf 1
+    ir1  = MIN(MAX(ir1, 1), SIZE(cba_w_irank))
     w1   = cba_w_irank(ir1)
     wflg = cba_w_irank(1)
     nlt  = ct_nl_tiller(c, nl_ms)
@@ -5665,5 +5946,30 @@ CONTAINS
     IF (hgt_int_ear_member >= 2 .AND. inl_ped_open) inl_Lear_cm = inl_Lear_kirby_cm
     inl_h_b3 = inl_h_b2 + inl_Lear_cm                    ! BASIS 3: + spike and awns -- the quantity handed to plant_height
   END SUBROUTINE inl_advance
+
+  ! Driver record 186: f(T) = exp[(1/10) INT_25^T ln Q10(t) dt] with the measured
+  ! Q10(t) = q10_a - q10_b t of Gifford (1995) Glob Change Biol 1:385, Table 4,
+  ! held at its 15 C and 30 C values outside the measured range. Closed form:
+  ! INT ln(a - b t) dt = -(a - b t) (ln(a - b t) - 1) / b.
+  PURE FUNCTION maint_temp_factor_measured(temp) RESULT(f)
+    REAL(wp), INTENT(IN) :: temp
+    REAL(wp) :: f, integral
+    REAL(wp), PARAMETER :: q10_a = 2.243_wp, q10_b = 0.0308_wp
+    REAL(wp), PARAMETER :: t_lo = 15.0_wp, t_hi = 30.0_wp, t_ref = 25.0_wp
+    IF (temp > t_hi) THEN
+      integral = prim(t_hi) - prim(t_ref) + (temp - t_hi) * LOG(q10_a - q10_b * t_hi)
+    ELSE IF (temp < t_lo) THEN
+      integral = prim(t_lo) - prim(t_ref) + (temp - t_lo) * LOG(q10_a - q10_b * t_lo)
+    ELSE
+      integral = prim(temp) - prim(t_ref)
+    END IF
+    f = EXP(integral / 10.0_wp)
+  CONTAINS
+    PURE FUNCTION prim(t) RESULT(v)
+      REAL(wp), INTENT(IN) :: t
+      REAL(wp) :: v
+      v = -(q10_a - q10_b * t) * (LOG(q10_a - q10_b * t) - 1.0_wp) / q10_b
+    END FUNCTION prim
+  END FUNCTION maint_temp_factor_measured
 
 END MODULE GROWTH_MODULE

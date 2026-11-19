@@ -1,0 +1,17 @@
+! Maricopa FACE TRNO 912 MEASURED initial mineral N by layer - archive yield.ods Init_conditions_Soil_layers
+! (icno3, icnh4 ppm) x bulk density (Soil_layers slbdm, AZMC920001) x thickness; sampled 1995-12-18.
+! Unsampled depths carry no initial mineral N. Columns: z_top_m,z_bot_m,NO3_gN_m2,NH4_gN_m2
+0.00,0.05,0.37662,0.14803
+0.05,0.15,0.73025,0.28702
+0.15,0.30,1.65735,0.45149
+0.30,0.50,2.01760,0.51740
+0.50,0.60,1.14072,0.29253
+0.60,0.70,0.61152,0.13965
+0.70,0.90,1.30624,0.29830
+0.90,1.10,0.60288,0.21980
+1.10,1.20,0.30144,0.10990
+1.20,1.30,0.11461,0.10205
+1.30,1.50,0.22922,0.20410
+1.50,1.70,0.13502,0.10048
+1.70,1.90,0.16642,0.13188
+1.90,2.10,0.16642,0.13188

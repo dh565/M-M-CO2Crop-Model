@@ -1,24 +1,26 @@
-! D37 PHENOLOGY RE-DERIVATION (2026-10-18). Record 173 spac_sink_coupling = 1 cools the
-! canopy, so the canopy clock that drives cum_tdu moved and every threshold below was re-derived by
-! the cum_tdu bracket-midpoint rule of the calibration-variables rules (internal; not distributed) section 1 on the D37-A run
-! 20261018_1403_D37A_ON42, control deck BRAUNSCHWEIG_102.
-! Stages moved: Emergence 185.1 -> 185.1, Anthesis 1159.2 -> 1154.0, Maturity 1983.6 -> 1968.0.
-! Stages NOT moved: only Emergence, Anthesis and Maturity carry a dated obs row in this deck's observation table (internal; not distributed); season 2013/14 group.
+! Cultivar phenology and early-growth inputs: cv. Batis, Braunschweig FACE 2013/14, deck BRAUNSCHWEIG_106.
+! Rows are positional (value first, label second); '!' lines and blank lines are skipped (INPUT_GUIDE.md section 6).
+! Stage thresholds (Emergence to Maturity) are cumulative thermal development units, degC d. Anthesis and the
+! anthesis-to-maturity interval were calibrated with CroptimizR on control deck BRAUNSCHWEIG_103 to its observed anthesis
+! and maturity days (tools/croptimizr_face, phase phen); 3_leaves, Tillering, Booting and Heading are scaled with
+! Anthesis, and Grain_filling keeps its share of the anthesis-to-maturity interval (face_run.py, pheno_params).
+! The same thresholds are used on every deck of the group: BRAUNSCHWEIG_101, BRAUNSCHWEIG_102, BRAUNSCHWEIG_103, BRAUNSCHWEIG_104, BRAUNSCHWEIG_105, BRAUNSCHWEIG_106, BRAUNSCHWEIG_107, BRAUNSCHWEIG_110.
+! Obs_*_DAP rows: observed stage dates in days after planting; 0 = not observed.
 1       GDD_Method
-0.0     T_Base_[TO-PIN_MW1997]
-25.0    T_Opt_Lower_[TO-PIN_MW1997]
+0.0     T_Base
+25.0    T_Opt_Lower
 50.0    T_Opt_Upper
 60.0    T_Max
 90.0    Photo_Sens
-30.0     Vern_Factor	! [2026-10-16: lowered to the McMaster 2008 Eq 3 / Table 3 printed maximum 30: 50 -> 30; outputs identical except the printed vf column (Sect. 6); P1D 90 kept, see Sect. 6d]
+30.0     Vern_Factor	! McMaster et al. 2008 Eq. 3 / Table 3, printed maximum 30
 185.1   Emergence
-219.412 3_leaves
-328.822 Tillering
-888.233 Booting
-1038.652 Heading
-1154.0  Anthesis
-1298.462 Grain_filling
-1968.0  Maturity
+220.744 3_leaves
+330.821 Tillering
+893.629 Booting
+1044.963 Heading
+1142.601  Anthesis
+1305.978 Grain_filling
+1957.470  Maturity
 2013	Sowing_Year
 10	Sowing_Month
 29	Sowing_Day
@@ -43,6 +45,6 @@
 85.0	Phyllochron_degCd	! literature-range + observed-timing calibration (Abichou 2016 p.29 range 87-126; flag leaf 2014-05-14), control deck 103
 18.0133	Blade_L_max_cm	! literature-range calibration on control-deck LAI (Abichou 2016 Fig. 8b five-cultivar spread), control deck 103
 1.2557	Blade_W_max_cm	! literature-range calibration on control-deck LAI (Abichou 2016 Fig. 8b five-cultivar spread), control deck 103
-17.0	Sheath_L_max_cm	! D28 staging: compiled default (identity)
-0.45	Sheath_D_cm	! D28 staging: compiled default (identity)
+17.0	Sheath_L_max_cm	! compiled default (Abichou 2016 Ch.2 Fig. 3b p.67)
+0.45	Sheath_D_cm	! compiled default (Abichou 2016 Ch.2 Table S2 p.87)
 1.800	Axes_max_per_plant	! axes plant-1 (0 = no cap); crop bound = value x plant density

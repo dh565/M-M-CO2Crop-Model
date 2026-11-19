@@ -12,10 +12,8 @@ executable, one stack, all sites" means APPENDING the template's own tail verbat
 reference driver onto every site deck's own (unmodified) file, never renumbering or
 re-deriving anything, and NEVER hard-coding one specific deck length or template length.
 
-2026-10-11 generalization (the records 145/146 adoption, records 145/146): the previous version
-of this script hard-coded deck length == 116 and reference length == 141 (`ValueError`
-otherwise), so it could not stage a deck past record 141 at all, and could not reach a
-146-line template (records 145/146) on ANY deck. `build_driver_main()` below now reads
+Neither the deck length nor the reference template length is hard-coded, so any deck can
+be staged past record 141 and any template length can be reached. `build_driver_main()` reads
 BOTH lengths from the files themselves and appends `ref_lines[len(deck_lines):]` -- the
 template's own missing tail, whatever its length -- so a 116-, 118- or 144-line on-disk
 deck driver is staged against a 141-, 144- or 146-line (or any future length) template with
@@ -57,7 +55,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import d6_config_guard  # noqa: E402  -- D6 2026-10-10 configuration-harmonization guard
+import d6_config_guard  # noqa: E402  -- D6 configuration-harmonization guard
 
 
 def md5_file(path):
@@ -101,10 +99,7 @@ def build_driver_main(deck_driver_path, ref_driver_path, out_path, log_rows, dec
     own in-source comment names it as such), never a site measurement -- and is reported,
     never silent.
 
-    2026-10-11 generalization (the records 145/146 adoption): NEITHER the deck's own length NOR
-    the reference template's length is hard-coded (the previous version asserted exactly
-    116 and exactly 141, which made it impossible to stage a deck past record 141, or to
-    reach a 146-line template on any deck, without editing this function). Both lengths
+    NEITHER the deck's own length NOR the reference template's length is hard-coded. Both lengths
     are read from the files themselves; the template's own tail, `ref_lines[n_deck:]`,
     whatever its length, supplies every record the deck does not itself carry. The deck's
     own on-disk lines are never rewritten (so they stay byte-exact on every overlapping
@@ -198,7 +193,7 @@ def assemble_deck(deck, rows, decks_dir, root_input, ref_driver, out_deck_dir, l
             continue  # handled specially below, after the plain copies
         if not os.path.isfile(src_path):
             raise ValueError("deck %s: manifest file %s (%s) not found at %s" % (deck, fname, source, src_path))
-        # D6 2026-10-10 bug fix: a manifest row may name a file under a subdirectory
+        # D6 bug fix: a manifest row may name a file under a subdirectory
         # (e.g. "WDF25_Data/foo.csv" -- the first manifest this script was run against
         # with such a path); the previous code only created the top-level `input/`
         # directory, so the destination copy failed with FileNotFoundError on any
@@ -274,14 +269,14 @@ def main():
                           " task found to hard-ERROR-STOP under the appended template tail as"
                           " built for the site (e.g. --force-rec 99:4). Repeatable.")
     ap.add_argument("--config-reference", default=d6_config_guard.DEFAULT_REFERENCE,
-                     help="D6 2026-10-10 guard: path to the canonical v1.0 driver_main.txt"
+                     help="D6 guard: path to the canonical v1.0 driver_main.txt"
                           " (default docs/V1_CONFIGURATION_driver_main_v1.0.txt) every assembled"
                           " deck's MECHANISM records (23 to the reference file's own length,"
                           " excluding the declared SITE-STATE/DIAGNOSTIC records, see"
                           " scripts/d6_config_guard.py) are checked against before any run is"
                           " launched.")
     ap.add_argument("--allow-config-deviation", action="store_true",
-                     help="D6 2026-10-10 guard: do not refuse on a MECHANISM-record mismatch against"
+                     help="D6 guard: do not refuse on a MECHANISM-record mismatch against"
                           " --config-reference; log every deviation to CONFIG_DEVIATION_LOG.csv in"
                           " the output package instead and proceed. For a DECLARED ablation arm only"
                           " -- never for a routine site/fingerprint run.")
@@ -322,7 +317,7 @@ def main():
         w.writerow(["deck", "file", "source_or_marker", "detail", "token"])
         w.writerows(log_rows)
 
-    # D6 2026-10-10 configuration-harmonization guard: every assembled deck's MECHANISM
+    # D6 configuration-harmonization guard: every assembled deck's MECHANISM
     # records must match the canonical v1.0 reference before any run is launched. A
     # record FORCED by --force-rec is, by construction, declared and logged above (not a
     # silent deviation) and is skipped here only if it was actually forced this run.

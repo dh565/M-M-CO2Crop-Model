@@ -133,7 +133,7 @@ MODULE SHARED
   !   alpha_soil_dry_sandy = 0.28, dry bare sandy soil. Karnieli et al. (1996)
   !     Remote Sens Environ 56:1-12, Table 2 (measured 0.25-0.32, Negev).
   !   alpha_canopy_wheat   = 0.20, green cereal canopy. Monteith & Unsworth
-  !     (2008) Principles of Environmental Physics, 4th ed., p. 48 Table 3.1
+  !     (2008) Principles of Environmental Physics, 3rd ed., p. 48 Table 3.1
   !     ("grass/cereal crops 0.18-0.25").
   !   k_alpha_canopy       = 0.5, the extinction coefficient of the blend; the
   !     same Beer-Lambert form as k_dr in Goudriaan (1977).
@@ -142,16 +142,27 @@ MODULE SHARED
   REAL(wp), PARAMETER :: k_alpha_canopy       = 0.5_wp
   REAL(wp) :: alpha_mix_s = 0.25_wp   ! computed each hourly step from LAI
 
-  ! LAI-dependent roughness length and displacement height.
-  !   raupach_cd1 = 7.5 and raupach_cd = 0.2: Raupach (1994) Boundary-Layer
-  !     Meteorol 71:211-216, Table 1 (cd is the mean drag coefficient per unit
-  !     frontal area).
-  !   frontal_lai_factor = 0.5: frontal-area index lambda_f = 0.5 LAI for the
-  !     erectophile wheat canopy; Raupach et al. (1991) Boundary-Layer Meteorol
-  !     56:351-369, Eq. 2.
-  REAL(wp), PARAMETER :: raupach_cd1         = 7.5_wp
-  REAL(wp), PARAMETER :: raupach_cd          = 0.2_wp
-  REAL(wp), PARAMETER :: frontal_lai_factor  = 0.5_wp
+  ! LAI-dependent zero-plane displacement d and roughness length z0, Raupach
+  ! (1994) Boundary-Layer Meteorol 71:211-216 (the paper has no tables; all
+  ! constants are those of its Sect. 4, p. 214, used for Fig. 1, p. 215).
+  ! The independent variable is the canopy area index Lambda, the total
+  ! single-sided area of all canopy elements per unit ground area (p. 213,
+  ! Sect. 3a); the frontal area index is lambda = Lambda/2 for isotropically
+  ! oriented elements (p. 213). The model passes Lambda = LAI.
+  !   d/h  = 1 - (1 - exp(-sqrt(cd1 Lambda)))/sqrt(cd1 Lambda)        Eq. (8)
+  !   u*/Uh = min[(C_S + C_R Lambda/2)^(1/2), (u*/Uh)max]             Eq. (7)
+  !   z0/h = (1 - d/h) exp(-kappa Uh/u* - Psi_h)                      Eq. (4)
+  !   Psi_h = ln(c_w) - 1 + 1/c_w  (= 0.193 for c_w = 2)              Eq. (5)
+  !   raupach_cd1 = 7.5   (Sect. 4e, p. 214)
+  !   raupach_CR  = 0.3   roughness-element drag coefficient (Sect. 4a, p. 214)
+  !   raupach_CS  = 0.003 substrate-surface drag coefficient (Sect. 4b, p. 214)
+  !   raupach_ustar_Uh_max = 0.3 (Sect. 4c, p. 214)
+  !   raupach_cw  = 2     roughness-sublayer depth ratio (Sect. 4d, p. 214)
+  REAL(wp), PARAMETER :: raupach_cd1          = 7.5_wp
+  REAL(wp), PARAMETER :: raupach_CR           = 0.3_wp
+  REAL(wp), PARAMETER :: raupach_CS           = 0.003_wp
+  REAL(wp), PARAMETER :: raupach_ustar_Uh_max = 0.3_wp
+  REAL(wp), PARAMETER :: raupach_cw           = 2.0_wp
   REAL(wp) :: frontal_area_index_s = 0.0_wp
   REAL(wp) :: disp_height_s        = 0.0_wp
   REAL(wp) :: rough_len_s          = 0.0_wp
@@ -238,7 +249,7 @@ MODULE SHARED
   ! Model Dev 5:919-940, p.922, "Tuzet et al. (2003) use a flexible psi_L
   ! modifier (in place of the f(D) function in Eq. 2)". Their own Table 3
   ! p.930 gives g1 (Tuzet model) = 5.5, independent corroboration of the
-  ! refit. The leaf-water-potential pathway now carries the humidity response.
+  ! refit. The leaf-water-potential pathway carries the humidity response.
   ! ------------------------------------------------------------------------- !
   REAL(wp), PARAMETER :: g1_tuzet = 5.776_wp
   REAL(wp), PARAMETER :: D0 = 1500.0_wp
@@ -525,7 +536,7 @@ MODULE SHARED
   ! leaf class and per hour by bisection inside the Ci solve and required to
   ! converge to 1e-6 MPa.
   ! ------------------------------------------------------------------------- !
-  INTEGER  :: spac_mode = 0                   ! rec 81: 0 OFF; 1/2/3 psi_s weighting (see above)
+  INTEGER  :: spac_mode = 0                   ! rec 81: 0 OFF; 1/2/3 psi_s weighting (see above); 4 = Gardner soil-root conductance (below)
   ! ------------------------------------------------------------------------- !
   ! K_plant, the soil-to-leaf hydraulic conductance of Eq. 4 above.
   ! Duursma & Medlyn (2012) Geosci Model Dev 5:919-940 define k_L as the
@@ -550,6 +561,106 @@ MODULE SHARED
   ! grows as the soil dries.
   ! ------------------------------------------------------------------------- !
   REAL(wp) :: spac_K_plant = 0.0222_wp                   ! mol m-2 s-1 MPa-1 (rec 81 third token; default 0.0222)
+  ! ------------------------------------------------------------------------- !
+  ! Rec 81 mode 4: the rhizosphere term of the standing limitation
+  ! above. Per layer i, the soil-to-root resistance of the single-root model of
+  ! Gardner (1960) Soil Sci 89:63-73, in the form of Duursma & Medlyn (2012)
+  ! Geosci Model Dev 5:919-940, Eq. 22 p.925,
+  !   R_sr,i = ln(r_s,i / r_r) / (2 pi L_v,i H_i K_i),   r_s,i = 1 / SQRT(pi L_v,i),
+  ! with L_v,i = W_root fr_i SRL / H_i (the model's own root length density, the
+  ! same expression the N uptake uses), r_r = 80 um, the wheat root radius of
+  ! Gahoonia et al. (1997) Plant Soil 191:181 Table 2 (NITROGEN_RADIAL_MODULE r0),
+  ! and K_i the committed unsaturated conductivity of the layer converted from
+  ! m d-1 of head to mol m-1 s-1 MPa-1 by 1/(86400 rho_w g) x 1e6/18.015.
+  ! The layers act in parallel (D&M p.925), so with a common root xylem potential
+  ! (Taylor & Keppler 1975, the assumption D&M adopt for Eq. 12) the flux is
+  ! SUM g_i (psi_i - psi_R) = G (psi_s,eff - psi_R), with g_i = 1/R_sr,i,
+  ! G = SUM g_i and psi_s,eff = SUM g_i psi_i / G - the conductance-weighted soil
+  ! potential (D&M Eq. 24 weights by E_max,i instead, which needs a minimum root
+  ! potential parameter; the conductance form needs none). The leaf-specific
+  ! soil-to-leaf conductance is then D&M Eq. 23,
+  !   k_L = 1 / (1/K_plant + LAI / G),
+  ! which replaces K_plant in (H). In wet soil G/LAI is orders of magnitude above
+  ! K_plant and k_L = K_plant; it binds only as K_i collapses in drying soil.
+  ! No new constant: every input is a measured value already in the model.
+  ! Tested on all 38 decks: no effect (k_L fell at most ~8 %, the
+  ! conductance-weighted potential stayed near -0.24 MPa on the driest Maricopa
+  ! days) - by this physics the wetter deep layers CAN supply the canopy. The
+  ! binding supply limit is instead the non-compensating Feddes sink of the
+  ! Richards solver (hydro.f90), a different uptake law from this one.
+  ! Decks use mode 3.
+  ! ------------------------------------------------------------------------- !
+  REAL(wp) :: spac_K_L = 0.0222_wp           ! mol m-2 s-1 MPa-1, the conductance used in (H); = spac_K_plant below mode 4
+  REAL(wp) :: spac_G_soil = 0.0_wp           ! mol m-2(ground) s-1 MPa-1, SUM g_i of mode 4 (diagnostic)
+  ! ------------------------------------------------------------------------- !
+  ! Rec 81 mode 5: ONE root water uptake law for the stomata and
+  ! the Richards sink, Duursma & Medlyn (2012) Eq. 12 p.924 with the common
+  ! root xylem potential psi_R of Taylor & Keppler (1975) Soil Sci 120:57-67.
+  ! Per layer i, in parallel,
+  !   E_i = g_i MAX(0, psi_i - psi_R),   g_i = 1 / (R_sr,i + R_rad,i),
+  ! R_sr,i the Gardner soil-to-root resistance of mode 4, and R_rad,i the root
+  ! resistance of the layer, inversely proportional to its root length (D&M
+  ! p.925; Taylor & Klepper 1975: radial resistance dominates and the axial one
+  ! is negligible, uptake proportional to root length density). On ground area,
+  !   1/R_rad,i = K_root,L LAI f_i,   f_i = the layer's share of root length,
+  ! so that the layers in parallel carry the whole root system's conductance.
+  ! K_root,L, the leaf-specific root-system conductance of WHEAT: Trillo &
+  ! Fernandez (2005) Plant Soil 277:277-284, Table 1 p.281, control plants at
+  ! flowering, KRL = 0.188 mg s-1 MPa-1 cm-2 leaf (detopped root system, 9 kPa)
+  ! = 1880 / 18.015 mmol = 0.1044 mol m-2 s-1 MPa-1. The rest of the plant
+  ! (root xylem -> leaf) takes the remainder of Koehler et al. (2026)'s
+  ! whole-plant K_plant, 1/K_shoot = 1/K_plant - 1/K_root,L:
+  ! 1/(1/0.0222 - 1/0.1044) = 0.0282 mol m-2 s-1 MPa-1. Roots then hold 21 % of
+  ! the plant resistance, and in wet soil the series sum is exactly Koehler's
+  ! measured K_plant. FLAGGED: the split combines two studies (cultivar, stage,
+  ! pot); a measured wheat root/shoot split on one plant (Gallardo et al. 1996
+  ! J Exp Bot 47:233) was not obtained. Bramley et al. (2009) Plant Physiol
+  ! 150:348 Table I seedling Lp_r (5.7e-8 m s-1 MPa-1) is not used: with the
+  ! model's root length it gives a root system less conductive than Koehler's
+  ! whole plant (checked on Koehler's own 5.9 g root mass), i.e. impossible.
+  ! No uptake where psi_i <= psi_R: D&M exclude hydraulic redistribution
+  ! (p.925, citing Domec et al. 2012). psi_R is the unique root of
+  ! SUM E_i = E_canopy (spac_root_psi below). The leaf sits above the root
+  ! xylem through the remaining plant conductance,
+  !   psi_L = psi_R(LAI E_leaf) - E_leaf / spac_K_shoot,
+  ! which replaces (H) in assim (leaf basis to ground basis by LAI, as D&M
+  ! Eq. 23). At E = 0, psi_R = the potential of the wettest rooted layer.
+  ! hydro.f90 takes the SAME law as its sink, so the transpiration that sets
+  ! the carbon gain is exactly the water the soil delivers.
+  ! ------------------------------------------------------------------------- !
+  REAL(wp), PARAMETER :: spac_K_rootL = 0.1044_wp   ! mol m-2(leaf) s-1 MPa-1, Trillo & Fernandez 2005 Table 1 KRL control
+  REAL(wp) :: spac_K_shoot = 0.0282_wp       ! mol m-2(leaf) s-1 MPa-1, 1/(1/spac_K_plant - 1/spac_K_rootL), set in main
+  REAL(wp), PARAMETER :: spac_r_root = 8.0e-5_wp   ! m, wheat root radius, Gahoonia et al. (1997) Plant Soil 191:181 Table 2 (= NITROGEN_RADIAL_MODULE r0)
+  ! ------------------------------------------------------------------------- !
+  ! Rec 81 mode 6: mode 5 with the root term scaled by the
+  ! model's own root surface instead of its leaf area. The mode-5 root term,
+  ! 1/R_rad,i = K_root,L LAI f_i, fixes the root conductance PER LEAF AREA at the
+  ! value of Trillo & Fernandez's pot plants (920 g root per m2 leaf); the field
+  ! crop of the Maricopa decks carries 27-32 g root per m2 leaf in March. The
+  ! measured quantity that transfers between plants is the conductance per unit
+  ! absorbing root (Bramley et al. 2009 Plant Physiol 150:348, p.360; D&M 2012
+  ! p.925, root resistance inversely proportional to root length), so
+  !   1/R_rad,i = Lp_r x A_root,i,   A_root,i = 2 pi r_root L_root,i,
+  ! with Lp_r the radial hydraulic conductivity per root surface of a WHOLE
+  ! wheat root system, Bramley et al. (2009) Table I: Lpr = 5.74e-8 m s-1
+  ! MPa-1 (cv. Kulin, 14 d, sand, pressure chamber, flux/pressure slope
+  ! 0.3-0.7 MPa, normalized by the scanned surface area of the whole system),
+  ! x 1e6/18.015 = 3.19e-3 mol m-2(root) s-1 MPa-1; and L_root,i = W_root f_i
+  ! SRL, r_root as above (the same root geometry the Gardner term and the N
+  ! uptake use). The shoot term is unchanged. Checked against the field: with
+  ! the model's own LAI and root mass on 10 Mar 1994 this gives a soil-to-leaf
+  ! conductance of 0.005 mol m-2(leaf) s-1 MPa-1 against 0.004-0.008 derived
+  ! from Wall et al. (2006) Tables 2-3 (internal stress-onset diagnosis note,
+  ! sections 6-7; not distributed). Caveat stated: Bramley's roots are
+  ! 14-day seedlings; a mature field root system has more suberized length per
+  ! absorbing tip, so Lpr per surface is if anything an upper bound.
+  ! ------------------------------------------------------------------------- !
+  REAL(wp), PARAMETER :: spac_Lpr_root = 5.74e-8_wp   ! m s-1 MPa-1 per m2 root surface, Bramley et al. 2009 Table I, wheat whole root system
+  REAL(wp) :: spac_lai = 0.0_wp              ! m2 m-2, the day's LAI used by (H) in mode 5
+  REAL(wp), ALLOCATABLE :: spac_g_lay(:)     ! mol m-2(ground) s-1 MPa-1, g_i of the day (committed state)
+  REAL(wp), ALLOCATABLE :: spac_psi_lay(:)   ! MPa, psi_i of the day (committed state)
+  REAL(wp) :: hydro_m5_psiR_MPa = 0.0_wp     ! MPa, psi_R of the last mode-5 sink (diagnostic)
+  INTEGER  :: hydro_m5_nog_steps = 0         ! run count of mode-5 sink calls with no root conductance (Feddes kept)
 
   ! sf, the steepness of f_psi: 3.2 MPa-1, Tuzet et al. (2003) as tabulated by
   ! Duursma & Medlyn (2012) Geosci Model Dev 5:919-940, p.928 (their fitted
@@ -581,7 +692,7 @@ MODULE SHARED
   LOGICAL  :: h_committed_vec_valid = .FALSE.
   LOGICAL  :: spac_pass_on = .TRUE.              ! .FALSE. only on the outer-iteration-1 (unstressed) demand pass
   REAL(wp) :: spac_psi_s_MPa = 0.0_wp            ! psi_s,rw of the day under the selected weighting
-  REAL(wp) :: spac_psi_s_conv(3) = 0.0_wp        ! the three conventions, every day (diagnostic)
+  REAL(wp) :: spac_psi_s_conv(4) = 0.0_wp        ! the three conventions, every day (diagnostic)
   INTEGER  :: spac_psi_s_fallback = 0            ! 1 = selected weighting had zero weight sum -> Couvreur literal used
   INTEGER  :: spac_psi_s_valid = 0               ! 0 = no committed profile yet (day 1) -> psi_s = 0, f_psi = 1
   ! Hourly census (output/spac_census.csv; one row per assim call on the writer pass when rec 81 >= 1,
@@ -1094,6 +1205,11 @@ INTEGER :: k_avg_mode = 1 ! 0=arithmetic, 1=geometric, 2=upstream
 
   ! Prognostic profile and the thermal properties derived from it:
   REAL(wp), ALLOCATABLE :: Tsoil_prof(:)   ! per-layer soil temperature (C)
+  ! Daily MEAN per-layer temperature of the accepted energy-balance pass (C), the
+  ! sub-step-weighted mean of Tsoil_prof; drives the soil-N transformations of the
+  ! mineralizing span. tpd_sum is its accumulator.
+  REAL(wp), ALLOCATABLE :: Tsoil_prof_day(:), tpd_sum(:)
+  LOGICAL  :: tsoil_prof_day_ok = .FALSE.
   REAL(wp), ALLOCATABLE :: Cv_soil(:)      ! per-layer volumetric heat capacity (J m-3 K-1; de Vries 1963)
   REAL(wp), ALLOCATABLE :: lambda_soil(:)  ! per-layer thermal conductivity (W m-1 K-1; Cote-Konrad 2005)
 
@@ -1372,6 +1488,18 @@ REAL(wp) :: f_t
                                     ! (measured range 1-4 for loams; Venterea et al. 2015,
                                     ! Methods of Soil Analysis; sensitivity-bounded, pos 43)
   REAL(wp) :: BD_surf     = 1.4_wp  ! surface-layer bulk density, Mg m-3 (workbook, pos 44)
+  ! Kd_NH4 tiers (driver_N.csv pos 43). >= 0: the user's value (measured, or estimated by the user
+  ! inside the class range below and labeled so in the deck). < 0: no value given -> the midpoint of the
+  ! measured range of the deck's USDA texture class (clay, silt rows 68-69). Measured ranges, batch
+  ! sorption, Gronwald et al. 2015 SOIL 1:475 Table 3 (10.5 g soil / 40 mL; sorbed 11-16 % sandy loam,
+  ! CEC 4.0 cmolc/kg; 33-54 % silty loam, CEC 10.8): Kd = f/(1-f) x 40/10.5.
+  !   sand, loamy sand : 0.00 - 0.73 (no measurement; bounded above by the sandy loam, which has more
+  !                      clay and CEC; 0 = no exchange)
+  !   sandy loam       : 0.47 - 0.73 (measured)
+  !   loam and finer   : 1.88 - 4.47 (measured on a silty loam; clay classes are an extrapolation)
+  REAL(wp), PARAMETER :: kd_cls_lo(3) = [0.00_wp, 0.47_wp, 1.88_wp]
+  REAL(wp), PARAMETER :: kd_cls_hi(3) = [0.73_wp, 0.73_wp, 4.47_wp]
+  INTEGER  :: kd_tier = 1, kd_class = 0
   REAL(wp) :: z_surf_N    = 0.05_wp ! emission-layer thickness, m (measured emission depth
                                     ! 0-5 cm: Sommer et al. 2004, Adv Agron 82:557, sec III.B; pos 45)
   REAL(wp) :: Km_den      = 0.035_wp ! Michaelis constant for denitrification in NO3, g N L-1
@@ -2237,6 +2365,39 @@ REAL(wp) :: f_t
   REAL(wp) :: sdm4_tau_anth    = -1.0_wp   ! degCd, tau on the anthesis day (first dvs2 >= 1; diagnostic)
 
   ! ======================================================================== !
+  ! Driver record 196 tiller_full_demand: the
+  ! rec 99 mode 4 affordability ledger counts the axis's WHOLE structural growth
+  ! demand, not its lamina alone. 0 = off. 1 = per axis class and day,
+  !   demand = lamina (unchanged: dA x LMA x g_leaf)
+  !          + stem: the rec 100 mode 4 per-internode law (Kirby 1988 rates and
+  !            durations, records 103/104 members; Fournier 2003 collar onset),
+  !            evaluated per class, x g_stem
+  !          + ear: the rec 98 per-axis spike rate (Fischer 1985 Table 4 p.451,
+  !            p.449) over the rec 89 spike window, x g_storage
+  ! and the supply shared out by light is the growth supply LESS the day's root
+  ! growth cost, since the roots are paid from the same pool. The fitted Abichou
+  ! shape Eqn T4.4 is not applied (F = 1) and the window ends at anthesis
+  ! (dvs2 >= 1), not at main-stem flag ligulation (Eqn T4.3): tiller death runs
+  ! through stem elongation and ear growth and almost none occurs in grain
+  ! filling (Davidson & Chevalier 1990 Crop Sci 30:832; Gomez-Macpherson et al.
+  ! 1998 Ann Bot 82:323; Thorne & Wood 1987 Ann Bot 59:413; Alzueta et al. 2012).
+  ! Known gap, not represented: the red/far-red trigger of the START of death
+  ! (Sparkes et al. 2006 Eur J Agron 24:212). Requires rec 99 = 4 and rec 89 >= 1.
+  ! Recs 103/104 are retired at 0, so the line carries its own members:
+  ! "1 d r" with d = 1-6 (the rec 103 onset/duration member) and r = 1-3 (the
+  ! rec 104 rate member). With 1 the rec 123 N term is not applied: dying
+  ! tillers are not N-short (Sparkes et al. 2006); N acts through the supply.
+  INTEGER  :: tiller_full_demand = 0
+  REAL(wp) :: tfd_stem_mg(0:CT_MAXTIL) = 0.0_wp   ! mg DM axis-1 d-1, today's potential structural stem demand per class
+  REAL(wp) :: tfd_ear_dm_day   = 0.0_wp           ! g DM axis-1 d-1, today's potential spike growth (same for every live axis)
+  REAL(wp) :: tfd_root_cost_day  = 0.0_wp         ! g CH2O m-2 d-1, today's realized root growth cost (g_root x dw_root)
+  REAL(wp) :: tfd_root_cost_prev = 0.0_wp         ! the same, yesterday's, paired with tca_gsup_prev
+  REAL(wp) :: tfd_tau_prev = -1.0_wp              ! degCd, canopy clock on the previous call
+  REAL(wp) :: tfd_tau_on(0:CT_MAXTIL, CLR_MAXRANK+1) = -1.0_wp  ! degCd, latched internode onset per class and rank (slot CLR_MAXRANK+1 = peduncle)
+  REAL(wp) :: tfd_dvs2_prev = 0.0_wp              ! -, yesterday's dvs2 (the window end test)
+  REAL(wp) :: tfd_dem_stem_ms = 0.0_wp, tfd_dem_ear_ax = 0.0_wp, tfd_dem_lam_ms = 0.0_wp  ! g CH2O axis-1 d-1, main-stem diagnostics
+
+  ! ======================================================================== !
   ! Fate of the surplus (refused) carbon - driver record 101, accepted at the
   ! value 0, so the incumbent fate runs. The law the record would select rests
   ! on Schnyder, H. (1993) "The role of carbohydrate storage and redistribution
@@ -3016,6 +3177,7 @@ REAL(wp) :: f_t
   ! Urea remains the scalar N_urea_soil (surface-applied, layer 1 only — design A);
   ! TAN_surf scalar semantics unchanged (Sommer 2004 volatilization).
   REAL(wp), ALLOCATABLE :: NO3_lay(:), NH4_lay(:)
+  REAL(wp), ALLOCATABLE :: urea_lay(:)   ! rec 190: per-layer urea-N (g N m-2), allocated always, used only when ON
   ! Daily read-only hydrology aggregates used by the nitrogen transport and
   ! uptake, filled by main_MMCO2Crop.f90 from the per-call accumulators below;
   ! the nitrogen code writes no water state:
@@ -3161,8 +3323,76 @@ REAL(wp) :: f_t
   REAL(wp) :: npg_unpaid_ch2o_day = 0.0_wp       ! g CH2O m-2 d-1, carbon of the unpaid increments
   REAL(wp) :: npg_dw_wsc_day = 0.0_wp            ! g DM m-2 d-1, deposited in the stem WSC reserve(a)
   REAL(wp) :: npg_resid_day = 0.0_wp             ! g CH2O m-2 d-1, explicit residual(b)
+  ! rec 193 unpaid_lamina_root_fate: 0 = OFF (EOF-default: lamina carbon refused for lack of N goes to the
+  ! stem WSC cap, then is deleted as the explicit residual). 1 = that carbon is exported to the ROOT the same day
+  ! as extra root structure, paid in N at the root construction concentration npg_c_R from the shoot pool left
+  ! after the structural tiers; whatever the root cannot pay keeps the old fate (WSC, then residual). Sources:
+  ! Brouwer 1962 / Ericsson 1995 Plant Soil 168:205 (N shortage limits leaf growth first, roots keep growing);
+  ! Andrews et al. 1999 PCE 22:949 Tables 2-3 (wheat S:R 4.5 -> 1.6 and 6.1 -> 1.1 at low N); Hermans et al.
+  ! 2006 TIPS 11:610 (N deficiency: more carbon exported to roots); Gastal & Lemaire 2002 JXB 53:789. Zero new
+  ! constants. Differs from the falsified rec 142: no lamina price change, and the carbon goes to the root
+  ! directly, not pro rata to the day's (possibly zero) organ potentials.
+  INTEGER  :: unpaid_lamina_root_fate = 0
+  REAL(wp) :: ulr_dw_root_day = 0.0_wp, ulr_dw_root_cum = 0.0_wp   ! g DM m-2 (d-1), extra root built from refused lamina carbon
+  REAL(wp) :: ulr_n_day = 0.0_wp, ulr_n_cum = 0.0_wp               ! g N m-2 (d-1), N paid for it
   REAL(wp) :: npg_lamina_unpaid_day = 0.0_wp     ! g DM m-2 d-1, lamina DM built as area today but not paid in N (REPORTED ledger)
   REAL(wp) :: npg_lamina_unpaid_cum = 0.0_wp     ! g DM m-2, cumulative 'area built ahead of its nitrogen' (Batch 2 closes it)
+  ! rec 194 soil_orgN_law: 0 = OFF (EOF-default: flat background mineralization N_mineral_rate, driver_N row 13).
+  ! 1 = first-order mineralization of the MEASURED soil organic N stock over the mineralization depth (driver_N row
+  ! 72), per layer: dNorg/dt = -k_ref f(T) h(pF) Norg. All constants measured, none from another model:
+  !   k_ref 1.3e-4 d-1 at 15 C and field capacity = 0.13 kg N per t Norg per normalized day (SD 0.05, range
+  !     0.05-0.27), Vale 2006 PhD thesis INP Toulouse Table 4.8 p.137, in-situ bare-soil N balances of 55 arable
+  !     fields (LIXIM), Norg of the ploughed layer.
+  !   f(T) = exp[(Ea/R)(1/288.15 - 1/T)], Ea 78 kJ mol-1 = mean of 70.2, 84.4, 79.3 (Vale Table 1.2 p.57, measured
+  !     14.7-35.3 C); T capped at 35.3 C, the top of that measured range.
+  !   g(theta) = linear from 1 at field capacity (pF 2.5) to 0.20 at wilting (pF 4.2), Vale Eqs 9-10 p.31-32: the
+  !     water function his 55-field k_ref was computed with (p.103); h = 1.61 - 0.24 pF (Table 1.4,
+  !     one incubation soil) is not used because it is not the basis of k_ref. gPF 0.20 is FLAGGED (Rodrigo 1997 convention).
+  ! The same h (depth-weighted) replaces vwc/theta_ref_dec as the water factor of the residue module, so one
+  ! measured moisture law drives all organic-N mineralization. With rec 194 = 1 an optional input/presow_daily.csv
+  ! (one row per day from the residue burial date to the run start: soil T in C, water factor) drives the pre-run
+  ! residue decomposition day by day instead of the constant presow_Tsoil/presow_fwater pair.
+  INTEGER  :: soil_orgN_law = 0
+  ! rec 195 grain_n_source_phase: 0 = off (the rec-86 potential, N_g0 x exp(g tt), g = 0.005 DECLARED NOT
+  ! MEASURED, bounds the grain-N import over the whole fill). 1 = after the endosperm cell-division phase (tau =
+  ! 250 degCd, a measured duration, FPB p.786) the grain-N import is SOURCE-limited: the sink is only the room under
+  ! the measured per-kernel ceiling (rec 125, Martre et al. 2003 Plant Physiol 133:1959 Table I p.1961). Martre 2003
+  ! p.1963: grain N is sink- or co-limited only for the first 10-15 d after anthesis and source-limited after that.
+  INTEGER  :: grain_n_source_phase = 0
+  ! rec 197 rhizo_immob: crop-driven microbial N immobilization.
+  ! Line "0" = off (EOF-default). "1 r_rd" = on. Daily, per m2:
+  !   C_rd  = r_rd * dw_root * c_frac          rhizodeposit C reaching the soil (g C)
+  !   N_dem = C_rd * y_mic / CN_mic            N the microbes need to build cells on that C (g N)
+  !   N_imm = MIN(N_dem, mineral N in the root zone), NH4 first, then NO3; to a new organic pool, no in-season release.
+  ! Measured values (papers read in full):
+  !   r_rd   rhizodeposit C / C kept in new roots: 0.02-0.1 Gregory & Atwell 1991; ~1 Keith 1986; 0.3-1.3 Kuzyakov &
+  !          Domanski 2000; ~2 with root decay Swinnen 1995. ONE constant for all decks, read from the line.
+  !   c_frac 0.425, mid of 0.40-0.45 (Keith 1986; Gregory & Atwell 1991; King 2001).
+  !   y_mic  0.82, mid of 0.72-0.92 kept by microbes (Swinnen 1994, 1995: 8-28 % respired in 3 weeks).
+  !   CN_mic 5.8, mid of 4.8-6.8 measured microbial C:N (Shen 1989, Broadbalk).
+  !   NH4 first: microbes take NH4 2-4x faster than NO3 (Recous 1988, 1992); NO3 little immobilized while NH4 is
+  !   present (Jenkinson 1985). No release before harvest (Recous 1988; Shen 1989).
+  ! dw_root is the model's own root growth (growth_module.f90 mnp_dw_root_day); the soil-N step runs before the
+  ! growth call, so the previous day's root growth is used (one-day lag). Needs the layered soil N.
+  INTEGER  :: rhizo_immob = 0
+  REAL(wp) :: rhz_r_rd = 0.0_wp
+  REAL(wp), PARAMETER :: rhz_c_frac = 0.425_wp, rhz_y_mic = 0.82_wp, rhz_CN_mic = 5.8_wp
+  REAL(wp) :: rhz_Norg = 0.0_wp, rhz_imm_day = 0.0_wp, rhz_dem_day = 0.0_wp
+  REAL(wp) :: rhz_imm_NH4_cum = 0.0_wp, rhz_imm_NO3_cum = 0.0_wp
+  INTEGER  :: unit_rhz = 0                      ! output/daily_rhizo_immob.csv, opened only with rec 197 = 1
+  LOGICAL  :: rhz_open = .FALSE.
+  ! rec 198 min_water_unity: DIAGNOSTIC ONLY. 0 = off (EOF-default). 1 = the rec-194 mineralization
+  ! water factor is held at 1 (field capacity) every day, to bound how much the model's 20-40 cm water deficit
+  ! (vs measured at Braunschweig) affects soil N supply. The soil-water hydraulics are NOT changed.
+  INTEGER  :: min_water_unity = 0
+  REAL(wp), PARAMETER :: vale_k_ref = 1.3e-4_wp, vale_Ea = 78000.0_wp, vale_Tref_K = 288.15_wp
+  REAL(wp), PARAMETER :: vale_T_max_c = 35.3_wp, vale_h_a = 1.61_wp, vale_h_b = 0.24_wp, R_gas_vale = 8.314_wp
+  REAL(wp), PARAMETER :: vale_gPF = 0.20_wp   ! g at wilting point of the linear water function the k_ref was derived with (Vale 2006 Eq. 10 p.32, after Rodrigo et al. 1997); FLAGGED convention. h = 1.61 - 0.24 pF is not used because it is not the basis of k_ref
+  REAL(wp) :: soil_Norg_gN_m2 = -1.0_wp          ! driver_N row 72, organic N stock 0..n_min_depth_m (g N m-2), input
+  REAL(wp) :: vale_Norg = 0.0_wp                 ! g N m-2, the depleting organic-N pool
+  REAL(wp) :: vale_min_day = 0.0_wp, vale_min_cum = 0.0_wp, vale_fT_day = 1.0_wp, vale_h_day = 1.0_wp
+  INTEGER  :: presow_n_days = 0
+  REAL(wp), ALLOCATABLE :: presow_T_d(:), presow_f_d(:)
   REAL(wp) :: npg_unpaid_ch2o_cum = 0.0_wp, npg_wsc_cum = 0.0_wp, npg_resid_cum = 0.0_wp
   REAL(wp) :: npg_paid_cum_L = 0.0_wp, npg_paid_cum_S = 0.0_wp, npg_paid_cum_R = 0.0_wp
   INTEGER  :: npg_days_live = 0, npg_days_bind_L = 0, npg_days_bind_S = 0, npg_days_bind_R = 0
@@ -3464,13 +3694,21 @@ REAL(wp) :: f_t
   ! Sci 91:91, Barraclough & Leigh (1984) J Agric Sci 103:59 and
   ! Thorup-Kristensen, Cortasa & Loges (2009) Plant Soil 322:101 giving the
   ! 7.9-11.3 mm d-1 bracket that the three linear members span.
-  INTEGER  :: root_front_law = 0                  ! rec 124; 0 Borg & Grimes (EOF-default), 1/2/3 linear 7.9/9.6/11.3 mm d-1
+  INTEGER  :: root_front_law = 0                  ! rec 124; 0 Borg & Grimes (EOF-default), 1/2/3 linear 7.9/9.6/11.3 mm d-1, 4 thermal time (Thorup-Kristensen 2009)
   REAL(wp), PARAMETER :: rfl_z0 = 0.10_wp                  ! m, emergence root-zone depth; an assumed floor
   REAL(wp), PARAMETER :: rfl_rz_mode(3) = (/ 7.9_wp, 9.6_wp, 11.3_wp /)  ! mm d-1, Kirkegaard & Lilley 2007 range: low, mid, high
   REAL(wp) :: rfl_rz = 0.0_wp                     ! mm d-1, the rate in use
   INTEGER  :: rfl_days_emerged = 0                ! days since emergence (dvs2 > 0), counted at the root-depth call
   REAL(wp) :: rfl_z_legacy = 0.0_wp, rfl_z_new = 0.0_wp, rfl_z_max = 0.0_wp    ! m, the incumbent and the new root-front depth, and the season maximum
   INTEGER  :: rfl_day_zmax = 0                    ! first model day on which z_root = z_max (0 = never)
+  ! rec 124 = 4: THERMAL-TIME root front of Thorup-Kristensen, Salmeron Cortasa & Loges 2009
+  ! Plant Soil 322:101, Fig. 4 p.107: winter wheat z = -0.08 + 1.34e-3 x (sum of daily mean air T, base 0 C,
+  ! from sowing) m, R2 0.84, linear to heading (p.105); 1.3 mm per degC d for winter and spring wheat. Held
+  ! after anthesis (dvs2 >= 1; heading-to-anthesis gap FLAGGED). Capped by min(root_max_depth, profile).
+  ! One Danish sandy loam; other soils FLAGGED. The soil restriction of Kirkegaard & Lilley 2007 is NOT
+  ! applied (abstract only, not read in full).
+  REAL(wp), PARAMETER :: rfl_tt_a = -0.08_wp, rfl_tt_b = 1.34e-3_wp   ! m, m per degC d
+  REAL(wp) :: rfl_tsum = 0.0_wp                   ! degC d, sum of daily mean air T (> 0) from sowing
 
   ! ======================================================================== !
   ! Per-kernel grain-nitrogen ceiling and potential - driver record 125. The
@@ -3656,7 +3894,7 @@ REAL(wp) :: f_t
   ! ======================================================================== !
   ! Surface water-balance conservation - driver record 149, accepted at the
   ! value 3. The top boundary flux is limited to what the surface can accept
-  ! and the ledger residual is no longer zeroed at the minimum time step, so the
+  ! and the ledger residual is not zeroed at the minimum time step, so the
   ! true residual is carried and reported. The mixed-form mass-conservative
   ! discretization and its top-flux treatment are those of Celia, Bouloutas &
   ! Zarba (1990) Water Resour Res 26:1483, Eqs. 15-17.
@@ -4006,6 +4244,95 @@ REAL(wp) :: f_t
   ! Record 182 is read and never used; it holds its position in the positional
   ! driver file.
   INTEGER  :: reserved_rec_182 = 0   ! rec 182 RESERVED ( vegetative-N demand basis, NOT BUILT); read, never used
+  ! rec 184 soil_heat_implicit: 0 = OFF (EOF-default): the surface heat flux enters the soil
+  !   heat solve explicitly (lagged node), which grows a period-2 oscillation on wet, conductive soil
+  !   and can stop a crop from maturing (8 of 4800 AgMIP seasons). 1 = ON:
+  !   the surface flux is linearised in the top-node temperature and taken implicitly, with the
+  !   change booked to soil sensible heat so G + Hs is unchanged. Numerical correction; no new constant.
+  INTEGER  :: soil_heat_implicit = 0
+  INTEGER  :: par_absorb_conserving = 0      ! rec 185; 0 = OFF (EOF-default): sunlit/shaded absorbed PAR of Teh (2006) Eqs. 3.36-3.39, which
+                                              ! give each leaf alpha x the depth-mean diffuse flux and the canopy-bottom scattered beam, so the two classes
+                                              ! together can absorb more PAR than Teh's own Eqs. 3.8 and 3.32 let the canopy intercept (6-17 % more under
+                                              ! overcast skies at LAI 1.6-5). 1 = per-leaf absorption is the depth derivative of those same fluxes,
+                                              ! integrated over the sunlit (beam-weighted) and shaded leaf area, so sunlit + shaded = the intercepted
+                                              ! PAR exactly. Same coefficients (kdr, kdf, sqrt(alpha), p); no new parameter. Numerical only.
+  ! rec 192 anthesis_event_interp: 0 = OFF (EOF-default): kernel number is set from the spike
+  !   mass at the END of the day BEFORE the day the anthesis threshold is crossed, so a crossing a few hours earlier or later moves the whole
+  !   day of spike growth (about 5 % of the spike at anthesis) in or out of the kernel-number basis. 1 = ON: the crossing is located within
+  !   the day in thermal time, f = (TDU_anthesis - TDU_start_of_day) / dTDU_day, and the spike receives the fraction f of that day's
+  !   reproductive growth before the kernel number is set (the rest follows the post-anthesis route, so mass is conserved); the
+  !   grain-filling thermal clock starts at the crossing and receives (1 - f) of that day's thermal time. Numerical only: event location
+  !   within a time step, no new parameter.
+  INTEGER  :: anthesis_event_interp = 0
+  REAL(wp) :: ani_frac      = 1.0_wp   ! rec 192: fraction of today before the anthesis crossing (main, every day)
+  REAL(wp) :: ani_frac_used = -1.0_wp  ! rec 192: the fraction applied on the crossing day (diagnostic; -1 = not applied)
+  REAL(wp) :: ani_open_frac = 1.0_wp   ! rec 192: fraction of the spike-window opening day AFTER the 300 degCd point (Fischer 1985 p.449)
+  ! rec 186 resp_temp_basis: 0 = OFF (EOF-default): maintenance respiration scales with a fixed
+  !   Q10 = 2.0 from 25 C (Teh 2006 Listing 8.7 p.194). 1 = ON: the Q10 falls with temperature as
+  !   MEASURED on whole wheat plants, Q10(T) = 2.243 - 0.0308 T (Gifford 1995 Glob Change Biol 1:385,
+  !   Table 4: 1.80/1.59/1.49/1.32 at 15/20/25/30 C), integrated from 25 C and held at its end values
+  !   outside 15-30 C; f(15)/f(25) = 0.62 matches Gifford's long-term coefficients (Fig. 5, 0.61).
+  INTEGER  :: resp_temp_basis = 0
+  ! rec 187 preanth_supply_uptake: 0 = OFF (EOF-default, the demand-gated law): before
+  !   anthesis the uptake potential is MIN(demand x E_N, soil supply). 1 = ON: before
+  !   anthesis the uptake potential is the soil supply itself - the per-layer active,
+  !   mass-flow and diffusion terms, already scaled by the MEASURED wheat feedback
+  !   f_Nstatus(NNI) of Taulemesse et al. (2015) PLoS ONE 10:e0120291 - capped by the
+  !   Justes et al. (1994) Ann Bot 74:397 Eq. (17) p.405 MAXIMUM-curve shoot stock gap
+  !   plus the root structural demand. There is no demand x E_N gate. Evidence: the
+  !   field wheat uptake rate rises with the 0-30 cm soil nitrate concentration
+  !   independently of NNI, up to the maximum curve (Devienne-Barret et al. 2000 Ann
+  !   Bot 86:995-1005, Table 2, Fig. 5A, Fig. 1); the root uptake of Bertheloot,
+  !   Cournede & Andrieu (2011) Ann Bot 108:1085 Eq. (3) has no demand term. A
+  !   stock-deficit DEMAND (rec 176 mode 2) is cancelled by E_N,
+  !   which is why this record removes the gate instead. Zero new constants.
+  ! rec 188 n_delivery_series_bound: 0 = OFF (EOF-default, the additive law): per layer
+  !   and ion the supply is MIN(pool, active + mass flow + diffusion), the three
+  !   added in parallel. 1 = ON: the transporters absorb only what mass flow and
+  !   diffusion deliver to the root surface, so the supply is
+  !   MIN(pool, MIN(active, mass flow + diffusion)); soil transport and membrane
+  !   uptake act in series (Nye & Tinker 1977, Solute movement in the soil-root
+  !   system; Barber 1995, Soil nutrient bioavailability). The active, mass-flow and
+  !   diffusion output split stays a proportional diagnostic. Zero new constants.
+  INTEGER  :: preanth_supply_uptake   = 0
+  INTEGER  :: n_delivery_series_bound = 0
+  ! rec 189 n_radial_uptake: 0 = OFF (EOF-default): the layer N supply is MIN(pool, active +
+  !   mass flow + diffusion), with the active Michaelis-Menten term on the BULK concentration. 1 = ON:
+  !   the supply is a radial Barber-Cushman solve per layer (NITROGEN_RADIAL_MODULE): transporters on
+  !   the root and root-hair surface at the LOCAL solution concentration, fed by diffusion (Li & Gregory
+  !   1974 D_l; impedance f_l = 1.1 (theta - theta_th) of Olesen et al. 2001 Soil Sci 166:89 Eq.7a/b,
+  !   theta_th from the deck's clay, silt and bulk density, Eq.5) and mass flow, b = theta for NO3- and
+  !   theta + rho_b Kd for NH4+. Requires driver_N.csv rows 68-70. Zero new fitted constants.
+  !   Barraclough & Tinker 1981 (1.58 theta - 0.17, two loams) was tried first and rejected: it gives
+  !   f_l = 0 at the sandy WheatDryFACE soil's measured water content (0.06-0.14).
+  INTEGER  :: n_radial_uptake = 0
+  ! rec 190 urea_transport: 0 = OFF (EOF-default): fertilizer urea is one scalar pool with no
+  !   location; it hydrolyzes into the surface ammoniacal pool and reaches the soil only as layer-1
+  !   ammonium, which is never moved by water. 1 = ON (requires the layered soil N): urea is a
+  !   per-layer pool. Urea is an uncharged molecule, not held on the exchange complex, so it is moved
+  !   by the soil water flux exactly as nitrate is (same upwind scheme, same water, b = theta), and it
+  !   hydrolyzes in whichever layer it has reached, with the existing rate law (Lasisi & Akinremi 2020).
+  !   Hydrolysis in layer 1 still feeds the surface ammoniacal pool (volatilization unchanged);
+  !   below layer 1 it feeds that layer's ammonium. Zero new constants.
+  INTEGER  :: urea_transport = 0
+  ! rec 191 organ_n_storage_basis: 0 = OFF (EOF-default): before anthesis, assimilated (REDUCED)
+  !   N that finds no room in the organ tiers is returned to the shoot NITRATE pool and reduced again the
+  !   next day. Under record 187 this relabels 4-16 g N m-2 of organic N as nitrate (shoot nitrate 60-68 %
+  !   of shoot N; measured in wheat 0.7-7 %: Bloom et al. 2014 Nat Clim Change 4:477 Fig. 2, Bahrami et al.
+  !   2017 J Plant Physiol 216:44 Fig. 2C, Lawlor et al. 1987 JXB 38:378 Fig. 5) and double-counts the
+  !   reduction flux. 1 = ON: that overflow is kept as REDUCED mobile N (N_mobile_veg), the pool new
+  !   construction draws on first. Measured basis: excess N is held as amino acids and protein, not
+  !   nitrate (Lawlor et al. 1988 JXB 39:329 p.339), and stem N is remobilized to growing leaves during
+  !   stem elongation at 1.6-2.5 kg N ha-1 d-1 (Vouillot & Devienne-Barret 1999 Ann Bot 83:569). The pool
+  !   is shoot N, so it is counted in the record-187 maximum-curve cap and in the NNI of the f_Nstatus
+  !   feedback, exactly as the nitrate store is. Zero new constants. The overflow is counted (run.log).
+  INTEGER  :: organ_n_storage_basis = 0
+  REAL(wp) :: ons_ovf_cum = 0.0_wp   ! g N m-2, rec 191 diagnostic: season sum of assimilated overflow kept as mobile reduced N
+  REAL(wp) :: nup_droot_day    = 0.0_wp  ! g N m-2 d-1, today's pre-anthesis root structural demand (0 after anthesis)
+  INTEGER  :: nup_days_pre     = 0       ! rec 187 ON: pre-anthesis days on which the record set the uptake potential
+  INTEGER  :: nup_days_capbind = 0       ! rec 187 ON: of those, days on which the maximum-curve stock cap bound
+  REAL(wp) :: nup_cum_gain     = 0.0_wp  ! rec 187 ON: cumulative (record-187 potential - demand-gated potential), g N m-2
+  INTEGER  :: nsb_days_bound   = 0       ! rec 188 ON: days on which delivery bounded any layer active term
 
   ! ======================================================================== !
   ! Nitrogen basis of stem-reserve deposition - driver record 172, accepted at
@@ -4063,17 +4390,19 @@ REAL(wp) :: f_t
   ! admissible even when the tolerance is slow to close.
   INTEGER,  PARAMETER :: spac_extra_iter = 60          ! extra psi_L steps allowed only after spac_max_iter is exhausted
   REAL(wp), PARAMETER :: spac_tol_fallback_MPa = 1.0e-5_wp  ! bounded acceptance threshold, MPa
-  INTEGER  :: spac_fallback_accepts_run = 0            ! times (b) accepted a state; 0 on every deck of the v1.0 configuration
+  INTEGER  :: spac_fallback_accepts_run = 0            ! times (b) accepted a state; 0 on every deck of the deck configuration
 
   ! ======================================================================== !
-  ! Flag-leaf-number prediction - driver record 174, accepted at the value 0, so
-  ! the top rank stays the measured panel median until the anchored booting
-  ! stage. The Haun-stage chronology the prediction would use is the phyllochron
+  ! Flag-leaf-number prediction - driver record 174, default 0, so the top rank
+  ! stays the measured panel median until the anchored booting stage; at 1
+  ! the final leaf number is predicted on
+  ! the emergence day and used as the top rank from emergence, and the booting
+  ! freeze only confirms it. The Haun-stage chronology the prediction uses is the phyllochron
   ! of McMaster, Wilhelm, Palic, Porter & Jamieson (2003) Ann Bot 91:697-705,
   ! doi:10.1093/aob/mcg074, Table 2 p.701 (air basis, cultivar-settable), with
   ! the appearance-rate decline and the seed-reserve ratio of Streck, Weiss &
   ! Baenziger (2003) Ann Bot 92:181-190, Eq. 5 p.183, doi:10.1093/aob/mcg121.
-  INTEGER  :: canopy_fln_prediction = 0   ! rec 174; 0 = OFF (EOF-default: n_top stays the panel median cba_Nl_fit = 11 until the Booting freeze and then jumps to the emergent clr_FLN, retro-dimensioning every finished blade), 1 = FLN_pred = FLOOR(clr_HS_at_tau(stage_thresh(4) - tdu_at_emerge)) is computed on the emergence day and used as n_top from emergence, the Booting freeze only CONFIRMING it
+  INTEGER  :: canopy_fln_prediction = 0   ! rec 174; 0 = OFF (EOF-default: n_top stays the panel median cba_Nl_fit = 11 until the Booting freeze and then jumps to the emergent clr_FLN, retro-dimensioning every finished blade), 1 = FLN_pred = FLOOR(clr_HS_at_tau(stage_thresh(4) - tdu_at_emerge)) is computed on the emergence day and used as n_top from emergence, the Booting freeze only CONFIRMING it; 2 = as 1, plus blades below the ct_internodes_elong elongated-internode phytomers base-anchored (irank = MAX(n_top-n+1, cba_Nl_fit-n+1); Abichou 2016 Ch.2 Eqn T2.7a), identical to 1 at FLN >= cba_Nl_fit
   ! --- rec 174 state: the prediction, its input and its confirmation ---
   REAL(wp) :: clr_tau_boot_target = -1.0_wp    ! degree-Cd since emergence at which the anchored Booting stage will be set = stage_thresh(4) - tdu_at_emerge; set by main_MMCO2Crop.f90 from the phenology state every day before update_canopy_leaf_ranks (-1 = not yet emerged or not available)
   INTEGER  :: clr_FLN_pred     = 0        ! rec 174 >= 1 only: the final leaf number predicted on the EMERGENCE day from clr_tau_boot_target (0 = not predicted; mode 0 leaves it 0)
@@ -4195,7 +4524,7 @@ REAL(wp) :: f_t
   ! The measured green-area and nitrogen series it is judged against are those
   ! of Manderscheid, Dier, Erbs, Sickora & Weigel (2020) Open Data J Agric Res
   ! 6:28-33, doi:10.18174/odjar.v6i0.16397.
-  INTEGER :: lamina_expansion_n_limit = 0   ! rec 179; 0 OFF (EOF-default), 1 PRIMARY (Bertheloot 2008 FPB Eqn 8 minN^ph,a, running max), 2 arm (Eqn 8 plateau 1.114), 3 arm (Jamieson & Semenov 1.5 on total lamina N), 4 attribution arm (Yin l_N log form)
+  INTEGER :: lamina_expansion_n_limit = 0   ! rec 179; 0 OFF (EOF-default), 1 PRIMARY (Bertheloot 2008 FPB Eqn 8 minN^ph,a, running max), 2 arm (Eqn 8 plateau 1.114), 3 arm (Jamieson & Semenov 1.5 on total lamina N), 4 attribution arm (Yin l_N log form), 5 canopy lamina-N law (Justes Nc + Lemaire 2008 Fig 7f + p 0.70)
   REAL(wp), PARAMETER :: lnl_a_slope = 0.46_wp   ! dimensionless; slope a of Bertheloot, Martre & Andrieu 2008 Funct Plant Biol 35:781-796 Eqn 8, Table 1 p.784, doi 10.1071/FP08064; one value for cvs Apache/Isengrain/Thesee
   REAL(wp), PARAMETER :: lnl_b_max   = 1.9_wp    ! g N m-2 (Table 1 p.784 prints 1.9e-3 kg m-2); maxN^ph,a above which minN^ph,a stops rising
   REAL(wp), PARAMETER :: lnl_c_icpt  = 0.24_wp   ! g N m-2 (Table 1 p.784 prints 0.24e-3 kg m-2); intercept c of Eqn 8
@@ -4220,6 +4549,29 @@ REAL(wp) :: f_t
   REAL(wp) :: lnl_refused_cum  = 0.0_wp   ! m2 m-2; season cumulative of the above
   INTEGER  :: lnl_days_refuse  = 0        ! days on which lnl_refused_day > 0
   LOGICAL  :: lnl_live_today   = .FALSE.  ! .TRUE. only on a day the record evaluated (rec >= 1 and the rec-122 increment ledger was live)
+  ! Driver record 179 mode 5: the canopy lamina-N law. The area a
+  ! lamina N pool supports is LAI_c (N_lam / N_lam,c)^p, capped at r = 1, where
+  !   N_lam,c = f_lam Nc(W) W, Nc(W) = 5.35 W^-0.442 % (W >= 1.55 t ha-1; 4.4 %
+  !     below; Justes et al. 1994 Ann Bot 74:397), W = shoot dry mass;
+  !   LAI_c: the LAI of a critical-N crop holding N_lam,c, from the high-N crop
+  !     SLN = 2.27 LAI^-0.21 (Lemaire et al. 2008 Field Crops Res 105:253 Fig. 7f,
+  !     wheat Australia, FITTED by the authors, R2 0.76), so N_lam,c = 2.27 LAI_c^0.79;
+  !   f_lam = 0.56: green-lamina share of shoot N, MEASURED Braunschweig FACE
+  !     2014/2015 at both N levels (Manderscheid et al. 2020 ODJAR data);
+  !   p = 0.70: share of the lamina-N cut taken by area, FITTED at Braunschweig
+  !     (two N levels, two years) and TESTED on the independent Maricopa 1997
+  !     data (measured green-leaf N and LAI, 4 treatments: predicted/observed
+  !     LAI 0.81-1.09, DOY 49-98). FLAGGED: one fitted exponent.
+  ! TESTED AND NOT USED (all 38 decks): the law holds on
+  ! measured data, but the model's own lamina N pool is wrong in both directions
+  ! (high N: 5.8 vs 9.4 g N m-2 Braunschweig 14 May 2014, 5.0 vs 8.7 Maricopa
+  ! DOY 77-84; low N: 4.3 vs 2.4 Braunschweig), so the cap cut high-N area
+  ! (WDF25 Zahir yield 427 -> 295) and never bound at Braunschweig low N.
+  ! All decks keep rec 179 = 1; mode 5 waits for a correct lamina N supply.
+  REAL(wp), PARAMETER :: lnl5_flam = 0.56_wp, lnl5_p = 0.70_wp
+  REAL(wp), PARAMETER :: lnl5_sln_a = 2.27_wp, lnl5_sln_b = -0.21_wp
+  REAL(wp) :: lnl5_shoot_W = 0.0_wp       ! g DM m-2; shoot dry mass set before the rec-122 commit (mode 5 only)
+  REAL(wp) :: lnl5_r_day   = 1.0_wp       ! -; MIN(1, N_lam / N_lam,c) today (mode 5 only)
 
   ! ======================================================================== !
   ! Magnesium solution concentration - driver record 181, accepted at the value
@@ -4303,7 +4655,7 @@ REAL(wp) :: f_t
   INTEGER  :: gcl_days_post    = 0        ! days the post-anthesis partition ran
   INTEGER  :: gcl_days_pool    = 0        ! days the labile Ca pool bounded the law (raw > pool)
 
-  ! ======================================================================== !
+
 CONTAINS
 
   SUBROUTINE sync_hydro_step_state()
@@ -4432,6 +4784,80 @@ CONTAINS
       END DO
     END IF
   END SUBROUTINE check_event_reachability
+
+  ! Rec 81 mode 5: the conductance g_i = 1/(R_sr,i + R_rad,i) of one layer
+  ! (mol m-2 ground s-1 MPa-1), from its share of root length f, its root
+  ! length (W_root f SRL, m m-2), thickness H (m) and unsaturated conductivity
+  ! K (m d-1 of head).
+  REAL(wp) FUNCTION spac_layer_g(f, root_len, H, K_m_d)
+    REAL(wp), INTENT(IN) :: f, root_len, H, K_m_d
+    REAL(wp), PARAMETER :: pi_g = 3.14159265358979_wp, mol_m3 = 1.0e6_wp / 18.015_wp
+    REAL(wp) :: lv, rs, k_mol, g_sr, g_rad
+    spac_layer_g = 0.0_wp
+    IF (root_len <= 0.0_wp .OR. H <= 0.0_wp .OR. K_m_d <= 0.0_wp) RETURN
+    lv = root_len / H
+    rs = 1.0_wp / SQRT(pi_g * lv)
+    IF (rs <= spac_r_root) RETURN
+    k_mol = K_m_d / 86400.0_wp / spac_rho_g * mol_m3
+    g_sr  = 2.0_wp * pi_g * root_len * k_mol / LOG(rs / spac_r_root)   ! D&M Eq. 22
+    IF (spac_mode == 6) THEN
+      g_rad = spac_Lpr_root * mol_m3 * 2.0_wp * pi_g * spac_r_root * root_len   ! mode 6: Lp_r x root surface
+    ELSE
+      g_rad = spac_K_rootL * spac_lai * f                                         ! mode 5: K_root,L x LAI share
+    END IF
+    IF (g_sr > 0.0_wp .AND. g_rad > 0.0_wp) spac_layer_g = 1.0_wp / (1.0_wp / g_sr + 1.0_wp / g_rad)
+  END FUNCTION spac_layer_g
+
+  ! Rec 81 mode 5: the common root xylem potential psi_R (MPa) at which the
+  ! layers deliver E (mol m-2 ground s-1), SUM g_i MAX(0, psi_i - psi_R) = E.
+  ! The sum is continuous, piecewise linear and decreasing in psi_R, so the
+  ! root is found exactly by adding layers from the wettest down. With no
+  ! conductance at all, psi_R = psi_none and the caller sees no supply.
+  REAL(wp) FUNCTION spac_root_psi(n, g, psi, E)
+    INTEGER,  INTENT(IN) :: n
+    REAL(wp), INTENT(IN) :: g(n), psi(n), E
+    REAL(wp), PARAMETER :: psi_none = -1.0e3_wp
+    LOGICAL  :: used(n)
+    REAL(wp) :: sg, sgp, cand, psi_next
+    INTEGER  :: k, j, jmax
+    used = (g <= 0.0_wp)
+    sg = 0.0_wp; sgp = 0.0_wp
+    spac_root_psi = psi_none
+    DO k = 1, n
+      jmax = 0
+      DO j = 1, n
+        IF (used(j)) CYCLE
+        IF (jmax == 0) THEN
+          jmax = j
+        ELSE IF (psi(j) > psi(jmax)) THEN
+          jmax = j
+        END IF
+      END DO
+      IF (jmax == 0) EXIT
+      used(jmax) = .TRUE.
+      sg = sg + g(jmax); sgp = sgp + g(jmax) * psi(jmax)
+      cand = (sgp - MAX(0.0_wp, E)) / sg
+      psi_next = psi_none
+      DO j = 1, n
+        IF (.NOT. used(j)) psi_next = MAX(psi_next, psi(j))
+      END DO
+      spac_root_psi = cand
+      IF (cand >= psi_next) RETURN
+    END DO
+  END FUNCTION spac_root_psi
+
+  ! The supply side of (H): the leaf water potential the hydraulic path allows
+  ! at leaf transpiration E_leaf (mol m-2 leaf s-1). Modes 1-4: psi_s - E/K_L.
+  ! Modes 5 and 6: psi_R(LAI E_leaf) - E_leaf / K_shoot.
+  REAL(wp) FUNCTION spac_supply_psi(psi_s, E_leaf)
+    REAL(wp), INTENT(IN) :: psi_s, E_leaf
+    IF (spac_mode >= 5) THEN
+      spac_supply_psi = spac_root_psi(SIZE(spac_g_lay), spac_g_lay, spac_psi_lay, spac_lai * E_leaf) &
+                        - E_leaf / spac_K_shoot
+    ELSE
+      spac_supply_psi = psi_s - E_leaf / spac_K_L
+    END IF
+  END FUNCTION spac_supply_psi
 
 END MODULE SHARED
   ! ======================================================================== !

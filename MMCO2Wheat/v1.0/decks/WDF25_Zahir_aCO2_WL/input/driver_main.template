@@ -17,8 +17,8 @@ input/input_daily_meteo.csv
 0.02                       ! dry layer thickness (upper soil layer - should be read from wtbal.f90)
 0.42                       ! Porosity
 0.18                       ! Pore size distance
-0.39                       ! Saturation point (theta_s - hack for now).
-0.20                       ! initial water content at w10 (upper layer) - hack for now.
+0.39                       ! Saturation point (theta_s).
+0.20                       ! initial water content at w10 (upper layer).
 420.0                      ! atmospheric CO2 (umol mol-1)
 1                          ! water stress mode (1=gsw, 2=An)
 1                          ! soil water stress (1=on, 0=off)

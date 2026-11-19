@@ -36,7 +36,7 @@ input/input_daily_meteo.csv
 0                          ! Hydraulic model (0=VGM,1=Brooks-Corey,2=Campbell)
 2                          ! init profile mode (0=as-is, 1=hydrostatic, 2=monotonic top->bottom)
 -0.35                      ! init bottom pressure head (m, negative=suction); used if init profile mode>0
-2                                                   ! energy balance mode -- DEV DEFAULT = 1 (three-node EB). 0=DEPRECATED legacy SW (regression reference only); 1=active dev physics; 2=+1D soil heat; 3=full CO2ST [2-3 RESERVED]. Legacy run: ./main_output.exe 0
+2                                                   ! energy balance mode -- DEV DEFAULT = 1 (three-node EB). 0=DEPRECATED baseline SW (regression reference only); 1=active dev physics; 2=+1D soil heat; 3=full CO2ST [2-3 RESERVED]. Baseline run:./main_output.exe 0
 0                         ! EB free-convection fallback (0=off/MO-only)
 1000.0                    ! EB boundary-layer height z_i (m)
 1.2                       ! EB gustiness beta
@@ -48,4 +48,4 @@ input/input_daily_meteo.csv
 0                         ! bottom BC type (mode-2 soil heat)
 15.0                      ! deep soil temperature Tdeep (C)
 1                         ! soil-T init method (0=uniform,1=damped)
-1.0                       ! root_comp_omega: Jarvis compensatory root uptake; 1.0=OFF (legacy), 0<omega<1 = compensation on
+1.0                       ! root_comp_omega: Jarvis compensatory root uptake; 1.0=OFF (baseline), 0<omega<1 = compensation on

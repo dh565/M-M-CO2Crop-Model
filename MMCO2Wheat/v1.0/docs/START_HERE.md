@@ -31,8 +31,8 @@ python3 tools/compare_outputs.py run/output testcase/output
 
 That is the whole procedure. Notes on each step:
 
-- **Step 1** builds the executable `mmco2crop` in the current directory from the 19
-  Fortran source files beside the `Makefile` — 18 compiled units and one `include` body,
+- **Step 1** builds the executable `mmco2crop` in the current directory from the 20
+  Fortran source files beside the `Makefile` — 19 compiled units and one `include` body,
   `csv_file_1d.f90` — with the release flags `-O3 -Wall`. It takes
   well under a minute. Compiler **warnings are normal and expected**; what matters is that
   `make` finishes with no error and that `mmco2crop` exists.
@@ -44,7 +44,7 @@ That is the whole procedure. Notes on each step:
   last line printed should be `exit=0`. `testcase/` itself is never written to: the work
   happens on a copy in `run/`. Keep `testcase/` unchanged — it is the reference, and
   `testcase/MD5SUMS` lets you prove at any time that it still is.
-- **Step 3** compares all 88 result files your run produced against the 88 shipped
+- **Step 3** compares all 90 result files your run produced against the 90 shipped
   expected files. For every file it reports byte identity or, where the file is not
   identical, the maximum absolute and maximum relative difference of each numeric column
   with the data row at which each maximum occurs, then a summary table ordered worst
@@ -57,7 +57,7 @@ That is the whole procedure. Notes on each step:
 In a matched environment step 3 ends with:
 
 ```
-88 of 88 expected file(s) byte-identical.
+90 of 90 expected file(s) byte-identical.
 VERDICT: byte-identical reproduction of the reference case.
 ```
 
@@ -70,24 +70,19 @@ in full in the repository `README.md`, section "Verifying a run"; in short:
 
 **1. In a matched environment, reproduction is byte-for-byte, and that was measured.**
 A matched environment means the same compiler, the same compiler version, the same
-optimization flags and the same platform. In that environment all 88 output files of the
-test case are reproduced byte for byte. This is not an expectation: it is the result of
-the release acceptance test, which required all 42 release decks to exit 0 and all 3 696
-output files to be byte-identical to the frozen reference package, and which was re-run on
-every release commit. The environment in which it was measured for this package is
-recorded in `README.md`, section "Dependencies, and the versions this release was tested
-with", and in `PROVENANCE.md`.
+optimization flags and the same platform. In that environment all 90 output files of the
+test case are reproduced byte for byte. This was measured on 18 Nov 2026 by building this
+package and running the test case in a clean copy of it (gfortran 16.2.0, Apple silicon,
+`-O3 -Wall`). The environment is recorded in `README.md`, section "Dependencies, and the
+versions this release was tested with", and in `PROVENANCE.md`.
 
 **2. On a different compiler, compiler version, optimization level or platform, byte
-identity is NOT expected.** One further platform has been measured and is reported in
-Part 1, Sect. 13.3 (gfortran 13.3 on Linux x86-64: 55 of 88 output tables byte-identical);
-a single second platform does not define a tolerance. Different
+identity is NOT expected.** No other platform has been measured for this package. Different
 compilers and versions legitimately reorder floating-point operations, contract
 multiply-add pairs differently and evaluate intrinsics to different last bits; in a
 season-long iterative simulation those last-bit differences grow. No measured
-cross-platform tolerance can be quoted for this model, because only one platform was
-available when it was released, so no second platform could be measured and any tolerance
-stated here would be an invention. `tools/compare_outputs.py` exists precisely to
+cross-platform tolerance can be quoted for this model, and any tolerance stated here
+would be an invention. `tools/compare_outputs.py` exists precisely to
 quantify whatever difference you actually get: run it and read the numbers it prints. A
 difference it reports on a different compiler is information about compiler sensitivity,
 not evidence that your installation is wrong, and the right response is to report the
@@ -103,10 +98,10 @@ numbers rather than to adjust anything.
 | every input file, its format and units, and every driver record | `INPUT_GUIDE.md` |
 | what each module does | `docs/MODULES.md` |
 | the module call and data-flow diagram | `docs/ARCHITECTURE.png` (source: `.dot`) |
-| every file that ships, every input and all 88 outputs | `docs/FILE_INVENTORY.md` |
+| every file that ships, every input and all 90 outputs | `docs/FILE_INVENTORY.md` |
 | optional diagnostics that v1.0 cannot produce | `docs/V1_KNOWN_LIMITATIONS.md` |
 | how the shipped architecture diagram is regenerated | `scripts/render_architecture.py` |
-| the v1.0 driver configuration, record by record | `docs/V1_CONFIGURATION_driver_main_v1.0.txt` |
+| the released driver configuration (198 records), record by record | `docs/V1_CONFIGURATION_driver_main_v1.0.txt` |
 | the test case itself | `testcase/README.md` |
 | licence and how to cite | `LICENSE`, `CITATION.cff` |
 

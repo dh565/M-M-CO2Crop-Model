@@ -894,18 +894,19 @@ def figN_signs_site2(out):
                 for cls in ("agree", "B", "N", "A"):
                     w = c[cls] / tot
                     ax.barh(y, w, left=left, color=cols[cls], height=0.34, edgecolor="white", lw=0.4, hatch=None if grp == "agr" else "////", alpha=1.0)
-                    if c[cls]: ax.text(left + w / 2, y, str(c[cls]), ha="center", va="center", fontsize=5.4, color="white" if cls != "B" else "#1a1a1a")
+                    if c[cls] and w >= 0.02 + 0.045 * len(str(c[cls])):   # count only where the segment can hold it
+                        ax.text(left + w / 2, y, str(c[cls]), ha="center", va="center", fontsize=5.4, color="white" if cls != "B" else "#1a1a1a")
                     left += w
-                ax.text(1.03, y, "%d" % tot, va="center", fontsize=5.2, color=GRAY)
+                ax.text(1.03, y, "%d %s" % (tot, "crop" if grp == "agr" else "minerals"), va="center", fontsize=5.2, color=GRAY)
             if not any_:
                 ax.text(0.5, yi, "not tested", fontsize=5.6, color=GRAY, style="italic", va="center", ha="center")
         ax.set_yticks(ys); ax.set_yticklabels([SITE_N[s].replace("WheatDryFACE", "WDF") for s in sites])
-        ax.set_xlim(0, 1.3); ax.set_xticks([0, 0.5, 1]); ax.set_xticklabels(["0", "50", "100"]); ax.set_xlabel("Share of contrasts (%)")
+        ax.set_xlim(0, 1.72); ax.set_xticks([0, 0.5, 1]); ax.set_xticklabels(["0", "50", "100"]); ax.set_xlabel("Share of contrasts (%)")
         ax.set_title(ttl, pad=3, loc="right"); letter(ax, k, x=0.0, y=1.02, inside=False)
         ax.spines["left"].set_visible(False); ax.tick_params(axis="y", length=0)
     h = [Patch(color=cols["agree"], label="same sign"), Patch(color=cols["B"], label="opposite sign, observed effect not significant"), Patch(color=cols["N"], label="observed effect significant, simulated < 5 %"), Patch(color=cols["A"], label="opposite sign, observed effect significant")]
     fig.legend(handles=h, loc="lower center", ncol=2, bbox_to_anchor=(0.5, -0.07), fontsize=5.8, frameon=False)
-    fig.text(0.5, -0.13, "Solid bars: the twelve harvest and canopy variables listed in Sect. 5.  Hatched bars: the six grain minerals.  Numbers at right: contrasts with an observation.", ha="center", fontsize=6.0, color="#404040")
+    fig.text(0.5, -0.13, "crop (solid bars): the twelve harvest and canopy variables listed in Sect. 5.  minerals (hatched bars): the six grain minerals.  Numbers at right: contrasts with an observation.", ha="center", fontsize=6.0, color="#404040")
     fig.tight_layout(w_pad=1.5)
     save(fig, out, "FigN11_sign_agreement_site_two_bars")
 

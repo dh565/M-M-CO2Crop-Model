@@ -363,7 +363,7 @@ A_light = dNum / dDen
 !----------------------------------------------------------------------!
 !----------------------------------------------------------------------!
 N_glycine_j   =        alpha_g * A_light * Phi_o_c
-N_serine_j    = 0.75_wp * alpha_s * A_light * Phi_o_c
+N_serine_j    = (2.0_wp/3.0_wp) * alpha_s * A_light * Phi_o_c  ! 2/3 alpha_S: Busch et al. (2018) Nat Plants 4:46-54, p. 49, Fig. 1
 !----------------------------------------------------------------------!
 ! Total Nitrogen assimilated through the photorespiratory pathway
 ! (in umol m-2 s-1):
@@ -406,7 +406,7 @@ alpha_s       = MIN ( alpha_s_max, c_alpha_s_max )
 !----------------------------------------------------------------------!
 !----------------------------------------------------------------------!
 N_glycine_c   =        alpha_g * A_Rubisco * Phi_o_c
-N_serine_c    = 0.75_wp * alpha_s * A_Rubisco * Phi_o_c
+N_serine_c    = (2.0_wp/3.0_wp) * alpha_s * A_Rubisco * Phi_o_c  ! 2/3 alpha_S: Busch et al. (2018) Nat Plants 4:46-54, p. 49, Fig. 1
 !----------------------------------------------------------------------!
 ! Total Nitrogen assimilated through the photorespiratory pathway
 ! (in umol m-2 s-1):
@@ -467,7 +467,7 @@ A_sucrose = (3.0_wp * TPU) &
 !----------------------------------------------------------------------!
 !----------------------------------------------------------------------!
 N_glycine_p   =        alpha_g * A_sucrose * Phi_o_c
-N_serine_p    = 0.75_wp * alpha_s * A_sucrose * Phi_o_c
+N_serine_p    = (2.0_wp/3.0_wp) * alpha_s * A_sucrose * Phi_o_c  ! 2/3 alpha_S: Busch et al. (2018) Nat Plants 4:46-54, p. 49, Fig. 1
 !----------------------------------------------------------------------!
 ! Total Nitrogen assimilated through the photorespiratory pathway
 ! (in umol m-2 s-1):
@@ -613,7 +613,7 @@ END IF
 IF (.NOT. spac_on_call) EXIT psi_loop
 n_psi  = ipsi
 E_leaf = gsw_leu * MAX (0.0_wp, Ds) / spac_P_Pa                 ! (E) mol m-2 s-1
-g_psi  = psi_s_loc - E_leaf / spac_K_plant - psiL               ! (H) residual, MPa
+g_psi  = spac_supply_psi (psi_s_loc, E_leaf) - psiL               ! (H) residual, MPa
 IF (ABS (g_psi) < spac_tol_MPa) EXIT psi_loop
 SELECT CASE (spac_stage)
 CASE (1)                       ! evaluated at psi_hi = psi_s: g = -E/K <= 0
@@ -624,7 +624,7 @@ CASE (1)                       ! evaluated at psi_hi = psi_s: g = -E/K <= 0
     ERROR STOP 81
   END IF
   g_hi = g_psi
-  psi_lo = psi_s_loc - E_leaf / spac_K_plant                    ! lower bracket end
+  psi_lo = spac_supply_psi (psi_s_loc, E_leaf)                    ! lower bracket end
   spac_stage = 2; psiL = psi_lo
 CASE (2)                       ! evaluated at psi_lo: g = (E(psi_s) - E(psi_lo))/K >= 0
   IF (g_psi < 0.0_wp) THEN
@@ -673,9 +673,9 @@ fpsi = (1.0_wp + EXP(spac_sf * spac_psi_f)) / (1.0_wp + EXP(spac_sf * (spac_psi_
 END DO psi_loop
 IF (spac_on_call) THEN
   ! The hydraulic identity psi_s - E/K_plant - psi_L = 0 is asserted at the final state.
-  IF (ABS (psi_s_loc - E_leaf / spac_K_plant - psiL) >= spac_tol_MPa) THEN
+  IF (ABS (spac_supply_psi (psi_s_loc, E_leaf) - psiL) >= spac_tol_MPa) THEN
     ! Bounded fallback acceptance below spac_tol_fallback_MPa, counted; otherwise the run stops.
-    IF (ABS (psi_s_loc - E_leaf / spac_K_plant - psiL) < spac_tol_fallback_MPa) THEN
+    IF (ABS (spac_supply_psi (psi_s_loc, E_leaf) - psiL) < spac_tol_fallback_MPa) THEN
       spac_fallback_accepts_run = spac_fallback_accepts_run + 1
     ELSE
     WRITE (*,'(A)') ' SPAC PSI_L SOLVE: no convergence within spac_max_iter -- STOP'

@@ -1,0 +1,6 @@
+! Braunschweig FACE BRAUNSCHWEIG_102: MEASURED soil mineral N (Nmin) 0-40 cm at the start of the main growing season,
+! "mid-March" 2014 = 14.2 kg N/ha (Dier et al. 2018 Eur J Agron 101:38, p.39; one site value before fertilizer).
+! Exact day not printed: 15 March taken (FLAGGED). Model day 196 = 2014-03-15 (weather day 1 = 2013-09-01).
+! Applied on its own date; the 1 Sep start value (driver_N row 1) stays the same measurement, flagged as unmeasured for 1 Sep.
+! Columns: model_day,z_top_m,z_bot_m,Nmin_gN_m2
+196,0.00,0.40,1.4202

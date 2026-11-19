@@ -1,24 +1,26 @@
-! D37 PHENOLOGY RE-DERIVATION (2026-10-18). Record 173 spac_sink_coupling = 1 cools the
-! canopy, so the canopy clock that drives cum_tdu moved and every threshold below was re-derived by
-! the cum_tdu bracket-midpoint rule of the calibration-variables rules (internal; not distributed) section 1 on the D37-A run
-! 20261018_1403_D37A_ON42, control deck MARICOPA_906.
-! Stages moved: Anthesis 1413.1 -> 1388.9, Maturity 2237.0 -> 2228.9.
-! Stages NOT moved: only ADAT and MDAT are measured and gate-bearing at Maricopa; the six intermediate stages are Zadoks-interpolated at +-3-4 d and emergence is not measured at all (the calibration-variables rules (internal; not distributed) sect. 1), so they are NOT moved; season 1993/94 group.
+! Cultivar phenology and early-growth inputs: cv. Yecora Rojo, Maricopa FACE 1993/94, deck MARICOPA_905.
+! Rows are positional (value first, label second); '!' lines and blank lines are skipped (INPUT_GUIDE.md section 6).
+! Stage thresholds (Emergence to Maturity) are cumulative thermal development units, degC d. Anthesis and the
+! anthesis-to-maturity interval were calibrated with CroptimizR on control deck MARICOPA_906 to its observed anthesis
+! and maturity days (tools/croptimizr_face, phase phen); 3_leaves, Tillering, Booting and Heading are scaled with
+! Anthesis, and Grain_filling keeps its share of the anthesis-to-maturity interval (face_run.py, pheno_params).
+! The same thresholds are used on every deck of the group: MARICOPA_905, MARICOPA_906, MARICOPA_907, MARICOPA_908.
+! Obs_*_DAP rows: observed stage dates in days after planting; 0 = not observed.
 1       GDD_Method
-0.0     T_Base_[TO-PIN_MW1997]
-25.0    T_Opt_Lower_[TO-PIN_MW1997]
+0.0     T_Base
+25.0    T_Opt_Lower
 50.0    T_Opt_Upper
 60.0    T_Max
 0.0     Photo_Sens
 0.0     Vern_Factor
 222.165	Emergence
-398.474	3_leaves
-517.947	Tillering
-1219.325	Booting
-1316.170	Heading
-1388.9  Anthesis
-1501.345	Grain_filling
-2228.9  Maturity
+399.579	3_leaves
+519.384	Tillering
+1222.707	Booting
+1319.823	Heading
+1392.753  Anthesis
+1504.591	Grain_filling
+2228.210  Maturity
 1993	Sowing_Year
 12	Sowing_Month
 7	Sowing_Day
@@ -40,9 +42,9 @@
 0.020   Init_RootN_frac_gN_gDM
 0.015   Init_StorageN_frac_gN_gDM
 0       Use_Beta_Emerge
-73.9	Phyllochron_degCd	! D28 staging: compiled default (identity)
-20.8	Blade_L_max_cm	! D28 staging: compiled default (identity)
-1.45	Blade_W_max_cm	! D28 staging: compiled default (identity)
-17.0	Sheath_L_max_cm	! D28 staging: compiled default (identity)
-0.45	Sheath_D_cm	! D28 staging: compiled default (identity)
+73.9	Phyllochron_degCd	! compiled default (McMaster et al. 2003 Ann Bot 91:697-705, Table 2 p.701)
+24.989	Blade_L_max_cm	! CroptimizR-calibrated (tools/croptimizr_face, phase cult) on MARICOPA_906 to control-deck peak LAI within the measured field range of Yecora Rojo, 16-25 cm (Kumar 2024 TAG Table 1, Jia 2025 BMC Genomics Table 1)
+1.70	Blade_W_max_cm	! literature center for Yecora Rojo (no published width): field spring/CIMMYT panels 1.4-2.0 cm (Jia 2025 BMC Genomics Table 1; Kumar 2024 TAG Table 1)
+17.0	Sheath_L_max_cm	! compiled default (Abichou 2016 Ch.2 Fig. 3b p.67)
+0.45	Sheath_D_cm	! compiled default (Abichou 2016 Ch.2 Table S2 p.87)
 5.500	Axes_max_per_plant	! axes plant-1 (0 = no cap); crop bound = value x plant density

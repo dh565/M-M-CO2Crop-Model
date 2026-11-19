@@ -4,3 +4,5 @@
 mmco2crop
 run/
 RERUN_*/
+__pycache__/
+generated_results/

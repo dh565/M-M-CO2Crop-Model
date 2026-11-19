@@ -73,7 +73,7 @@ NODES = {
     "main_MMCO2Crop": (340, 258, 900, 88, 1,
                        ["main_MMCO2Crop.f90   -   PROGRAM mmco2crop",
                         "reads the decks, refuses retired options, runs the day loop,",
-                        "writes the 88 output files and the season summary"]),
+                        "writes the 90 output files and the season summary"]),
 
     "phenology_module": (180, 452, 260, 100, 2,
                          ["phenology_module.f90", "thermal time, vernalization,",

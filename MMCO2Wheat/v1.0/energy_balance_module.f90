@@ -277,24 +277,31 @@ CONTAINS
       RETURN
     END IF
     ! ------------------------------------------------------------------------- !
-    ! Raupach (1994) LAI-dependent d and z0.
+    ! Raupach (1994) Boundary-Layer Meteorol 71:211-216, Eqs. (4), (5), (7), (8)
+    ! with the constants of its Sect. 4 (SHARED). The independent variable is the
+    ! canopy area index Lambda (single-sided area of all canopy elements per unit
+    ! ground area, p. 213); here Lambda = LAI. Eq. (7) uses Lambda/2, the frontal
+    ! area index of isotropically oriented elements. The z0_soil floor, the 0.05 m
+    ! height floor and the bare-soil branch are model guards, not Raupach.
     ! ------------------------------------------------------------------------- !
     BLOCK
-      REAL(wp) :: hgt_eff, lambda_f, sqrt_cdl, d_over_h, z0_over_h
+      REAL(wp) :: hgt_eff, Lambda_c, sqrt_cdl, d_over_h, z0_over_h, ust_Uh, psi_h
       hgt_eff = MAX(0.05_wp, gParam_hgt_s)
-      lambda_f = frontal_lai_factor * MAX(0.0_wp, gParam_lai)
-      IF (lambda_f > 1.0e-6_wp) THEN
-        sqrt_cdl = SQRT(raupach_cd1 * lambda_f)
-        d_over_h = 1.0_wp - (1.0_wp - EXP(-sqrt_cdl)) / MAX(1.0e-9_wp, sqrt_cdl)
-        z0_over_h = (1.0_wp - d_over_h) * &
-                    EXP(-k_cons / SQRT(MAX(1.0e-9_wp, raupach_cd * lambda_f)))
+      Lambda_c = MAX(0.0_wp, gParam_lai)
+      IF (Lambda_c > 1.0e-6_wp) THEN
+        sqrt_cdl = SQRT(raupach_cd1 * Lambda_c)
+        d_over_h = 1.0_wp - (1.0_wp - EXP(-sqrt_cdl)) / sqrt_cdl                    ! Eq. (8)
+        ust_Uh   = MIN(SQRT(raupach_CS + raupach_CR * 0.5_wp * Lambda_c), &
+                       raupach_ustar_Uh_max)                                         ! Eq. (7)
+        psi_h    = LOG(raupach_cw) - 1.0_wp + 1.0_wp / raupach_cw                    ! Eq. (5)
+        z0_over_h = (1.0_wp - d_over_h) * EXP(-k_cons / ust_Uh - psi_h)              ! Eq. (4)
         Zeroplane = d_over_h * hgt_eff
         RoughLen  = MAX(z0_soil, z0_over_h * hgt_eff)
       ELSE
         Zeroplane = 0.0_wp
         RoughLen  = z0_soil
       END IF
-      frontal_area_index_s = lambda_f
+      frontal_area_index_s = 0.5_wp * Lambda_c       ! lambda = Lambda/2 (p. 213), diagnostic only
       disp_height_s        = Zeroplane
       rough_len_s          = RoughLen
       FrictionVelocity = k_cons * w_eb_s / &            ! PART B: = w_d_s when rec 71 = 0
@@ -785,6 +792,7 @@ CONTAINS
     REAL(wp) :: w, wsum, LEc_tr, LEc_in, LEs_a, Tcan, Tac, Tsoil, Hc, Hs
     REAL(wp) :: Rnc_h, Rns_h, G_h, raa_u, resid, rp_res
     REAL(wp) :: dt_s, heat_resid_h, G_placeholder_h, storage_change_h
+    REAL(wp) :: kf_h, t1_h, keff_h, G_new_h, dG_h
     REAL(wp), ALLOCATABLE :: tsp_save(:), tsp_day_save(:)
     ! Daily soil-heat aggregates (J m-2, C).
     REAL(wp) :: shd_Gint, shd_store, shd_Tsurf_sum, shd_Ttop_sum, shd_w
@@ -821,6 +829,10 @@ CONTAINS
     ! Zero the daily soil-heat aggregates.
     shd_Gint = 0.0_wp; shd_store = 0.0_wp; shd_Tsurf_sum = 0.0_wp; shd_Ttop_sum = 0.0_wp
     shd_w = 0.0_wp; shd_Tsurf_min = HUGE(1.0_wp); shd_Tsurf_max = -HUGE(1.0_wp)
+    IF (ALLOCATED(Tsoil_prof)) THEN
+      IF (.NOT. ALLOCATED(tpd_sum)) ALLOCATE (tpd_sum(SIZE(Tsoil_prof)), Tsoil_prof_day(SIZE(Tsoil_prof)))
+      tpd_sum = 0.0_wp
+    END IF
     wsum = 0.0_wp
     ! Zero the daily ACTUAL energy sums, accumulated below per sub-step.
     Rn_day_act = 0.0_wp; G_day_act = 0.0_wp
@@ -929,7 +941,24 @@ CONTAINS
         eba_node1(h) = Tsoil_prof(1)
         dt_s = ebh_weight(h) * 86400.0_wp
         tsp_save = Tsoil_prof   ! auto-(re)allocates; guard restore point
+        ! Series conductance of the surface face with the (raa + rsa) air path,
+        ! the same dG/dT1 the closed-form Hs of repartition_eb_actual carries; the
+        ! advance takes G implicitly in T1 and the change is booked to Hs (G + Hs fixed).
+        ! Record 184 soil_heat_implicit: 0 = the explicit (lagged-node) call.
+        IF (soil_heat_implicit == 0) THEN
         CALL advance_soil_heat(NSoil_layers, dt_s, G_h, heat_resid_h)
+        ELSE
+        CALL soil_heat_surface_coeffs(kf_h, t1_h)
+        keff_h = kf_h / (1.0_wp + kf_h * (raa_u + ebh_rsa(h)) / (rho * Cp))
+        CALL advance_soil_heat(NSoil_layers, dt_s, G_h, heat_resid_h, keff_h, G_new_h)
+        END IF
+        IF (soil_heat_implicit == 1 .AND. ABS(heat_resid_h) < 1.0e30_wp) THEN
+          dG_h = G_new_h - G_h
+          G_day_act  = G_day_act  + dG_h * ebh_weight(h) * 86400.0_wp * 1.0e-6_wp
+          Hs_day_act = Hs_day_act - dG_h * ebh_weight(h) * 86400.0_wp * 1.0e-6_wp
+          G_h = G_new_h; Hs = Hs - dG_h
+          eba_G(h) = G_h; eba_Hs(h) = Hs
+        END IF
         IF (.NOT. (ABS(heat_resid_h) < 1.0e30_wp)) THEN
           ! Non-finite advance: hold the profile for this sub-step instead of
           ! aborting, and count and report the event.
@@ -969,6 +998,7 @@ CONTAINS
           shd_store     = shd_store + storage_change_h
           shd_Tsurf_sum = shd_Tsurf_sum + Tsoil * w
           shd_Ttop_sum  = shd_Ttop_sum  + Tsoil_prof(1) * w
+          IF (ALLOCATED(tpd_sum)) tpd_sum = tpd_sum + Tsoil_prof * w
           shd_Tsurf_min = MIN(shd_Tsurf_min, Tsoil)
           shd_Tsurf_max = MAX(shd_Tsurf_max, Tsoil)
           shd_w         = shd_w + w
@@ -999,6 +1029,10 @@ CONTAINS
     IF (energy_balance_mode == 2) THEN
       IF (.NOT. is_accepted) Tsoil_prof = tsp_day_save
       eba_node1_valid = .TRUE.
+    END IF
+    IF (is_accepted .AND. shd_w > 0.0_wp .AND. ALLOCATED(tpd_sum)) THEN
+      Tsoil_prof_day = tpd_sum / shd_w
+      tsoil_prof_day_ok = .TRUE.
     END IF
     ! Daily soil-heat roll-up.  G_bottom = 0, so the daily heat residual is the
     ! storage change minus the surface-flux integral.

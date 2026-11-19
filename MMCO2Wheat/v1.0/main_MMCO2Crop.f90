@@ -12,7 +12,7 @@
 !          water solver, interception, infiltration and ponding, soil heat, the
 !          soil and plant nitrogen economy, carbon allocation and yield
 !          formation, the mineral economy, and the daily water, energy, carbon
-!          and nitrogen closures. It writes the 88 output files of output/ and
+!          and nitrogen closures. It writes the 90 output files of output/ and
 !          the season summary to run.log. Time steps: the Richards adaptive
 !          sub-step, the hourly canopy and energy-balance step, the daily crop
 !          and soil step, and the season. Spatial units: the sunlit and shaded
@@ -84,6 +84,7 @@ USE MINERAL_MODULE, ONLY: NMIN, mineral_names, read_mineral_params, init_mineral
   mm_grain_eN, mnc_refused, mnc_days, &   ! rec 171 reporting
   mm_kd, mm_ceiling, mm_pool_mgkg, mm_modelled, mm_b   ! rec 183 reporting ONLY: the column-3 Kd, column-4 ceiling, column-2 pool, modeled flag and the OFF column-19 constant b_e replaces; READ-ONLY in this file
 USE SOILN_MODULE, ONLY: decompose_residue_day
+USE NITROGEN_RADIAL_MODULE, ONLY: nrad_layer_day, nrad_commit, r_root_wheat => r0   ! rec 189; r0 also rec 81 mode 4
 USE PHENOLOGY_MODULE, ONLY: PhenologyParams, PhenologyState, NUM_PHENO_STAGES, &
   initialize_phenology_params, read_phenology_cultivar, initialize_phenology_state, &
   bootstrap_phenology_state, update_phenology_day, calendar_doy, calc_dev_stage_0_2, calc_dev_stage_rate_0_2, &
@@ -205,6 +206,21 @@ REAL(wp) :: grainN_conc_b3, chaffN_conc_b3   ! B-3 whole-organ [N]
 REAL(wp) :: N_leach_d         ! daily N leaching loss (g N m-2 d-1)
 REAL(wp) :: N_hydrolysis_day, N_nitrification_day  ! urea->NH4, NH4->NO3 daily fluxes (g N m-2 d-1)
 REAL(wp) :: soilN_before_day, soilN_balance_resid  ! soil-N closure check (g N m-2; incl organic pools)
+! Daily mean soil temperature of the mineralizing span 0..n_min_depth_m (C): thickness-weighted mean of
+! the daily-mean layer temperatures (Tsoil_prof_day). Drives organic-N mineralization (rec 194), residue
+! decay, urea hydrolysis and nitrification, which happen in that soil volume (not the
+! soil SURFACE temperature T_soil_day, which Vale 2006 did not measure against: his rate is
+! defined on the 10 cm soil temperature). NH3 volatilization keeps the surface temperature.
+REAL(wp) :: T_nspan_day = 0.0_wp
+INTEGER  :: unit_vale = 0    ! output/daily_soilN_drivers.csv (rec 194 drivers, opened on first use)
+LOGICAL  :: vale_open = .FALSE.
+! rec 195: lagged above-ground dry-matter increment (g m-2 d-1) for the post-anthesis critical-N demand
+REAL(wp) :: r195_agb_prev = 0.0_wp, r195_dagb = 0.0_wp
+! Optional input/soilN_measured_state.csv: a measured mineral-N state applied on its own date
+! (e.g. Braunschweig mid-March 0-40 cm Nmin). msr_* hold the events; msr_delta_cum the net N the
+! resets added (+) or removed (-), reported so that the season balance stays readable.
+INTEGER  :: msr_n = -1, msr_day(16)
+REAL(wp) :: msr_zt(16), msr_zb(16), msr_nmin(16), msr_delta_cum = 0.0_wp
 ! Organic-residue decomposition daily diagnostics (g m-2 d-1) and pre-sowing closure.
 REAL(wp) :: decomp_C_day, decomp_N_day, respired_C_day, net_min_NH4_day, immob_NH4_day, immob_NO3_day
 REAL(wp) :: turnover_N_day, residue_N_in_day, pre_sow_N_resid
@@ -1081,7 +1097,7 @@ IF (rss_theta_s_consistency /= 1) rss_theta_s_consistency = 0
 ! base term is added back uniformly, i.e. Eq. (2) of Bertheloot, Martre &
 ! Andrieu (2008) Plant Physiol 148:1707-1720 with a base of 0.4 g N m-2 from
 ! that same page. Value 0 distributed the whole leaf-nitrogen pool
-! exponentially with no base term; its code was removed from v1.0 and the value
+! exponentially with no base term; it is not implemented and the value
 ! is refused below, so the record must be present and must read 1.
 !------------------------------------------------------------------------------!
 READ (1,*,IOSTAT=ios) canopy_n_base_profile
@@ -1152,8 +1168,8 @@ BLOCK
       END IF
     END IF
   END IF
-  IF (spac_mode < 0 .OR. spac_mode > 3) THEN
-    WRITE (*,'(A,I0)') ' ERROR rec 81: spac_mode must be 0, 1, 2 or 3; read ', spac_mode
+  IF (spac_mode < 0 .OR. spac_mode > 6) THEN
+    WRITE (*,'(A,I0)') ' ERROR rec 81: spac_mode must be 0, 1, 2, 3, 4, 5 or 6; read ', spac_mode
     ERROR STOP 'rec 81: invalid spac_mode'
   END IF
   IF (spac_mode >= 1) THEN
@@ -1794,7 +1810,7 @@ IF (kernel_mass_ceiling < 0 .OR. kernel_mass_ceiling > 1) THEN
 END IF
 IF (kernel_mass_ceiling == 1 .AND. (grain_fill_mech == 0 .OR. grain_fill_mech == 3)) THEN
   WRITE (*,'(A,I0)') ' ERROR rec 118: kernel_mass_ceiling = 1 requires the rec 91 rate law (grain_fill_mech 1 or 2);' // &
-    ' under rec 91 = 0 or 3 the legacy stock cap already reads TKW_potential. Read rec 91 = ', grain_fill_mech
+    ' under rec 91 = 0 or 3 the baseline stock cap already reads TKW_potential. Read rec 91 = ', grain_fill_mech
   ERROR STOP 'rec 118 requires rec 91 = 1 or 2'
 END IF
 ! ==================================================================== !
@@ -1875,7 +1891,7 @@ END IF
 ! ==================================================================== !
 READ (1,*,IOSTAT=ios) root_front_law
 IF (ios /= 0) root_front_law = 0
-IF (root_front_law < 0 .OR. root_front_law > 3) THEN
+IF (root_front_law < 0 .OR. root_front_law > 4) THEN
   WRITE (*,'(A,I0)') ' ERROR rec 124: root_front_law must be 0 (Borg & Grimes), 1, 2 or 3 (7.9/9.6/11.3 mm d-1); read ', &
     root_front_law
   ERROR STOP 'rec 124: invalid root_front_law'
@@ -2203,8 +2219,8 @@ END IF
 !       r1 = (pi RLD)^-0.5 and a non-wheat-specific root radius 0.05 cm, the
 !       worked-example value shared by Baldwin (1973) p.626 and Cushman (1979)
 !       Part II Fig. 1. The mode-1 and mode-2 subtraction of the
-!       half-saturation constant as a zero-flux threshold is REMOVED, since no
-!       source supports that use; the diffusion term now uses the full
+!       half-saturation constant as a zero-flux threshold is NOT USED, since no
+!       source supports that use; the diffusion term uses the full
 !       concentration as the driving gradient, and the smooth approach to zero
 !       as concentration falls lives entirely in the unchanged
 !       Michaelis-Menten form of the active term. No nitrate minimum
@@ -2443,7 +2459,7 @@ END IF
 READ (1,*,IOSTAT=ios) pheno_dev_factor_window
 IF (ios /= 0) pheno_dev_factor_window = 0
 IF (pheno_dev_factor_window < 0 .OR. pheno_dev_factor_window > 1) THEN
-  WRITE (*,'(A,I0)') ' ERROR rec 150: pheno_dev_factor_window must be 0 (legacy) or 1' // &
+  WRITE (*,'(A,I0)') ' ERROR rec 150: pheno_dev_factor_window must be 0 (baseline) or 1' // &
     ' (McMaster 2008 window, min(VF,DF)); read ', pheno_dev_factor_window
   ERROR STOP 'rec 150: invalid pheno_dev_factor_window'
 END IF
@@ -2669,7 +2685,7 @@ END IF
 READ (1,*,IOSTAT=ios) justes_nmax_floor_basis
 IF (ios /= 0) justes_nmax_floor_basis = 0
 IF (justes_nmax_floor_basis < 0 .OR. justes_nmax_floor_basis > 1) THEN
-  WRITE (*,'(A,I0)') ' ERROR rec 160: justes_nmax_floor_basis must be 0 (OFF, legacy 6.6 %' // &
+  WRITE (*,'(A,I0)') ' ERROR rec 160: justes_nmax_floor_basis must be 0 (OFF, baseline 6.6 %' // &
     ' Nmax plateau below 1.55 t ha-1, a constant that is NOT in Justes et al. 1994) or 1' // &
     ' (the Nmax outer cap below the floor held at the printed curve''s own value there,' // &
     ' 8.3 * 1.55**(-0.44); SHARED.f90).  There is no mode 2; read ', &
@@ -2757,17 +2773,16 @@ END IF
 !       soil-nitrogen supply law and E_N the unchanged record-155 limb-(b)
 !       value. No new numeric constant: the record deletes a gate and adds
 !       nothing.
-! The carbon term E_C of Eq. (5) is NOT implemented. Its form is no longer
+! The carbon term E_C of Eq. (5) is NOT implemented. Its form is not
 ! inferred - the typeset paper is on disk and Eq. (5) was read at first hand on
 ! p.1090, E_C = 0 if the root remobilizable mass is at or below its minimum and
 ! 1 - exp(-beta_C x that mass) otherwise - but its argument is a per-culm root
 ! dry-mass influx in g d-1 with a 0.0013 g d-1 threshold, while this model
 ! carries only a per-ground-area root increment. Since E_C is at most 1, mode 1
 ! is an UPPER BOUND on the uptake of that law.
-! The mode-1 run.log banner further below still prints the superseded wording
-! about the typeset form. It is an executable WRITE statement, so it was not
-! edited in this documentation pass; record 163 is 0 in the released
-! configuration, so the line is never printed on any shipped deck.
+! The mode-1 run.log banner further below words the typeset form differently;
+! record 163 is 0 in the deck configuration, so that line is never printed
+! on any shipped deck.
 ! Inactive alternative, see Part 1 Table 6.
 ! ==================================================================== !
 READ (1,*,IOSTAT=ios) postanth_uptake_regulation
@@ -2962,7 +2977,7 @@ READ (1,*,IOSTAT=ios) mineral_impedance_basis
 IF (ios /= 0) mineral_impedance_basis = 0
 IF (mineral_impedance_basis < 0 .OR. mineral_impedance_basis > 1) THEN
   WRITE (*,'(A,I0)') ' ERROR rec 168: mineral_impedance_basis must be 0 (OFF, the DECLARED AND' // &
-    ' pair f_l = MAX(0, 1.60*vwc_root - 0.17), re-labeled 2026-10-18 to Barraclough & Tinker' // &
+    ' pair f_l = MAX(0, 1.60*vwc_root - 0.17), attributed to Barraclough & Tinker' // &
     ' 1981 J Soil Sci 32:225 p.234 Fig. 1 best fit 1.58*theta - 0.17, intercept exact / slope' // &
     ' 1.3 % off; record-168 conflict disclosed) or 1 (Olesen et al. 2001 Soil Sci' // &
     ' 166:89-96 p.94 Eq.(7a)/(7b) CSIF, f_l = 1.1*MAX(0, vwc_root - theta_th), SHARED.f90' // &
@@ -3131,11 +3146,12 @@ END IF
 ! ==================================================================== !
 READ (1,*,IOSTAT=ios) canopy_fln_prediction
 IF (ios /= 0) canopy_fln_prediction = 0
-IF (canopy_fln_prediction < 0 .OR. canopy_fln_prediction > 1) THEN
+IF (canopy_fln_prediction < 0 .OR. canopy_fln_prediction > 2) THEN
   WRITE (*,'(A,I0)') ' ERROR rec 174: canopy_fln_prediction must be 0 (OFF, the provisional' // &
     ' panel-median top cba_Nl_fit = 11 stands until the Booting freeze, which then rewrites the final' // &
     ' dimensions of every finished blade) or 1 (the final leaf number is predicted on the emergence day' // &
-    ' and used as n_top from emergence); SHARED.f90; read ', canopy_fln_prediction
+    ' and used as n_top from emergence) or 2 (as 1, but blades below the elongated-internode' // &
+    ' phytomers keep the panel lower-blade sizes by absolute rank); SHARED.f90; read ', canopy_fln_prediction
   ERROR STOP 'rec 174: invalid canopy_fln_prediction'
 END IF
 ! ==================================================================== !
@@ -3283,15 +3299,18 @@ END IF
 !       Oijen & Bindraban (2004) NJAS 51(4):407-427 Appendix 2 p.424 with the
 !       model's own canopy extinction coefficient 0.41 and base leaf nitrogen
 !       0.40.
+!   5 = canopy lamina-N law: supportable area LAI_c (N_lam/N_lam,c)^0.70
+!       with the Justes 1994 critical N curve and the Lemaire et al. 2008 FCR
+!       105:253 Fig. 7f high-N SLN; constants and status at lnl5_* in SHARED.f90.
 ! Read before the driver file is closed.
 ! ==================================================================== !
 READ (1,*,IOSTAT=ios) lamina_expansion_n_limit
 IF (ios /= 0) lamina_expansion_n_limit = 0
-IF (lamina_expansion_n_limit < 0 .OR. lamina_expansion_n_limit > 4) THEN
+IF (lamina_expansion_n_limit < 0 .OR. lamina_expansion_n_limit > 5) THEN
   WRITE (*,'(A,I0)') ' ERROR rec 179: lamina_expansion_n_limit must be 0 (OFF), 1' // &
     ' (PRIMARY, Bertheloot 2008 FPB Eqn 8 minN^ph,a with the running maximum), 2 (the' // &
     ' Eqn 8 plateau 1.114 g N m-2), 3 (Jamieson & Semenov 1.5 g N m-2 on total lamina N)' // &
-    ' or 4 (the Yin l_N log form); SHARED.f90; read ', lamina_expansion_n_limit
+    ', 4 (the Yin l_N log form) or 5 (canopy lamina-N law); SHARED.f90; read ', lamina_expansion_n_limit
   ERROR STOP 'rec 179: invalid lamina_expansion_n_limit'
 END IF
 ! ==================================================================== !
@@ -3315,8 +3334,8 @@ END IF
 !       12.0-661 mg L-1 (White & Broadley 2003 Ann Bot 92:487 p.490; Atkinson,
 !       Ruiz & Mansfield 1992 J Exp Bot 43:1315 Table 3 p.1319) with a 10 %
 !       margin. The record-166 ear-area share and the grain-water route are
-!       retired for calcium under this mode, and the record-166-era constructed
-!       concentrations 842.0246 and 654.339 mg L-1 are withdrawn: they lie
+!       retired for calcium under this mode, and the constructed record-166
+!       concentrations 842.0246 and 654.339 mg L-1 are not used: they lie
 !       outside the measured envelope and cannot be run under mode 1.
 ! Read before the driver file is closed.
 ! ==================================================================== !
@@ -3388,6 +3407,165 @@ IF (mineral_buffer_power_basis < 0 .OR. mineral_buffer_power_basis > 1) THEN
     ' column-3 Kd); SHARED.f90; read ', mineral_buffer_power_basis
   ERROR STOP 'rec 183: invalid mineral_buffer_power_basis'
 END IF
+! ==================================================================== !
+! Records 184 soil_heat_implicit, 185 par_absorb_conserving, 186 resp_temp_basis, 187
+! preanth_supply_uptake and 188 n_delivery_series_bound, see SHARED.f90.
+! Read before the driver file is closed. The released values are 0.
+! ==================================================================== !
+READ (1,*,IOSTAT=ios) soil_heat_implicit
+IF (ios /= 0) soil_heat_implicit = 0
+IF (soil_heat_implicit < 0 .OR. soil_heat_implicit > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 184: soil_heat_implicit must be 0 (explicit) or 1 (implicit); read ', &
+    soil_heat_implicit
+  ERROR STOP 'rec 184: invalid soil_heat_implicit'
+END IF
+! Driver record 185 par_absorb_conserving: sunlit/shaded absorbed PAR that conserves the canopy's
+! intercepted PAR (SHARED.f90). EOF-default 0.
+READ (1,*,IOSTAT=ios) par_absorb_conserving
+IF (ios /= 0) par_absorb_conserving = 0
+IF (par_absorb_conserving < 0 .OR. par_absorb_conserving > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 185: par_absorb_conserving must be 0 or 1; read ', par_absorb_conserving
+  ERROR STOP 'rec 185: invalid par_absorb_conserving'
+END IF
+READ (1,*,IOSTAT=ios) resp_temp_basis
+IF (ios /= 0) resp_temp_basis = 0
+IF (resp_temp_basis < 0 .OR. resp_temp_basis > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 186: resp_temp_basis must be 0 or 1; read ', resp_temp_basis
+  ERROR STOP 'rec 186: invalid resp_temp_basis'
+END IF
+READ (1,*,IOSTAT=ios) preanth_supply_uptake
+IF (ios /= 0) preanth_supply_uptake = 0
+IF (preanth_supply_uptake < 0 .OR. preanth_supply_uptake > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 187: preanth_supply_uptake must be 0 (OFF) or 1 (pre-anthesis' // &
+    ' uptake = soil supply capped by the maximum-curve stock gap); read ', preanth_supply_uptake
+  ERROR STOP 'rec 187: invalid preanth_supply_uptake'
+END IF
+READ (1,*,IOSTAT=ios) n_delivery_series_bound
+IF (ios /= 0) n_delivery_series_bound = 0
+IF (n_delivery_series_bound < 0 .OR. n_delivery_series_bound > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 188: n_delivery_series_bound must be 0 (OFF) or 1 (active uptake' // &
+    ' bounded by mass flow + diffusion delivery); read ', n_delivery_series_bound
+  ERROR STOP 'rec 188: invalid n_delivery_series_bound'
+END IF
+READ (1,*,IOSTAT=ios) n_radial_uptake
+IF (ios /= 0) n_radial_uptake = 0
+IF (n_radial_uptake < 0 .OR. n_radial_uptake > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 189: n_radial_uptake must be 0 (OFF) or 1 (radial root-surface N uptake); read ', &
+    n_radial_uptake
+  ERROR STOP 'rec 189: invalid n_radial_uptake'
+END IF
+! Driver record 190 urea_transport (SHARED.f90). EOF-default 0.
+READ (1,*,IOSTAT=ios) urea_transport
+IF (ios /= 0) urea_transport = 0
+IF (urea_transport < 0 .OR. urea_transport > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 190: urea_transport must be 0 (OFF) or 1 (urea moved by water); read ', urea_transport
+  ERROR STOP 'rec 190: invalid urea_transport'
+END IF
+! Driver record 191 organ_n_storage_basis (SHARED.f90). EOF-default 0.
+READ (1,*,IOSTAT=ios) organ_n_storage_basis
+IF (ios /= 0) organ_n_storage_basis = 0
+IF (organ_n_storage_basis < 0 .OR. organ_n_storage_basis > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 191: organ_n_storage_basis must be 0 (OFF) or 1 (overflow kept as mobile reduced N); read ', &
+    organ_n_storage_basis
+  ERROR STOP 'rec 191: invalid organ_n_storage_basis'
+END IF
+! Driver record 192 anthesis_event_interp: within-day location of the anthesis crossing for the
+! kernel-number basis and the start of the grain-filling clock (SHARED.f90). EOF-default 0.
+READ (1,*,IOSTAT=ios) anthesis_event_interp
+IF (ios /= 0) anthesis_event_interp = 0
+IF (anthesis_event_interp < 0 .OR. anthesis_event_interp > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 192: anthesis_event_interp must be 0 or 1; read ', anthesis_event_interp
+  ERROR STOP 'rec 192: invalid anthesis_event_interp'
+END IF
+! Driver record 193 unpaid_lamina_root_fate: carbon of the lamina refused for lack of N is exported to the
+! root (SHARED.f90). EOF-default 0. Needs the rec-121 N payment gate.
+READ (1,*,IOSTAT=ios) unpaid_lamina_root_fate
+IF (ios /= 0) unpaid_lamina_root_fate = 0
+IF (unpaid_lamina_root_fate < 0 .OR. unpaid_lamina_root_fate > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 193: unpaid_lamina_root_fate must be 0 or 1; read ', unpaid_lamina_root_fate
+  ERROR STOP 'rec 193: invalid unpaid_lamina_root_fate'
+END IF
+IF (unpaid_lamina_root_fate == 1 .AND. n_payment_gate < 1) THEN
+  WRITE (*,'(A)') ' ERROR rec 193: unpaid_lamina_root_fate = 1 requires rec 121 n_payment_gate >= 1'
+  ERROR STOP 'rec 193 requires rec 121'
+END IF
+! Driver record 194 soil_orgN_law: measured first-order mineralization of soil organic N (SHARED.f90).
+! EOF-default 0. Needs driver_N row 72 (organic N stock) and the layered soil N.
+READ (1,*,IOSTAT=ios) soil_orgN_law
+IF (ios /= 0) soil_orgN_law = 0
+IF (soil_orgN_law < 0 .OR. soil_orgN_law > 1) THEN
+  WRITE (*,'(A,I0)') ' ERROR rec 194: soil_orgN_law must be 0 or 1; read ', soil_orgN_law
+  ERROR STOP 'rec 194: invalid soil_orgN_law'
+END IF
+IF (soil_orgN_law == 1 .AND. soil_n_mech /= 0) ERROR STOP 'rec 194 and rec 93 are exclusive'
+! Driver record 195 grain_n_source_phase (SHARED.f90): source-limited grain N after the cell-division phase.
+READ (1,*,IOSTAT=ios) grain_n_source_phase
+IF (ios /= 0) grain_n_source_phase = 0
+IF (grain_n_source_phase < 0 .OR. grain_n_source_phase > 1) ERROR STOP 'rec 195: grain_n_source_phase must be 0 or 1'
+IF (grain_n_source_phase == 1 .AND. kernel_potential_law /= 1 .AND. kernel_potential_law /= 2) &
+  ERROR STOP 'rec 195 = 1 requires the rec-125 per-kernel ceiling (125 = 1 or 2)'
+IF (grain_n_source_phase == 1) WRITE (*,'(A)') ' rec 195 grain_n_source_phase = 1: after 250 degCd the grain-N' // &
+  ' import is source-limited under the per-kernel ceiling (Martre et al. 2003 p.1963).'
+! Driver record 196 tiller_full_demand (SHARED.f90): the rec 99 = 4 ledger counts
+! lamina + stem + ear demand. Line "0" = off (EOF-default); "1 d r" = on with the
+! rec 103 member d (1-6) and rec 104 member r (1-3), those records being retired at 0.
+BLOCK
+  CHARACTER(LEN=512) :: ln196
+  INTEGER :: m196(3), ios196
+  REAL(wp), PARAMETER :: dur196(3) = [277.0_wp, 350.8_wp, 476.0_wp], &
+    r196(3) = [0.7_wp, 0.7_wp*1.7_wp, 1.7_wp], cap196(3) = [0.7_wp*3.8_wp, 0.7_wp*3.8_wp, 3.8_wp]
+  m196 = 0
+  READ (1,'(A)',IOSTAT=ios) ln196
+  IF (ios == 0) THEN
+    READ (ln196,*,IOSTAT=ios196) m196
+    IF (ios196 /= 0) READ (ln196,*,IOSTAT=ios196) m196(1)
+    IF (ios196 /= 0) m196(1) = 0
+  END IF
+  tiller_full_demand = m196(1)
+  IF (tiller_full_demand < 0 .OR. tiller_full_demand > 1) ERROR STOP 'rec 196: tiller_full_demand must be 0 or 1'
+  IF (tiller_full_demand == 1) THEN
+    IF (m196(2) < 1 .OR. m196(2) > 6 .OR. m196(3) < 1 .OR. m196(3) > 3) &
+      ERROR STOP 'rec 196 = 1 needs "1 d r": d = 1-6 (onset F/M x Delta_I lo/mid/hi), r = 1-3 (rate lo/mid/hi)'
+    IF (tiller_survival_mech /= 4) ERROR STOP 'rec 196 = 1 requires rec 99 = 4'
+    IF (grain_number_mech < 1) ERROR STOP 'rec 196 = 1 requires rec 89 >= 1 (spike window)'
+    IF (canopy_tillering /= 1) ERROR STOP 'rec 196 = 1 requires rec 66 = 1'
+    ! Members as documented at recs 103/104: Delta_I 277.0 / 350.8 / 476.0 degCd
+    ! (Kirby 1988; Kang 2008); r_I 0.7x1.0 / 0.7x1.7 / 1.7 mg DM degCd-1 internode-1,
+    ! cap 0.7x3.8 / 0.7x3.8 / 3.8 mg DM degCd-1 axis-1 (Kirby 1988 folio 137-140).
+    sdm4_onset_k = MERGE(0, 2, m196(2) <= 3)
+    sdm4_dur_Cd  = dur196(MOD(m196(2) - 1, 3) + 1)
+    sdm4_r_mg    = r196(m196(3))
+    sdm4_cap_mg  = cap196(m196(3))
+    WRITE (*,'(A,I0,A,I0,A,F6.1,A,F6.3,A,F6.3)') ' rec 196 tiller_full_demand = 1: onset k = ', sdm4_onset_k, &
+      ' (member ', m196(2), '), Delta_I = ', sdm4_dur_Cd, ' degCd, r_I = ', sdm4_r_mg, ' mg/degCd, cap = ', sdm4_cap_mg
+  END IF
+END BLOCK
+! Driver record 197 rhizo_immob (SHARED.f90): "0" = off (EOF-default); "1 r_rd" = on with that root-carbon ratio.
+BLOCK
+  CHARACTER(LEN=512) :: ln197
+  INTEGER :: ios197
+  rhizo_immob = 0; rhz_r_rd = 0.0_wp
+  READ (1,'(A)',IOSTAT=ios) ln197
+  IF (ios == 0) THEN
+    READ (ln197,*,IOSTAT=ios197) rhizo_immob, rhz_r_rd
+    IF (ios197 /= 0) READ (ln197,*,IOSTAT=ios197) rhizo_immob
+    IF (ios197 /= 0) rhizo_immob = 0
+  END IF
+  IF (rhizo_immob < 0 .OR. rhizo_immob > 1) ERROR STOP 'rec 197: rhizo_immob must be 0 or 1'
+  IF (rhizo_immob == 1) THEN
+    IF (soilN_layered /= 1) ERROR STOP 'rec 197 = 1 requires the layered soil N (driver_N soilN_layered = 1)'
+    IF (rhz_r_rd <= 0.0_wp .OR. rhz_r_rd > 2.0_wp) &
+      ERROR STOP 'rec 197 = 1 needs "1 r_rd" with 0 < r_rd <= 2 (measured range 0.02 to ~2, Swinnen 1995)'
+    WRITE (*,'(A,F7.4,A,F6.3,A,F5.2,A,F5.2)') ' rec 197 rhizo_immob = 1: r_rd = ', rhz_r_rd, ', c_frac = ', &
+      rhz_c_frac, ', y_mic = ', rhz_y_mic, ', CN_mic = ', rhz_CN_mic
+  END IF
+END BLOCK
+! Driver record 198 min_water_unity (SHARED.f90): diagnostic, mineralization water factor held at 1.
+READ (1,*,IOSTAT=ios) min_water_unity
+IF (ios /= 0) min_water_unity = 0
+IF (min_water_unity < 0 .OR. min_water_unity > 1) ERROR STOP 'rec 198: min_water_unity must be 0 or 1'
+IF (min_water_unity == 1 .AND. soil_orgN_law /= 1) ERROR STOP 'rec 198 = 1 requires rec 194 = 1'
+IF (min_water_unity == 1) WRITE (*,'(A)') ' rec 198 min_water_unity = 1: DIAGNOSTIC, mineralization water factor = 1'
 CLOSE (1)
 ! Record 179 dependencies, refused rather than left a silent no-op: without
 ! record 84 there is no organ-level green lamina area to constrain, and without
@@ -3488,7 +3666,7 @@ IF (grain_n_partition_basis >= 1) THEN
     ERROR STOP 'rec 175 requires rec 154 >= 1'
   END IF
   IF (nitrate_drain_rate_basis < 1) THEN
-    WRITE (*,'(A,I0,A)') ' ERROR rec 175: mode 1 repairs the numerator ndb_rate_prev, which is' // &
+    WRITE (*,'(A,I0,A)') ' ERROR rec 175: mode 1 acts on the numerator ndb_rate_prev, which is' // &
       ' READ only when rec 158 nitrate_drain_rate_basis >= 1 (at rec 158 = 0 the Busch N_max' // &
       ' supply term is the shoot nitrate STORE and the continuity term is never read); read' // &
       ' rec 158 = ', nitrate_drain_rate_basis, '. Set rec 158 = 1 or rec 175 = 0.'
@@ -3570,8 +3748,8 @@ END IF
 ! and are refused.
 IF (chaff_growth_mode >= 1) THEN
   IF (.NOT. (grain_number_mech == 1 .OR. grain_number_mech == 2)) THEN
-    WRITE (*,'(A,I0,A)') ' ERROR rec 117: the ON path must retire the ANCHORED storage_peak_frac' // &
-      ' construction, which only rec 89 grain_number_mech = 1 or 2 does (ITEM D replaces both' // &
+    WRITE (*,'(A,I0,A)') ' ERROR rec 117: the ON path must switch off the ANCHORED storage_peak_frac' // &
+      ' construction, which only rec 89 grain_number_mech = 1 or 2 does (the grain-number chain replaces both' // &
       ' spike-partition nodes with Fischer 1985 p.452); read rec 89 = ', grain_number_mech, &
       '. A chaff sink beside an observation-anchored anthesis target is not shipped.'
     ERROR STOP 'rec 117 requires rec 89 = 1 or 2'
@@ -3590,7 +3768,7 @@ IF (gnf_ng0_basis == 1) THEN
     ERROR STOP 'rec 115 requires rec 89 = 1 or 3'
   END IF
   IF (.NOT. (grainN_sink_mech >= 1 .AND. grainN_sink_mech /= 3)) THEN
-    WRITE (*,'(A,I0,A)') ' ERROR rec 115: the basis it changes lives inside the rec 86 item-F grain-N' // &
+    WRITE (*,'(A,I0,A)') ' ERROR rec 115: the basis it changes lives inside the rec 86 grain-N' // &
       ' sink, which is reached only when rec 86 grainN_sink_mech >= 1 and /= 3; read rec 86 = ', &
       grainN_sink_mech, '. A flag that cannot act is not shipped as a silent no-op.'
     ERROR STOP 'rec 115 requires rec 86 >= 1 and /= 3'
@@ -3601,7 +3779,7 @@ IF (sowing_model_day > 0) THEN
   WRITE (*,'(A,I0,A)') ' rec 88 sowing_model_day = ', iD_sowing, &
     ' : DAS 0 = this model day (fertiliser, residue event, residue-evap mass).'
 ELSE
-  WRITE (*,'(A,I0,A)') ' rec 88 sowing_model_day = 0 (not declared): legacy anchor iD_sowing = ', &
+  WRITE (*,'(A,I0,A)') ' rec 88 sowing_model_day = 0 (not declared): baseline anchor iD_sowing = ', &
     iD_sowing, ' (WheatDryFACE).'
 END IF
 IF (leafN_cap_route == 1) WRITE (*,'(A)') &
@@ -3637,7 +3815,11 @@ IF (tiller_n_afford >= 1) THEN
     ' gate''s p_L x demand); an axis class survives only if carbon AND nitrogen shares are paid, phi = MIN(phi_C, phi_N).' // &
     ' SHARED [TNA-1..3]. No new constant; byte-identical to rec 99 = 4 when rec 121 = 0.'
 END IF
-IF (root_front_law >= 1) THEN
+IF (root_front_law == 4) THEN
+  WRITE (*,'(A)') ' rec 124 root_front_law = 4 : thermal-time root front z = -0.08 + 1.34e-3 x sum(daily mean air T' // &
+    ' > 0 C from sowing) m (Thorup-Kristensen et al. 2009 Plant Soil 322:101 Fig. 4), held from anthesis, capped' // &
+    ' at root_max_depth / profile.'
+ELSE IF (root_front_law >= 1) THEN
   WRITE (*,'(A,I0,A,F5.1,A)') ' rec 124 root_front_law = ', root_front_law, &
     ' : root front descends linearly from emergence at ', rfl_rz_mode(root_front_law), &
     ' mm d-1 (Kirkegaard & Lilley 2007 abstract range 7.9-11.3; 1 lower bound, 2 midpoint DECLARED primary,' // &
@@ -3694,8 +3876,8 @@ IF (n_construction_ceiling_curve >= 1) THEN
       ' Justes/Brisson MAXIMUM dilution pair (a = 8.3, b = 0.44) instead of the critical pair (5.35, 0.442);' // &
       ' same marginal form a(1-b)W^-b, same 1.55 t ha-1 validity floor, zero new constants. Source: Brisson et al.' // &
       ' 1998 Agronomie 18:311-346 p.342 Eqn (47) + p.329, Table VIII p.330 (pair attributed to Justes et al. 1994).' // &
-      ' CAVEAT CLOSED 2026-10-16 (record 161/162 batch; the record-156 banner text itself is the only' // &
-      ' thing that changed and it moves run.log only): Justes 1994 verified first hand 2026-10-16' // &
+      ' Source check:' // &
+      ' Justes 1994 verified first hand' // &
       ' (Justes 1994 Ann Bot 74:397; Eqn 17 p.405, k = 46.5 DM^-0.44);' // &
       ' STICS ADILMAX 8.47 is STICS''s own value.  The 6.6 % plateau item alone still stands and is carried' // &
       ' by record 160; it is NEVER READ here.'
@@ -3718,7 +3900,7 @@ IF (lamina_n_storage >= 1) THEN
     ' structural floor stays) and feeds SLN -> Vcmax/Jmax through the existing assimilation path unchanged.'
   WRITE (*,'(A)') ' rec 157 mode 1: payment order = organ construction targets (rec 128) -> lamina storage' // &
     ' to capacity -> stem/chaff structural + root -> stem/chaff luxury (n4_stem_nmax) -> overflow to' // &
-    ' N_mobile_veg / N_NO3_shoot, i.e. the INCUMBENT order; only the ceiling changed.'
+    ' N_mobile_veg / N_NO3_shoot, i.e. the mode-0 order; only the ceiling changed.'
   IF (lamina_n_storage == 3) THEN
     WRITE (*,'(A)') ' rec 157 mode 3: the rec-155 limb-(b) [N]mob NUMERATOR is widened from N_mobile_veg' // &
       ' alone to N_mobile_veg + N_NO3_shoot + MAX(0, N_stem - 0.005*W_stem) + MAX(0, N_chaff - 0.005*W_chaff);' // &
@@ -3749,10 +3931,10 @@ IF (nitrate_drain_rate_basis >= 1) THEN
     ' limited by the nitrogen availability, the demand for nitrogen in the form of glycine and serine or by the' // &
     ' activities of the enzymes involved in the reduction of NO3- to NH4+."  ZERO new constants.'
   WRITE (*,'(A)') ' rec 158 DISCLOSED: a construction-N demand is a GROWTH flux (order 0.05 g N m-2 d-1),' // &
-    ' one to two orders of magnitude below both the incumbent store-derived N_max and Busch''s own FITTED' // &
+    ' one to two orders of magnitude below both the mode-0 store-derived N_max and Busch''s own FITTED' // &
     ' N_max = 1.21 (Fig. 3a, an ENZYME-CAPACITY number).  alpha_G and alpha_S therefore fall toward 0 on most' // &
-    ' days and A RISES on EVERY deck: this is a BASE-STATE move, gated on the 42-deck scorecard, not an N-axis' // &
-    ' repair adopted on the NL sign alone.  The per-day size is in the five ON-only columns of' // &
+    ' days and A RISES on EVERY deck: this is a BASE-STATE change.' // &
+    '  The per-day size is in the five ON-only columns of' // &
     ' output/daily_nitrogen.csv and in the rec 158 season-summary line.'
 END IF
 ! Record 159 banner: nothing is printed at mode 0.
@@ -3989,8 +4171,8 @@ IF (grain_ca_xylem_throughput >= 1) THEN
     ' redistribution below the 10 % reporting threshold while N is 73.0 %; White & Broadley 2003 Ann Bot' // &
     ' 92:487 for phloem immobility; Gilliham 2011 J Exp Bot 62:2233 Abstract p.2233 for the' // &
     ' transpiration coupling and the irreversibility of deposition.'
-  WRITE (*,'(A)') ' rec 166 NOT REPAIRED, DISCLOSED: whole-crop Ca uptake is still transpiration x' // &
-    ' solution with no root-exclusion term (8.5 against Gregory''s 2.32 g m-2 -- 3.6x, down from 56x);' // &
+  WRITE (*,'(A)') ' rec 166 DISCLOSED LIMITATION: whole-crop Ca uptake is transpiration x' // &
+    ' solution with no root-exclusion term (8.5 against Gregory''s 2.32 g m-2 -- 3.6x);' // &
     ' Atkinson 1992 Abstract p.1315 itself reports that xylem Ca transport "was not primarily by mass' // &
     ' flow", a disagreement declared and not resolved; the ear enters on a PROJECTED area basis against' // &
     ' one-sided leaf area with no ear stomatal conductance; and no grain-Ca observation exists at' // &
@@ -4048,11 +4230,11 @@ IF (mineral_impedance_basis >= 1) THEN
     ' theta > theta_th and 0 otherwise, with theta = vwc_root and theta_th from the same paper''s printed' // &
     ' p.93 Eq.(5) and THIS DECK''S OWN measured clay fraction, silt fraction and topsoil bulk density' // &
     ' (driver_N.csv positions 68-70).  TWO LOCI, BOTH IN mineral_module.f90: the live rec-140' // &
-    ' diffusion impedance fl_theta_m, and the already-retired rec-131 active term.'
+    ' diffusion impedance fl_theta_m, and the rec-131 active term (switched off when rec 140 >= 1).'
   WRITE (*,'(A)') ' rec 168 WHY: at mode 0 BOTH loci compute f_l = MAX(0, 1.60*vwc_root - 0.17),' // &
-    ' a pair re-labeled 2026-10-18 to Barraclough & Tinker 1981 J Soil Sci 32:225 p.234 Fig. 1 best fit' // &
-    ' 1.58*theta - 0.17 (intercept exact, slope 1.3 % off); the Oates & Barber 1987 attribution was REMOVED on 2026-10-07 as' // &
-    ' unobtainable on every legitimate route (see the development record),' // &
+    ' a pair attributed to Barraclough & Tinker 1981 J Soil Sci 32:225 p.234 Fig. 1 best fit' // &
+    ' 1.58*theta - 0.17 (intercept exact, slope 1.3 % off); an Oates & Barber 1987 attribution is not used, being' // &
+    ' unobtainable on every legitimate route,' // &
     ' and 0.17 is in fact the printed STANDARD DEVIATION of Olesen''s slope, not an intercept.  The pair' // &
     ' is also SITE-BLIND: identical slope and intercept on the WDF loamy sand (clay 0.04, silt 0.03,' // &
     ' rho_b 1.63), the Braunschweig sand (0.07/0.24/1.55) and the Maricopa clay loam (0.34/0.31/1.28),' // &
@@ -4098,7 +4280,7 @@ IF (zn_uptake_kinetic_basis >= 1) THEN
     ' from Hacisalihoglu, Hart & Kochian 2001 Plant Physiol 125:456 DOI 10.1104/pp.125.1.456 Table II p.459' // &
     ' (high-affinity row, apparent Km 2.3 +- 1.0 nM for (-)Zn-grown cv BDME-10; the paper''s printed range is' // &
     ' 0.6-2.3 nM), which is a 21-d-old HYDROPONIC SEEDLING parameter and whose companion Vmax was' // &
-    ' found inconsistent with the model''s own earlier test runs (grain Zn 50-80x too high). The scale is' // &
+    ' gives grain Zn 50-80x too high in this model. The scale is' // &
     ' mm_field_rate(Zn) = 2.36e-3 mg Zn gDW-1 d-1, the EXISTING driver_minerals.csv column-15 value derived' // &
     ' from Liu, Liu, Zhang, Chen & Zou 2019 Front Plant Sci 10:426 DOI 10.3389/fpls.2019.00426 -- Table 6' // &
     ' p.8 shoot Zn at maturity 259 g ha-1 + Table 4 p.6 root Zn 16.1 g ha-1 = 27.51 mg m-2, / Table 3 p.6' // &
@@ -4111,24 +4293,23 @@ IF (zn_uptake_kinetic_basis >= 1) THEN
     ' been charged, so c_surf falls back to the bulk solution concentration; that is a well-posedness guard' // &
     ' against a division by zero, not a second law. Both day counts are printed in the season summary.'
   WRITE (*,'(A)') ' rec 169 NOT CHANGED: Fe, Cu, Mn, Mg and Ca are untouched; the mass-flow, diffusion,' // &
-    ' phytosiderophore and retired limbs, the pool cap, the organ allocation, the remobilization' // &
+    ' phytosiderophore and switched-off limbs, the pool cap, the organ allocation, the remobilization' // &
     ' route and the export fractions are untouched; records 131 and 140 are untouched; the nitrogen chain''s' // &
     ' own record-139 supply law is NOT touched (this record lives inside mineral_module.f90 only, which' // &
     ' keeps its MG0 isolation and writes no C, N, water or energy state). INERT unless rec 131' // &
     ' mineral_supply_law = 1 and rec 140 mineral_supply_mech >= 1 put the zinc limb on the path.'
-  WRITE (*,'(A)') ' rec 169 NOT REPAIRED, DISCLOSED: avail_A(Zn) is NOT re-centered by this patch, so' // &
-    ' the Braunschweig zinc LEVEL on BR102/BR114 is expected to move off its calibration until the lead' // &
-    ' re-centers it as an INPUT change; the zinc remobilization share (model 26-34 % against Waters, Uauy,' // &
-    ' Dubcovsky & Grusak 2009 J Exp Bot 60:4263 p.4267 Table 2''s 42.6 %) is owned by repair R5b, not by' // &
-    ' this record; and Mn and Cu still have no active uptake term of any kind.'
+  WRITE (*,'(A)') ' rec 169 NOT SET BY THIS RECORD, DISCLOSED: avail_A(Zn) is an INPUT (driver_minerals.csv' // &
+    ' column 17, set on the Braunschweig controls); the zinc remobilization share (model 26-34 % against Waters, Uauy,' // &
+    ' Dubcovsky & Grusak 2009 J Exp Bot 60:4263 p.4267 Table 2''s 42.6 %) is set by the remobilization route,' // &
+    ' not by this record; and Mn and Cu still have no active uptake term of any kind.'
 END IF
 ! rec 171 mineral_n_coupling_basis -- ON-only echo (the OFF run.log is unchanged)
 IF (mineral_n_coupling_basis >= 1) THEN
   WRITE (*,'(A,I0,A)') ' rec 171 mineral_n_coupling_basis = ', mineral_n_coupling_basis, &
     ' : the grain''s PHLOEM SINK CAPACITY for a phloem-mobile mineral is set by the grain''s PROTEIN' // &
     ' (nitrogen), at the per-element grain element:N stoichiometry r_e = driver_minerals.csv column 20' // &
-    ' grain_eN_mg_gN [mg element per g grain N].  1 = FLUX (daily) basis, the design note''s R5 leg A' // &
-    ' wording: the day''s grain loading <= r_e x MAX(0, dN_grain today).  2 = POOL (cumulative) basis,' // &
+    ' grain_eN_mg_gN [mg element per g grain N].  1 = FLUX (daily) basis:' // &
+    ' the day''s grain loading <= r_e x MAX(0, dN_grain today).  2 = POOL (cumulative) basis,' // &
     ' Xia''s own wording: the grain''s accumulated content <= r_e x N_grain today.  Refused loading is' // &
     ' RETURNED TO ITS SOURCE (uptake share -> leaf terminus, senescence share -> dead tissue), exactly' // &
     ' as record 126 already does, so the per-element daily mass balance is unchanged.'
@@ -4150,7 +4331,7 @@ IF (mineral_n_coupling_basis >= 1) THEN
   WRITE (*,'(A)') ' rec 171 NOT CLAIMED: nitrogen enters as a CEILING only, so the N-driven' // &
     ' INCREASE in total uptake that Xia p.7 also reports is NOT modeled and the N-dose CONTENT magnitude' // &
     ' shortfall is not addressed; root uptake, root-to-shoot transport, the senescence export fractions,' // &
-    ' the soil impedance pair and the Zn HATS bound are untouched (other repairs, other records); and' // &
+    ' the soil impedance pair and the Zn HATS bound are untouched (set by other records); and' // &
     ' because grain protein FALLS under eCO2 a binding ceiling makes the eCO2 CONTENT response slightly' // &
     ' MORE negative -- this record and the eCO2 magnitude shortfall pull in opposite directions.'
   WRITE (*,'(A)') ' rec 171 ISOLATION: N_storage and N_chaff enter mineral_module.f90 READ-ONLY' // &
@@ -4160,6 +4341,45 @@ IF (mineral_n_coupling_basis >= 1) THEN
 END IF
 ! rec 174 ON banner. Nothing is printed at mode
 ! 0, so a mode-0 run.log is unchanged.
+IF (canopy_fln_prediction == 2) THEN
+  WRITE (*,'(A)') ' rec 174 canopy_fln_prediction = 2 : mode 1, plus the blades BELOW the' // &
+    ' ct_internodes_elong elongated-internode phytomers are anchored from the BASE (Abichou 2016 Ch.2' // &
+    ' Eqn T2.7a; juvenile size uncorrelated with adult size): on a culm with FLN < cba_Nl_fit they keep' // &
+    ' the panel lower-blade length and width by absolute rank; at FLN >= cba_Nl_fit identical to mode 1.'
+END IF
+IF (canopy_fln_prediction >= 1) THEN
+  WRITE (*,'(A)') ' rec 174 canopy_fln_prediction = 1 : a blade''s FINAL length and width are set ONCE,' // &
+    ' from the culm''s OWN final leaf number, and are never rewritten.  The final leaf number is' // &
+    ' PREDICTED on the emergence day as FLOOR(HS(stage_thresh(4) - tdu_at_emerge)) and used as the' // &
+    ' inversed-rank top from emergence; the Booting freeze only CONFIRMS it.'
+  WRITE (*,'(A)') ' rec 174 WHY: at mode 0 the profiles are indexed at the PROVISIONAL panel' // &
+    ' median cba_Nl_fit = 11 until FLN is frozen at Booting, so on that one day every ALREADY-LIGULATED' // &
+    ' blade is promoted (11 - FLN) positions up the profile and its FINAL dimensions are REWRITTEN' // &
+    ' RETROACTIVELY.  At BRAUNSCHWEIG_103 (FLN 7): A_shoot_pot 36.2047 -> 72.1211 cm2 and LAI 1.166 ->' // &
+    ' 3.088 on 2014-05-19, 54.8 % of the season''s lamina area on ONE day, 74.7 g DM lamina carbon' // &
+    ' backlog created, realized SLA 38.7 m2 kg-1 against the model''s own 18.5-20.6, green-lamina SLN' // &
+    ' 0.865 g N m-2 against every measured 1.96-2.75.  The mirror of the step is that ranks 1-7 were' // &
+    ' built 2.3-3.2x too small for the whole expansion period.'
+  WRITE (*,'(A)') ' rec 174 SOURCES, ALL READ AT FIRST HAND: Abichou 2016 thesis' // &
+    ' tel-02316154 Ch.3 Fig. 8a (printed p.104) caption VERBATIM "We counted phytomer rank from the top' // &
+    ' (e.i. basipetally) where n =1 represents the rank of the flag leaf", Ch.2 Fig. 3e (printed p.67)' // &
+    ' and printed p.151 "selon le nombre final de feuilles du brin maitre" -- the dimension table is' // &
+    ' indexed from the flag leaf and conditioned on the culm''s FINAL LEAF NUMBER; printed p.32 "Plants' // &
+    ' differing in Nl within a same treatment were nearly synchronous in the date of flag leaf' // &
+    ' ligulation ... Consequently, plants with higher Nl had a lower phyllochron", which IS the' // &
+    ' construction FLN = FLOOR(HS(tau_boot_target)); McMaster et al. 2003 Ann Bot 91:697-705 (DOI' // &
+    ' 10.1093/aob/mcg074) p.697 "temperature primarily controls the phyllochron" and "the relationship' // &
+    ' under field conditions is viewed as linear", Table 2 p.701 air basis 73.0/74.8 (bracket' // &
+    ' 68.4-77.4); Zadoks, Chang & Konzak 1974 Weed Res 14:415-421 for the flag leaf being the last rank' // &
+    ' ligulated (Z39) before booting (Z41-45).  ZERO new constants.  DISCLOSED: McMaster 2003 does NOT' // &
+    ' print a "constant thermal interval" statement -- the citation is the LINEARITY sentence, and the' // &
+    ' two-limb departure from linearity is Streck et al. 2003 Eqn 5 p.183.'
+  WRITE (*,'(A)') ' rec 174 NOT CHANGED: Photo_Sens / P1D untouched (the Braunschweig df = 0' // &
+    ' midwinter window is a separate input item); NO N limitation is added to lamina EXPANSION, so the' // &
+    ' low-N dated LAI and lamina N necessarily rise AWAY from the measurement and that consequence is' // &
+    ' REPORTED, not hidden; no development threshold, gate or stage date is touched -- no stage clock' // &
+    ' reads the blade area.'
+END IF
 IF (sink_full_carbon_fate == 1) THEN
   WRITE (*,'(A)') ' rec 129 sink_full_carbon_fate = 1 : while the grain sink is full, the rec-92 deposition window is' // &
     ' lifted for that surplus (storage continues to the existing wsc_cap_frac capacity); the remainder is booked to' // &
@@ -4171,7 +4391,7 @@ END IF
 ! rec 175 ON banner. Nothing is printed at mode 0.
 IF (grain_n_partition_basis >= 1) THEN
   WRITE (*,'(A,I0,A)') ' rec 175 grain_n_partition_basis = ', grain_n_partition_basis, &
-    ' : mode 1 corrects an earlier formulation.  Record 158''s own header declares that ndb_rate_prev is' // &
+    ' : mode 1 removes the following mode-0 behaviour.  Record 158''s own header declares that ndb_rate_prev is' // &
     ' "continuous across anthesis"; record 154 sets N_from_assim_day = 0 by construction, the three' // &
     ' N_alloc_* terms are already zeroed post-anthesis, so the sum is IDENTICALLY ZERO after anthesis,' // &
     ' N_max = MIN(1.21, 0) = 0 and the shoot stops reducing nitrate the day after anthesis.'
@@ -4205,7 +4425,7 @@ IF (grain_n_partition_basis >= 1) THEN
       ' DRY MASS, not as a lump on a grain of zero mass.  Mode 2 relabels gnf_ng0 (1.550 g N m-2 at' // &
       ' WDF25_Ruta_aCO2_WW) from chaff to grain on the first fill day, on which W_grain = 0.00 g m-2,' // &
       ' so the grain''s N concentration on that day is unbounded.  FPB 2008 p.786/Table 1 p.784 print' // &
-      ' Ngtot(0) = 2.4 mg with NO dry-mass clause, so mode 2 is NOT repaired in place.  Bertheloot, Wu,' // &
+      ' Ngtot(0) = 2.4 mg with NO dry-mass clause, so mode 2 is kept as it is.  Bertheloot, Wu,' // &
       ' Cournede & Andrieu 2011 Ann Bot 108:1097-1109 Table 1(a) ''Grains'' (DOI 10.1093/aob/mcr125)' // &
       ' publishes the SAME initial condition PAIRED with a dry mass: ''Total N mass N_grain^tot mg 2.4''' // &
       ' and ''Total dry mass M_grain^tot mg 120'', i.e. 0.020 g N g-1 DM = 2.0 % DM.  Mode 4 therefore' // &
@@ -4236,7 +4456,7 @@ IF (chaff_structural_n_basis == 1) THEN
     ' were given by the lowest values observed during the grain-filling period over all treatments.'''
   WRITE (*,'(A)') ' rec 178 SCOPE: the ten CHAFF loci only (flowering snapshot, FPB Eqn 5' // &
     ' degradation basis, chaff tissue death nph and n_to_dead, the rec-175 Ngtot(0) draw floor, the' // &
-    ' rec-154 synthesis potential, the rec-86/154 limb, the legacy nJ_R0 chaff limb, and both rec-159' // &
+    ' rec-154 synthesis potential, the rec-86/154 limb, the baseline nJ_R0 chaff limb, and both rec-159' // &
     ' mne_nrem_chaff branches).  n2_struct_lam, the SIX stem/sheath/internode/peduncle loci of' // &
     ' n2_struct_stem, and the root floors are UNTOUCHED.  It is a THRESHOLD, not a pool: no N is' // &
     ' created or destroyed and the Gate-D organ-state N closure must NOT move.'
@@ -4304,7 +4524,7 @@ IF (wsc_fate_law >= 1) THEN
     ' DEPOSITION CLOSE for the grain-sink-full surplus (Schnyder 1993 New Phytol 123:233 p.238, WSC' // &
     ' accumulate "until 10-20 d after anthesis"; p.233 Summary, "terminates within three weeks following' // &
     ' anthesis"), the refused carbon travelling the existing rec-127/129 overflow path to cfo_loss_day/cum;' // &
-    ' the rec-129 window LIFT and its withdrawn justification are superseded (misquote corrected at' // &
+    ' the rec-129 window LIFT is not used (its justification misquoted the source; see' // &
     ' SHARED). Term B opens the rec-105 = 2 release at TERMINAL GRAIN-SINK CLOSURE' // &
     ' (gfb_end_bound /= 0; Schnyder 1993 p.240, grain sink capacity "fixed at 2-3 wk after anthesis and' // &
     ' ... sink-limited thereafter") and spreads the standing pool to maturity entirely to cres_respired at' // &
@@ -4328,7 +4548,7 @@ IF (mineral_supply_law == 1) THEN
     ' (0.7625 g H2O g-1 final grain DM) stays measured, unchanged. Mg untouched. SHARED/mineral_module.f90.'
 END IF
 IF (mineral_supply_mech == 1) THEN
-  WRITE (*,'(A)') ' rec 140 mineral_supply_mech = 1 : rec 131''s calibrated generalized active term is RETIRED for' // &
+  WRITE (*,'(A)') ' rec 140 mineral_supply_mech = 1 : rec 131''s calibrated generalized active term is SWITCHED OFF for' // &
     ' Fe/Zn/Cu/Mn; mass flow (unchanged) + diffusion to the root surface (Barber-Cushman, reusing rec 139''s own' // &
     ' RLD/SRL and the SAME declared f_l(theta) pair) + (Zn only) a bounded HATS ceiling (Hacisalihoglu 2001 Table II,' // &
     ' capped at S_mf+S_diff, never a field rate) now carry Fe/Zn/Cu/Mg/Mn uptake; Ca xylem route unchanged.' // &
@@ -4438,9 +4658,9 @@ IF (grain_number_mech >= 1) THEN
   ! for both the mechanism and the anchored node is refused outright, as records
   ! 64, 65, 66 and 69 already are.
   IF (stem_spike_realloc_delta > 0.0_wp) THEN
-    WRITE (*,'(A,G14.6)') ' ERROR rec 89: storage_onset_dvs2 / rec 61 stem_spike_realloc_delta is RETIRED' // &
+    WRITE (*,'(A,G14.6)') ' ERROR rec 89: storage_onset_dvs2 / rec 61 stem_spike_realloc_delta is NOT USED' // &
       ' under rec 89 >= 1, but rec 61 was declared > 0: ', stem_spike_realloc_delta
-    ERROR STOP 'rec 89 with rec 61 > 0: the retired pre-anthesis stem->spike node cannot also be live'
+    ERROR STOP 'rec 89 with rec 61 > 0: the unused pre-anthesis stem->spike node cannot also be live'
   END IF
 END IF
 ! rec 90 dependency and banner.
@@ -4496,12 +4716,12 @@ IF (wsc_reserve_law == 1) THEN
     ERROR STOP 'rec 105 requires rec 92 = 1'
   END IF
   IF (grain_fill_mech < 1) THEN
-    WRITE (*,'(A,I0)') ' ERROR rec 105: requires rec 91 >= 1 (item B''s filling clock gfb_tt); rec 91 read ', &
+    WRITE (*,'(A,I0)') ' ERROR rec 105: requires rec 91 >= 1 (the grain-filling clock gfb_tt); rec 91 read ', &
       grain_fill_mech
     ERROR STOP 'rec 105 requires rec 91 >= 1'
   END IF
   IF (wsc_law_member == 0) THEN
-    WRITE (*,'(A)') ' ERROR rec 106: must name a member (1 item-B clock / 2 legacy clock / 3 no ceiling)' // &
+    WRITE (*,'(A)') ' ERROR rec 106: must name a member (1 grain-filling clock / 2 rec-59 clock / 3 no ceiling)' // &
       ' when rec 105 = 1.'
     ERROR STOP 'rec 106 must name a member when rec 105 = 1'
   END IF
@@ -4517,13 +4737,13 @@ IF (wsc_reserve_law == 2) THEN
     ERROR STOP 'rec 105 = 2 requires rec 92 = 1'
   END IF
   IF (grain_fill_mech < 1) THEN
-    WRITE (*,'(A,I0)') ' ERROR rec 105: mode 2 requires rec 91 >= 1 (the item-B filling clock gfb_tt is the' // &
+    WRITE (*,'(A,I0)') ' ERROR rec 105: mode 2 requires rec 91 >= 1 (the grain-filling clock gfb_tt is the' // &
       ' member-1 release clock and is reported on BOTH members); rec 91 read ', grain_fill_mech
     ERROR STOP 'rec 105 = 2 requires rec 91 >= 1'
   END IF
   IF (wsc_rel_window_member == 0) THEN
-    WRITE (*,'(A)') ' ERROR rec 107: must name a release-window member (1 = item-B filling clock /' // &
-      ' 2 = legacy rec-59 clock) when rec 105 = 2. No member is privileged.'
+    WRITE (*,'(A)') ' ERROR rec 107: must name a release-window member (1 = grain-filling clock /' // &
+      ' 2 = rec-59 clock) when rec 105 = 2. No member is privileged.'
     ERROR STOP 'rec 107 must name a member when rec 105 = 2'
   END IF
   IF (wsc_law_member /= 0) THEN
@@ -4532,11 +4752,11 @@ IF (wsc_reserve_law == 2) THEN
     ERROR STOP 'rec 106 must be 0 when rec 105 = 2'
   END IF
   WRITE (*,'(A,I0,A)') ' rec 105 wsc_reserve_law = 2 (rec 107 release-window member ', wsc_rel_window_member, &
-    ') : THE REPAIR -- the stem WSC pool is RELEASED over the window REGARDLESS of the grain deficit' // &
+    ') : THE LAW -- the stem WSC pool is RELEASED over the window REGARDLESS of the grain deficit' // &
     ' (rel = MIN(W_reserve, W_stem, cap), cap = W_reserve x dtau/tau_rem), and the deficit decides ONLY' // &
     ' the grain share: CASE 1 rel_g = MIN(rel, room/eff) -> grain at the rec 60 Gebbing efficiency;' // &
     ' CASE 2 rel_f = rel - rel_g -> the NAMED ledger cres_respired AT UNITY (no efficiency).' // &
-    ' Members: 1 = item-B filling clock (gfb_dfill - gfb_tt) / 2 = legacy rec-59 clock' // &
+    ' Members: 1 = grain-filling clock (gfb_dfill - gfb_tt) / 2 = rec-59 clock' // &
     ' (reserve_end_dvs2 - dvs2); SWEPT, never collapsed. rec 106 NOT READ. rec 100 = 0 legal.' // &
     ' SHARED.' // &
     ' Off by default.'
@@ -4591,7 +4811,7 @@ IF (height_internode_law == 1) THEN
     '). The model''s OWN structural stem increment constrains realised length;' // &
     ' the carbon shortfall is a MODEL-INTERNAL diagnostic that licenses NO parameter change.' // &
     ' Height is reported on THREE bases (B1 collar / B2 peduncle-included / B3 spike+awns)' // &
-    ' because the WDF25 height basis is UNKNOWN. NOT accepted, NOT audited, NOT the default.'
+    ' because the WDF25 height basis is UNKNOWN. NOT the default.'
 END IF
 ! Records 114, 115, 116, 117 and 118: the one echo line (or block) each,
 ! emitted only when the record is on.
@@ -4599,7 +4819,7 @@ IF (kernel_mass_ceiling == 1) THEN
   WRITE (*,'(A,G14.6,A)') ' rec 118 kernel_mass_ceiling = 1 : per-kernel mass bounded by the MEASURED cultivar' // &
     ' TKW_potential = ', TKW_potential, ' g per 1000 kernels (input/cultivar_yield.csv row 2), inside the rec-91' // &
     ' rate x duration law (Yin et al. 2003 Ann Bot 91:361 Table 2 w_max; Sofield et al. 1977 Aust J Plant' // &
-    ' Physiol 4:785).  SHARED.f90.  v1.0.0 fix A, approved 2026-10-05.'
+    ' Physiol 4:785).  SHARED.f90.'
 END IF
 ! rec 94 dependency and banner.
 IF (canopy_n_flag_zone >= 1) THEN
@@ -4616,7 +4836,7 @@ IF (canopy_n_flag_zone >= 1) THEN
   SELECT CASE (canopy_n_flag_zone)
   CASE (3)
     WRITE (*,'(A)') ' rec 94 canopy_n_flag_zone = 3: THE ITEM. Mode 1 plus the layered f_PAR' // &
-      ' of FPB Eqn 17 p.785 inside item F''s Eqn-6 limb (audit note (iii)).'
+      ' of FPB Eqn 17 p.785 inside the Eqn-6 limb.'
   END SELECT
 END IF
 ! rec 86 dependency and banner. SHARED.f90
@@ -4627,7 +4847,7 @@ gnf_eqn6 = (grainN_sink_mech == 1 .OR. grainN_sink_mech == 2 .OR. grainN_sink_me
 IF (grainN_sink_mech >= 1) THEN
   IF (grain_number_mech < 1) THEN
     WRITE (*,'(A,I0)') ' ERROR rec 86: the grain-N sink law is on a PER-EAR basis and requires' // &
-      ' rec 89 >= 1 (without item A chain gnx_ears_m2 is 0, the basis does not exist, and the' // &
+      ' rec 89 >= 1 (without the grain-number chain gnx_ears_m2 is 0, the basis does not exist, and the' // &
       ' grain would silently receive no N); rec 89 read ', grain_number_mech
     ERROR STOP 'rec 86 requires rec 89 >= 1'
   END IF
@@ -4638,8 +4858,8 @@ IF (grainN_sink_mech >= 1) THEN
       ' (N_g(0) = 2.4 mg ear-1, g = 0.005 degCd-1 DECLARED DERIVED NOT MEASURED, tau = 250 degCd,' // &
       ' thermal time base 0 C). Supply = assimilation + mobile pool + delta-limited organ draw above' // &
       ' the p.1711 structural floors. Post-anthesis UPTAKE demand read off the SAME potential' // &
-      ' (the Jamieson & Semenov NHI trajectory is retired). Critical-N shoot mass on W_grain+W_chaff.'
-    WRITE (*,'(A)') '   EQN-6 REPAIR 2026-09-21: lamina photosynthetic N now runs FPB Eqn 4 in FULL --' // &
+      ' (the Jamieson & Semenov NHI trajectory is not used). Critical-N shoot mass on W_grain+W_chaff.'
+    WRITE (*,'(A)') '   EQN 6: lamina photosynthetic N runs FPB Eqn 4 in FULL --' // &
       ' Eqn 5 degradation (delta = 0.008 [degCd]-1) AND Eqn 6 synthesis (sigma = 0.0015 [degCd]-1,' // &
       ' k1 = 0.0018 kg kg-1, k2 = 10 J m-2 s-1, all FPB Table 1 p.784), on the Eqn-1 p.783 pool basis' // &
       ' N^ph = (N^tot - N^struct)/(1+r) with r = 0.10 (p.786). FPB p.786 fitted sigma, delta, k1 and k2' // &
@@ -4682,7 +4902,7 @@ END IF
 ! Mode implemented: 2 = the three-node canopy, soil and airspace energy balance
 ! with the prognostic one-dimensional soil-heat profile supplying the ground heat
 ! flux, through energy_balance_module.f90. The retired Shuttleworth-Wallace mode
-! and its source file were removed from v1.0; record 39 accepts 2 only.
+! is not part of the model; record 39 accepts 2 only.
 IF (energy_balance_mode < 0 .OR. energy_balance_mode > 3) THEN
   WRITE (*,*) 'ERROR: energy_balance_mode must be 0-3. Got:', energy_balance_mode
   STOP 1
@@ -4864,8 +5084,8 @@ IF (lai_n_arrest /= 2) &
   CALL reject_retired_option (122, 'lai_n_arrest', lai_n_arrest, '2')
 IF (tiller_n_afford /= 1) &
   CALL reject_retired_option (123, 'tiller_n_afford', tiller_n_afford, '1')
-IF (root_front_law /= 2) &
-  CALL reject_retired_option (124, 'root_front_law', root_front_law, '2')
+IF (root_front_law /= 2 .AND. root_front_law /= 4) &
+  CALL reject_retired_option (124, 'root_front_law', root_front_law, '2 or 4')
 IF (kernel_potential_law /= 1 .AND. kernel_potential_law /= 2 .AND. kernel_potential_law /= 3) &
   CALL reject_retired_option (125, 'kernel_potential_law', kernel_potential_law, '1, 2, 3')
 IF (mineral_grain_sink_cap /= 1) &
@@ -4958,12 +5178,12 @@ IF (zn_uptake_kinetic_basis /= 1) &
   CALL reject_retired_option (169, 'zn_uptake_kinetic_basis', zn_uptake_kinetic_basis, '1')
 IF (mineral_n_coupling_basis /= 1) &
   CALL reject_retired_option (171, 'mineral_n_coupling_basis', mineral_n_coupling_basis, '1')
-IF (stem_reserve_deposition_n_basis /= 0) &
-  CALL reject_retired_option (172, 'stem_reserve_deposition_n_basis', stem_reserve_deposition_n_basis, '0')
+IF (stem_reserve_deposition_n_basis /= 0 .AND. stem_reserve_deposition_n_basis /= 1) &
+  CALL reject_retired_option (172, 'stem_reserve_deposition_n_basis', stem_reserve_deposition_n_basis, '0, 1')
 IF (spac_sink_coupling /= 1) &
   CALL reject_retired_option (173, 'spac_sink_coupling', spac_sink_coupling, '1')
-IF (canopy_fln_prediction /= 0) &
-  CALL reject_retired_option (174, 'canopy_fln_prediction', canopy_fln_prediction, '0')
+IF (canopy_fln_prediction < 0 .OR. canopy_fln_prediction > 2) &
+  CALL reject_retired_option (174, 'canopy_fln_prediction', canopy_fln_prediction, '0, 1, 2')
 IF (grain_n_partition_basis /= 4) &
   CALL reject_retired_option (175, 'grain_n_partition_basis', grain_n_partition_basis, '4')
 IF (vegetative_n_demand_basis /= 0) &
@@ -4972,8 +5192,8 @@ IF (grain_n_potential_trait /= 0) &
   CALL reject_retired_option (177, 'grain_n_potential_trait', grain_n_potential_trait, '0')
 IF (chaff_structural_n_basis /= 0 .AND. chaff_structural_n_basis /= 1 .AND. chaff_structural_n_basis /= 2) &
   CALL reject_retired_option (178, 'chaff_structural_n_basis', chaff_structural_n_basis, '0, 1, 2')
-IF (lamina_expansion_n_limit /= 1) &
-  CALL reject_retired_option (179, 'lamina_expansion_n_limit', lamina_expansion_n_limit, '1')
+IF (lamina_expansion_n_limit /= 0 .AND. lamina_expansion_n_limit /= 1 .AND. lamina_expansion_n_limit /= 5) &
+  CALL reject_retired_option (179, 'lamina_expansion_n_limit', lamina_expansion_n_limit, '0, 1 or 5')
 IF (grain_ca_loading_basis /= 1) &
   CALL reject_retired_option (180, 'grain_ca_loading_basis', grain_ca_loading_basis, '1')
 IF (mg_solution_basis /= 0) &
@@ -5129,7 +5349,7 @@ phen_params%dev_factor_window = pheno_dev_factor_window
 IF (pheno_dev_factor_window == 1) THEN
   WRITE (*,'(A,F6.1,A,F6.1,A)') ' rec 150 = 1: VF/DF act from emergence to terminal spikelet (400 degCd TDU),' // &
     ' DTDU = DTT*min(VF,DF) (McMaster et al. 2008 Eq. 1); Photo_Sens = ', phen_params%photo_sens, &
-    ', Vern_Factor = ', phen_params%vern_factor, ' (both 0 -> identical to legacy)'
+    ', Vern_Factor = ', phen_params%vern_factor, ' (both 0 -> identical to baseline)'
 END IF
 
 ! ----------------------------------------------------------------------!
@@ -5146,6 +5366,7 @@ WRITE (*,*) 'Number of soil layers = ', NSoil_layers
 ALLOCATE (hydro_root_dist_diag(NSoil_layers), hydro_alpha_diag(NSoil_layers))
 hydro_root_dist_diag = 0.0_wp; hydro_alpha_diag = 0.0_wp
 ALLOCATE (hydro_alpha_alt_diag(NSoil_layers)); hydro_alpha_alt_diag = 0.0_wp   ! rec 80 diagnostics
+ALLOCATE (spac_g_lay(NSoil_layers), spac_psi_lay(NSoil_layers)); spac_g_lay = 0.0_wp; spac_psi_lay = 0.0_wp   ! rec 81 mode 5
 ! rec 81: committed per-layer head / K twins of h1_committed_m (filled in both modes at the commit sites).
 ALLOCATE (h_committed_m(NSoil_layers), k_committed_m_d(NSoil_layers))
 h_committed_m = 0.0_wp; k_committed_m_d = 0.0_wp
@@ -5153,6 +5374,7 @@ h_committed_m = 0.0_wp; k_committed_m_d = 0.0_wp
 ! Allocated unconditionally; the single-pool path never reads them, and the
 ! hydrology accumulators never feed back into the water physics.
 ALLOCATE (NO3_lay(NSoil_layers), NH4_lay(NSoil_layers))
+ALLOCATE (urea_lay(NSoil_layers)); urea_lay = 0.0_wp   ! rec 190
 ALLOCATE (q_iface_day_mm(NSoil_layers), rootup_layer_day_mm(NSoil_layers))
 ALLOCATE (hydro_q_iface_m(NSoil_layers), hydro_sink_layer_m(NSoil_layers))
 NO3_lay = 0.0_wp; NH4_lay = 0.0_wp
@@ -5217,7 +5439,7 @@ WRITE (unit_ft_outer,'(A)') 'day,outer_iter,ft_pot_unstressed,f_t_in,f_t_out,F_r
 ! carries one row per gas-exchange call on the writer pass when the record is
 ! on.
 OPEN (newunit=unit_spac_daily,file='output/daily_spac_diag.csv',status='replace',action='write')
-WRITE (unit_spac_daily,'(A)') 'day,spac_mode,psi_f_MPa,K_plant_mol_m2_s_MPa,psi_s_valid,psi_s_fallback,' // &
+WRITE (unit_spac_daily,'(A)') 'day,spac_mode,psi_f_MPa,K_L_mol_m2_s_MPa,psi_s_valid,psi_s_fallback,' // &
   'psi_s_rootfrac_MPa,psi_s_alpha_MPa,psi_s_kwt_MPa,psi_s_used_MPa,spac_calls,spac_iters_max,' // &
   'spac_resid_max_MPa,trans_pot_unstressed_mm,E_spac_pass2_mm,trans_act_mm,supply_shortfall_mm'
 ! Record 173 on-only diagnostic: one row per day with the demand actually sent
@@ -5508,7 +5730,7 @@ BLOCK
   ! (clay, calcium carbonate and the initial humus nitrogen) in place of a single
   ! transplanted soil; they are read only if present, and record 93 at or above 1
   ! refuses to run without them.
-  INTEGER, PARAMETER :: N_PARAMS_SOIL = 71  ! last optional position (rec 153: N_soil_init_depth_m, row 71, same present-only convention as rows 65-67 and 68-70)
+  INTEGER, PARAMETER :: N_PARAMS_SOIL = 72  ! last optional position (rec 194: soil organic N stock, row 72; rec 153: N_soil_init_depth_m, row 71; same present-only convention as rows 65-67 and 68-70)
   INTEGER, PARAMETER :: N_PARAMS = 64   ! +4 (P2) Andrews; +2 (P5) Martre; +6 urea/NH4/NO3; +12 initial-N + residue decomposition; +5 (pH_surf, Kd_NH4, BD_surf, z_surf_N, Km_den); +13 root-scaled active uptake: 5 kinetics/root rows + 8 f_Nstatus(NNI) node values; +5 (layered-N) u_max_nh4_fw, Km_nh4, n_min_depth_m, cfl_frac, soilN_layered (appended AFTER existing rows so old positions keep meaning) — N_PARAMS itself is a STRUCTURAL row count, not a physical constant
   REAL(wp) :: N_pv(N_PARAMS_SOIL)
   N_pv = 0.0_wp; ip_N = 0
@@ -5574,6 +5796,7 @@ BLOCK
   u_max_nh4_fw     = N_pv(60); Km_nh4          = N_pv(61)
   n_min_depth_m    = N_pv(62); cfl_frac        = N_pv(63)
   soilN_layered    = NINT(N_pv(64))
+  IF (urea_transport == 1 .AND. soilN_layered /= 1) ERROR STOP 'rec 190 urea_transport needs the layered soil N (driver_N.csv soilN_layered = 1)'
   ! The MEASURED per-deck soil analysis for the humus mineralization of record
   ! 93, in the same class as the surface pH (position 42) and bulk density
   ! (position 44): a measured site soil analysis is an INPUT and not a fitted
@@ -5590,6 +5813,30 @@ BLOCK
   IF (ip_N >= 68) nud_clay_frac    = N_pv(68)
   IF (ip_N >= 69) nud_silt_frac    = N_pv(69)
   IF (ip_N >= 70) nud_bulk_density = N_pv(70)
+  ! Kd_NH4 tiers (SHARED.f90): a negative deck value means "not given"; the model then takes the
+  ! midpoint of the measured range of the deck's USDA texture class, and says so in run.log.
+  BLOCK
+    REAL(wp) :: sa, si, cl
+    IF (Kd_NH4 < 0.0_wp) THEN
+      IF (nud_clay_frac < 0.0_wp .OR. nud_silt_frac < 0.0_wp) ERROR STOP 'Kd_NH4 < 0 (class default) needs clay and silt (driver_N.csv rows 68-69)'
+      cl = 100.0_wp * nud_clay_frac; si = 100.0_wp * nud_silt_frac; sa = 100.0_wp - cl - si
+      IF (si + 2.0_wp*cl < 30.0_wp .AND. sa >= 70.0_wp) THEN
+        kd_class = 1                                   ! USDA sand or loamy sand
+      ELSE IF ((cl >= 7.0_wp .AND. cl < 20.0_wp .AND. sa > 52.0_wp) .OR. &
+               (cl < 7.0_wp .AND. si < 50.0_wp)) THEN
+        kd_class = 2                                   ! USDA sandy loam
+      ELSE
+        kd_class = 3                                   ! loam and finer
+      END IF
+      Kd_NH4  = 0.5_wp * (kd_cls_lo(kd_class) + kd_cls_hi(kd_class))
+      kd_tier = 3
+      WRITE(*,'(A,I0,A,F5.2,A,F5.2,A,F5.2,A)') ' Kd_NH4 tier 3 (no value given): texture class ', kd_class, &
+        ' (1 sand/loamy sand, 2 sandy loam, 3 loam and finer), measured range ', kd_cls_lo(kd_class), '-', &
+        kd_cls_hi(kd_class), ' L/kg (Gronwald et al. 2015), midpoint used = ', Kd_NH4, ' L/kg'
+    ELSE
+      kd_tier = 1
+    END IF
+  END BLOCK
   ! Record 153: the SAMPLING DEPTH the initial mineral-nitrogen measurement of
   ! row 1 was derived from, in m below the surface. An OPTIONAL row at the end of
   ! the file, read with the same present-only and explicit-reset idiom as rows 65
@@ -5604,6 +5851,18 @@ BLOCK
     n_init_depth_m = N_pv(71)
   ELSE
     n_init_depth_m = -1.0_wp
+  END IF
+  ! Record 194: the soil organic N stock over 0..n_min_depth_m (g N m-2), computed from the deck's measured soil
+  ! analysis (the derivation is in the row's note). Optional row 72; absent or negative = not given, and rec 194
+  ! then stops with an error.
+  soil_Norg_gN_m2 = -1.0_wp
+  IF (ip_N >= 72) soil_Norg_gN_m2 = N_pv(72)
+  IF (soil_orgN_law == 1) THEN
+    IF (soil_Norg_gN_m2 <= 0.0_wp) ERROR STOP 'rec 194 needs the soil organic N stock (driver_N.csv row 72)'
+    IF (soilN_layered /= 1) ERROR STOP 'rec 194 needs the layered soil N (driver_N.csv soilN_layered = 1)'
+    vale_Norg = soil_Norg_gN_m2
+    WRITE (*,'(A,F8.2,A,F5.2,A)') ' rec 194 soil organic N law (Vale 2006): Norg = ', vale_Norg, ' g N m-2 over 0-', &
+      n_min_depth_m, ' m (driver_N row 72); N_mineral_rate (row 13) NOT used.'
   END IF
   WRITE(*,'(A,F5.1,A,F4.2,A,F5.3)') ' N model: N_soil_init=', N_soil_init, &
     '  u_max_fw=', u_max_fw, '  k_remob_leaf=', k_remob_leaf_N
@@ -5628,11 +5887,11 @@ BLOCK
   ! of mode 3 needs the deck's own clay, silt and bulk density to compute the
   ! threshold water content (Olesen et al. 2001 p.93 Eq. (5)); a deck lacking all
   ! three rows cannot be run at mode 3.
-  ! Record 168: the threshold water content IS NOW COMPUTED ON EVERY DECK, and
-  ! the assignment is moved out of the mode-3 branch below. Inside that branch it
-  ! was identically zero on every released deck, which record 168 mode 1 cannot
-  ! use, since it would degrade Eq. (7a) to a threshold-free form, a third law
-  ! with no source. Moving it changes no output at record 168 = 0: every other
+  ! Record 168: the threshold water content IS COMPUTED ON EVERY DECK, outside
+  ! the mode-3 branch below. Inside that branch it would be identically zero on
+  ! every released deck, which record 168 mode 1 cannot use, since it would
+  ! degrade Eq. (7a) to a threshold-free form, a third law with no source.
+  ! Computing it here changes no output at record 168 = 0: every other
   ! reader and printer of the threshold is itself gated on record 139 at or above
   ! 3, and the mode-3 refusal below is unchanged. The 42-deck identity gate is
   ! what proves that, not this comment. Olesen et al. (2001) Soil Sci 166:89-96
@@ -5886,10 +6145,16 @@ END BLOCK
 ! rec 151: fruiting efficiency as a cultivar trait.
 gnx_floret_scale = 1.0_wp
 IF (fe_trait_mode == 1) THEN
-  IF (fruiting_efficiency < 50.0_wp .OR. fruiting_efficiency > 200.0_wp) THEN
+  ! The 50-200 range is not a hard stop. Measured deck values reach
+  ! 41 at Maricopa (Kimball et al. 2017 archive) and the Part 1 sensitivity run FE x0.8 needs < 50.
+  ! Outside the range the run continues with a warning; only a non-positive value stops.
+  IF (fruiting_efficiency <= 0.0_wp) THEN
     WRITE (*,'(A,F8.2,A)') ' ERROR rec 151: cultivar fruiting_efficiency = ', fruiting_efficiency, &
-      ' grains per g spike DW is outside the measured range 50-200 (Slafer et al. 2015 Fig. 4 p.97).'
-    ERROR STOP 'rec 151: fruiting_efficiency outside [50, 200]'
+      ' grains per g spike DW must be positive.'
+    ERROR STOP 'rec 151: fruiting_efficiency <= 0'
+  ELSE IF (fruiting_efficiency < 50.0_wp .OR. fruiting_efficiency > 200.0_wp) THEN
+    WRITE (*,'(A,F8.2,A)') ' WARNING rec 151: cultivar fruiting_efficiency = ', fruiting_efficiency, &
+      ' grains per g spike DW is outside the range 50-200 of Slafer et al. 2015 Fig. 4 p.97; run continues.'
   END IF
   gnx_floret_scale = (gnx_kern_per_fl / fruiting_efficiency) / gnx_m_floret
   WRITE (*,'(A,F7.2,A,F7.3,A,F6.3,A)') ' rec 151 FRUITING-EFFICIENCY TRAIT ON: FE = ', fruiting_efficiency, &
@@ -6369,20 +6634,55 @@ END BLOCK
 ! hydrolysis and nitrification, with no uptake and no leaching), which seeds
 ! the sowing-day ammonium and nitrate pools.
 CALL check_event_reachability(); pre_sow_N_resid = 0.0_wp   ! refusal, see SHARED.f90
+! Record 194: optional daily pre-run soil temperature and water factor (input/presow_daily.csv, comment lines
+! start with '!', then one 'T_soil_C, f_water' row per day counted back from the run start, the LAST row being the
+! day before the run). An event of age A uses the last A rows. Absent file = the constant presow pair.
+IF (soil_orgN_law == 1 .AND. org_treatments_active) THEN
+  BLOCK
+    INTEGER :: u_ps, ios_ps, n_ps
+    CHARACTER(len=256) :: l_ps
+    REAL(wp) :: t_ps, f_ps
+    OPEN (newunit=u_ps, FILE='input/presow_daily.csv', STATUS='OLD', IOSTAT=ios_ps)
+    IF (ios_ps == 0) THEN
+      ALLOCATE (presow_T_d(2000), presow_f_d(2000)); n_ps = 0
+      DO
+        READ (u_ps, '(A)', IOSTAT=ios_ps) l_ps
+        IF (ios_ps /= 0) EXIT
+        l_ps = ADJUSTL(l_ps)
+        IF (LEN_TRIM(l_ps) == 0 .OR. l_ps(1:1) == '!') CYCLE
+        READ (l_ps, *, IOSTAT=ios_ps) t_ps, f_ps
+        IF (ios_ps /= 0) ERROR STOP 'rec 194: bad row in input/presow_daily.csv'
+        n_ps = n_ps + 1
+        IF (n_ps > 2000) ERROR STOP 'rec 194: input/presow_daily.csv longer than 2000 days'
+        presow_T_d(n_ps) = t_ps; presow_f_d(n_ps) = MIN(1.0_wp, MAX(0.0_wp, f_ps))
+      END DO
+      CLOSE (u_ps); presow_n_days = n_ps
+      WRITE (*,'(A,I0,A,F6.2,A,F5.3)') ' rec 194 pre-run residue days from input/presow_daily.csv: ', n_ps, &
+        ', mean T ', SUM(presow_T_d(1:n_ps)) / MAX(1, n_ps), ' C, mean water factor ', SUM(presow_f_d(1:n_ps)) / MAX(1, n_ps)
+    END IF
+  END BLOCK
+END IF
 IF (org_treatments_active) THEN
   BLOCK
-    INTEGER :: io_i, d_ps
-    REAL(wp) :: nin, soilN0, dC, dN, rspC, nmin, imNH4, imNO3, tovN, khy, kni
+    INTEGER :: io_i, d_ps, k_ps
+    REAL(wp) :: nin, soilN0, dC, dN, rspC, nmin, imNH4, imNO3, tovN, khy, kni, t_ps, f_ps
     soilN0 = N_urea_soil + N_NH4_soil + N_soil_min + res_fast_N + res_slow_N + soil_mic_N
     DO io_i = 1, N_org_n
       IF (N_org_age(io_i) > 0) THEN
         CALL apply_residue_event(io_i, nin)
         soilN0 = soilN0 + nin                     ! residue N added pre-sowing
+        IF (presow_n_days > 0 .AND. N_org_age(io_i) > presow_n_days) &
+          ERROR STOP 'rec 194: input/presow_daily.csv has fewer days than the residue age'
         DO d_ps = 1, N_org_age(io_i)
-          CALL decompose_residue_day(presow_Tsoil, presow_fwater, dC, dN, rspC, nmin, imNH4, imNO3, tovN)
+          t_ps = presow_Tsoil; f_ps = presow_fwater
+          IF (presow_n_days > 0) THEN
+            k_ps = presow_n_days - N_org_age(io_i) + d_ps
+            t_ps = presow_T_d(k_ps); f_ps = presow_f_d(k_ps)
+          END IF
+          CALL decompose_residue_day(t_ps, f_ps, dC, dN, rspC, nmin, imNH4, imNO3, tovN)
           ! hydrolysis + nitrification at pre-season temperature (no urea pre-sowing normally, but general)
-          khy = k_hyd_ref * Q10_hyd ** ((presow_Tsoil - T_ref_hyd) / 10.0_wp)
-          kni = k_nit_ref * Q10_nit ** ((presow_Tsoil - T_ref_nit) / 10.0_wp)
+          khy = k_hyd_ref * Q10_hyd ** ((t_ps - T_ref_hyd) / 10.0_wp)
+          kni = k_nit_ref * Q10_nit ** ((t_ps - T_ref_nit) / 10.0_wp)
           BLOCK
             REAL(wp) :: dU, dNit
             dU   = MIN(N_urea_soil, MAX(0.0_wp, khy) * N_urea_soil)
@@ -6477,6 +6777,99 @@ IF (soilN_layered == 1) THEN
       NH4_lay = N_NH4_soil / REAL(NSoil_layers, wp)
     END IF
     END IF
+    ! ================================================================ !
+    ! MEASURED LAYERED INITIAL PROFILE (optional input/soilN_init_profile.csv).
+    ! When a deck carries the measured NO3/NH4 of each sampled depth interval
+    ! (e.g. the Maricopa archive sheet Init_conditions_Soil_layers, icno3/icnh4
+    ! in ppm x bulk density x thickness), each interval's mass is placed on the
+    ! model layers it overlaps, at uniform solution concentration WITHIN the
+    ! interval (weights theta x thickness x overlap fraction). The profile total
+    ! replaces driver_N rows 1 and 30 as the day-0 state; any pre-sowing
+    ! spin-up change (N_soil_min - N_soil_init) is added in proportion to the
+    ! measured profile. Below the deepest sampled interval the initial mineral N
+    ! is zero (not measured). File absent = the rules above, unchanged.
+    ! Rows: z_top_m, z_bot_m, NO3_gN_m2, NH4_gN_m2; '!' comments allowed.
+    ! ================================================================ !
+    BLOCK
+      LOGICAL  :: prof_ok
+      INTEGER  :: u_pr, ios_pr, l_pr
+      CHARACTER(LEN=512) :: ln_pr
+      REAL(wp) :: zt, zbt, no3_i, nh4_i, w_pr(NSoil_layers), ws_pr, fr_pr, zt_l, zb_l
+      REAL(wp) :: no3_p(NSoil_layers), nh4_p(NSoil_layers), d_no3, d_nh4, t_no3, t_nh4
+      INQUIRE (file='input/soilN_init_profile.csv', exist=prof_ok)
+      IF (prof_ok) THEN
+        no3_p = 0.0_wp; nh4_p = 0.0_wp
+        OPEN (newunit=u_pr, file='input/soilN_init_profile.csv', status='old', action='read')
+        DO
+          READ (u_pr,'(A)',IOSTAT=ios_pr) ln_pr
+          IF (ios_pr /= 0) EXIT
+          ln_pr = ADJUSTL(ln_pr)
+          IF (LEN_TRIM(ln_pr) == 0 .OR. ln_pr(1:1) == '!') CYCLE
+          READ (ln_pr,*,IOSTAT=ios_pr) zt, zbt, no3_i, nh4_i
+          IF (ios_pr /= 0 .OR. zbt <= zt .OR. zt < 0.0_wp .OR. no3_i < 0.0_wp .OR. nh4_i < 0.0_wp) THEN
+            WRITE (*,'(A,A)') ' ERROR soilN_init_profile.csv: bad line: ', TRIM(ln_pr)
+            ERROR STOP 'soilN_init_profile.csv: bad line'
+          END IF
+          w_pr = 0.0_wp
+          DO l_pr = 1, NSoil_layers
+            zt_l = ABS(zb(l_pr)); zb_l = ABS(zb(l_pr+1))
+            fr_pr = (MIN(zb_l, zbt) - MAX(zt_l, zt)) / MAX(1.0e-12_wp, zb_l - zt_l)
+            IF (fr_pr > 0.0_wp) w_pr(l_pr) = theta(l_pr) * tk(l_pr) * MIN(1.0_wp, fr_pr)
+          END DO
+          ws_pr = SUM(w_pr)
+          IF (ws_pr <= 1.0e-12_wp) THEN
+            WRITE (*,'(A,A)') ' ERROR soilN_init_profile.csv: interval outside the profile: ', TRIM(ln_pr)
+            ERROR STOP 'soilN_init_profile.csv: interval outside the profile'
+          END IF
+          no3_p = no3_p + no3_i * w_pr / ws_pr
+          nh4_p = nh4_p + nh4_i * w_pr / ws_pr
+        END DO
+        CLOSE (u_pr)
+        t_no3 = SUM(no3_p); t_nh4 = SUM(nh4_p)
+        d_no3 = N_soil_min - N_soil_init        ! pre-sowing spin-up change (0 without pre-sowing events)
+        d_nh4 = N_NH4_soil - N_soil_init_NH4
+        IF (t_no3 > 0.0_wp) THEN
+          NO3_lay = no3_p * (1.0_wp + d_no3 / t_no3)
+        ELSE
+          NO3_lay = no3_p
+        END IF
+        IF (t_nh4 > 0.0_wp) THEN
+          NH4_lay = nh4_p * (1.0_wp + d_nh4 / t_nh4)
+        ELSE
+          NH4_lay = nh4_p
+        END IF
+        WRITE (*,'(A,F9.4,A,F9.4,A,F9.4,A,F9.4,A)') ' soilN_init_profile.csv: MEASURED layered initial N, NO3 ', &
+          t_no3, ' + spin-up ', d_no3, ' g N m-2; NH4 ', t_nh4, ' + spin-up ', d_nh4, &
+          ' g N m-2 (replaces driver_N rows 1/30 and rec 153 placement)'
+      ELSE
+        ! PRE-SOWING SPIN-UP N ON ITS OWN SUPPORT. Mineral N released by a
+        ! pre-sowing residue event (age > 0) is produced where the residue was incorporated,
+        ! the topsoil mineralization span 0..n_min_depth_m (driver_N row 62), not over the
+        ! whole profile: the rec-153 placement above keeps only the deck's initial pool and
+        ! the positive spin-up gain goes to the span at uniform solution concentration.
+        ! A net loss (immobilization) keeps the proportional rule. Decks without a
+        ! pre-sowing event have a zero gain and are unchanged.
+        d_no3 = N_soil_min - N_soil_init
+        d_nh4 = N_NH4_soil - N_soil_init_NH4
+        IF ((d_no3 > 1.0e-9_wp .OR. d_nh4 > 1.0e-9_wp) .AND. n_min_depth_m > 0.0_wp) THEN
+          w_pr = 0.0_wp
+          DO l_pr = 1, NSoil_layers
+            zt_l = ABS(zb(l_pr)); zb_l = ABS(zb(l_pr+1))
+            fr_pr = (MIN(zb_l, n_min_depth_m) - zt_l) / MAX(1.0e-12_wp, zb_l - zt_l)
+            IF (fr_pr > 0.0_wp) w_pr(l_pr) = theta(l_pr) * tk(l_pr) * MIN(1.0_wp, fr_pr)
+          END DO
+          ws_pr = SUM(w_pr)
+          IF (ws_pr > 1.0e-12_wp) THEN
+            IF (d_no3 > 1.0e-9_wp .AND. N_soil_min > 0.0_wp) &
+              NO3_lay = NO3_lay * (N_soil_init / N_soil_min) + d_no3 * w_pr / ws_pr
+            IF (d_nh4 > 1.0e-9_wp .AND. N_NH4_soil > 0.0_wp) &
+              NH4_lay = NH4_lay * (N_soil_init_NH4 / N_NH4_soil) + d_nh4 * w_pr / ws_pr
+            WRITE (*,'(A,F9.4,A,F9.4,A,F5.2,A)') ' pre-sowing spin-up gain NO3 ', MAX(0.0_wp, d_no3), &
+              ' NH4 ', MAX(0.0_wp, d_nh4), ' g N m-2 placed on 0-', n_min_depth_m, ' m (topsoil span)'
+          END IF
+        END IF
+      END IF
+    END BLOCK
     ! Mirrors: force exact aggregate identity from the start.
     N_soil_min = SUM(NO3_lay)
     N_NH4_soil = SUM(NH4_lay)
@@ -6687,7 +7080,7 @@ END IF
 rfl_open = (root_front_law >= 1)
 IF (rfl_open) THEN
   OPEN (newunit=unit_rfl,file='output/daily_root_front.csv',status='replace',action='write')
-  WRITE (unit_rfl,'(A)') 'day,dvs2,days_emerged,r_z_mm_d,z_legacy_m,z_root_m,z_max_m'
+  WRITE (unit_rfl,'(A)') 'day,dvs2,days_emerged,r_z_mm_d,z_baseline_m,z_root_m,z_max_m'
 END IF
 rsf_open = (repro_surplus_fate == 1)
 IF (rsf_open) THEN
@@ -7248,6 +7641,7 @@ DO iD = 1, NDays
   !    The development stage used is the current (previous-day) phenology state,
   !    so the descent runs on the development clock and not on the calendar day.
   ! -------------------------------------------------------------------------- !
+  IF (iD >= iD_sowing) rfl_tsum = rfl_tsum + MAX(0.0_wp, 0.5_wp * (Tmax_d(iD) + Tmin_d(iD)))   ! rec 124 = 4 clock
   CALL update_root_depth(calc_dev_stage_0_2(phen_params, phen_state), root_max_depth, depth_lim, root_dep)
 
   ! -------------------------------------------------------------------------- !
@@ -7318,18 +7712,33 @@ END DO
   spac_psi_s_conv = 0.0_wp; spac_psi_s_fallback = 0; spac_psi_s_valid = 0; spac_psi_s_MPa = 0.0_wp
   spac_calls_day = 0; spac_iters_max_day = 0; spac_resid_max_day = 0.0_wp
   spac_pass_on = .TRUE.
+  spac_K_L = spac_K_plant; spac_G_soil = 0.0_wp   ! rec 81 mode 4 overwrites both below
   IF (h_committed_vec_valid) THEN
     BLOCK
-      REAL(wp) :: w_spac(NSoil_layers), ws_spac
-      LOGICAL  :: conv_ok(3)
+      REAL(wp) :: w_spac(NSoil_layers), ws_spac, lv_j, rs_j, kmol_j
+      LOGICAL  :: conv_ok(4)
       INTEGER  :: kconv, jl
+      REAL(wp), PARAMETER :: pi_spac = 3.14159265358979_wp
       conv_ok = .FALSE.
-      DO kconv = 1, 3
+      DO kconv = 1, 4
         DO jl = 1, NSoil_layers
           SELECT CASE (kconv)
           CASE (1); w_spac(jl) = hydro_root_dist_diag(jl)
           CASE (2); w_spac(jl) = hydro_root_dist_diag(jl) * hydro_alpha_diag(jl)
           CASE (3); w_spac(jl) = hydro_root_dist_diag(jl) * k_committed_m_d(jl) / MAX(1.0e-30_wp, k_s(jl))
+          CASE (4)
+            ! Gardner (1960) soil-to-root conductance g_i = 1/R_sr,i of Duursma & Medlyn
+            ! (2012) Eq. 22 (SHARED.f90, spac_K_L): L_v from the model's root mass and
+            ! SRL, r_s = (pi L_v)^-1/2, K in mol m-1 s-1 MPa-1. A layer without roots,
+            ! or one so sparse that r_s <= r_r is impossible, carries no conductance.
+            w_spac(jl) = 0.0_wp
+            lv_j = W_root * MAX(0.0_wp, hydro_root_dist_diag(jl)) * nud_SRL / MAX(tk(jl), 1.0e-6_wp)
+            IF (lv_j > 0.0_wp) THEN
+              rs_j = 1.0_wp / SQRT(pi_spac * lv_j)
+              kmol_j = k_committed_m_d(jl) / 86400.0_wp / spac_rho_g * (1.0e6_wp / 18.015_wp)
+              IF (rs_j > r_root_wheat) w_spac(jl) = 2.0_wp * pi_spac * lv_j * tk(jl) * kmol_j &
+                                                    / LOG(rs_j / r_root_wheat)
+            END IF
           END SELECT
         END DO
         ws_spac = SUM(w_spac)
@@ -7339,7 +7748,35 @@ END DO
         END IF
       END DO
       IF (conv_ok(1)) spac_psi_s_valid = 1
-      IF (spac_mode >= 1 .AND. spac_psi_s_valid == 1) THEN
+      ! Mode 4: G = SUM g_i, here the sum of the CASE (4) weights of the last pass of
+      ! the loop above, and k_L = 1/(1/K_plant + LAI/G), Duursma & Medlyn Eq. 23.
+      IF (spac_mode == 4 .AND. conv_ok(4)) THEN
+        spac_G_soil = ws_spac
+        IF (lai_growth_diag > 0.0_wp) spac_K_L = 1.0_wp / (1.0_wp / spac_K_plant + lai_growth_diag / spac_G_soil)
+      END IF
+      ! Mode 5: the day's layer conductances g_i = 1/(R_sr,i + R_rad,i) and potentials
+      ! on the committed state (SHARED.f90, spac_layer_g); the potential the leaf
+      ! starts from is psi_R at zero flow, the wettest rooted layer. With no root
+      ! conductance anywhere the mode-1 potential stands in, flagged.
+      IF (spac_mode >= 5 .AND. spac_psi_s_valid == 1) THEN      ! modes 5 and 6 (mode 6: root term per root surface, SHARED.f90)
+        spac_lai = MAX(0.0_wp, lai_growth_diag)
+        spac_K_shoot = 1.0_wp / (1.0_wp / spac_K_plant - 1.0_wp / spac_K_rootL)
+        DO jl = 1, NSoil_layers
+          spac_g_lay(jl) = spac_layer_g(MAX(0.0_wp, hydro_root_dist_diag(jl)), &
+                                        W_root * MAX(0.0_wp, hydro_root_dist_diag(jl)) * nud_SRL, &
+                                        tk(jl), k_committed_m_d(jl))
+          spac_psi_lay(jl) = spac_rho_g * h_committed_m(jl)
+        END DO
+        spac_G_soil = SUM(spac_g_lay)
+        IF (spac_G_soil > 0.0_wp) THEN
+          spac_psi_s_MPa = spac_root_psi(NSoil_layers, spac_g_lay, spac_psi_lay, 0.0_wp)
+        ELSE
+          ! one layer at the mode-1 potential with a conductance far above the plant's
+          ! (1e3 vs ~0.1 mol m-2 s-1 MPa-1), so that psi_L = psi_s - E/K_shoot
+          spac_g_lay = 0.0_wp; spac_psi_lay = spac_psi_s_conv(1); spac_g_lay(1) = 1.0e3_wp
+          spac_psi_s_MPa = spac_psi_s_conv(1); spac_psi_s_fallback = 1
+        END IF
+      ELSE IF (spac_mode >= 1 .AND. spac_psi_s_valid == 1) THEN
         IF (conv_ok(spac_mode)) THEN
           spac_psi_s_MPa = spac_psi_s_conv(spac_mode)
         ELSE
@@ -8463,6 +8900,21 @@ END DO
 
   VPD_day = VPD_day / 24.0_wp; T_leaf_day = T_leaf_day / 24.0_wp; T_air_day = T_air_day / 24.0_wp
   T_soil_day = T_soil_day / 24.0_wp
+  T_nspan_day = T_soil_day
+  IF (tsoil_prof_day_ok .AND. n_min_depth_m > 0.0_wp) THEN
+    BLOCK
+      REAL(wp) :: zt_t, ov_t, ows_t, tw_t
+      INTEGER  :: iLt
+      zt_t = 0.0_wp; ows_t = 0.0_wp; tw_t = 0.0_wp
+      DO iLt = 1, NSoil_layers
+        ov_t = MAX(0.0_wp, MIN(zt_t + tk(iLt), n_min_depth_m) - zt_t)
+        tw_t = tw_t + Tsoil_prof_day(iLt) * ov_t; ows_t = ows_t + ov_t
+        zt_t = zt_t + tk(iLt)
+        IF (zt_t >= n_min_depth_m) EXIT
+      END DO
+      IF (ows_t > 1.0e-9_wp) T_nspan_day = tw_t / ows_t
+    END BLOCK
+  END IF
   ! Post-emergence development runs on the COMMITTED CANOPY temperature daily
   ! mean - the quantity validated against the infrared measurements, with a
   ! six-date mean bias of 0.03-0.10 K - and not on air temperature. The basis is
@@ -8655,6 +9107,7 @@ END DO
     An_growth_day = An_day
     N_assim_biochem_day = MAX(0.0_wp, N_day)
   dvs2_growth = calc_dev_stage_0_2(phen_params, phen_state)
+  tfd_dvs2_prev = dvs2_growth   ! rec 196: read by tomorrow's ledger and spike demand
   dvs2_rate_growth = calc_dev_stage_rate_0_2(phen_params, phen_state)
   ! The days-after-anthesis counter for the living-root capacity decline (Zheng
   ! et al. 2022 Front Plant Sci 12:814658 Tables 2-3; the development stage 1
@@ -8745,6 +9198,73 @@ END DO
   ! the availability timing follows the fertilizer type and the soil conditions
   ! the deck specifies in that file.
   ! -------------------------------------------------------------------- !
+  ! MEASURED MINERAL-N STATE ON ITS OWN DATE (optional input/soilN_measured_state.csv).
+  ! A soil mineral-N measurement (NO3 + NH4, g N m-2) over a sampled depth span is an
+  ! initial condition for the day it was taken, not for the run start. On that model
+  ! day, before any flux, the NO3 and NH4 of the layers in the span (overlap fraction
+  ! for straddling layers) are rescaled by one common factor so that their sum equals
+  ! the measurement; layers outside the span are untouched. The change is applied
+  ! before the closure snapshot, so the daily ledger stays closed, and is reported.
+  ! Rows: model_day, z_top_m, z_bot_m, Nmin_gN_m2; '!' comments allowed. File absent
+  ! = nothing happens. Requires the layered soil-N state (driver_N soilN_layered = 1).
+  ! -------------------------------------------------------------------- !
+  IF (msr_n < 0) THEN
+    BLOCK
+      LOGICAL :: ex_m
+      INTEGER :: u_m, ios_m
+      CHARACTER(LEN=512) :: ln_m
+      msr_n = 0
+      INQUIRE (file='input/soilN_measured_state.csv', exist=ex_m)
+      IF (ex_m) THEN
+        OPEN (newunit=u_m, file='input/soilN_measured_state.csv', status='old', action='read')
+        DO
+          READ (u_m,'(A)',IOSTAT=ios_m) ln_m
+          IF (ios_m /= 0) EXIT
+          ln_m = ADJUSTL(ln_m)
+          IF (LEN_TRIM(ln_m) == 0 .OR. ln_m(1:1) == '!') CYCLE
+          IF (msr_n >= SIZE(msr_day)) ERROR STOP 'soilN_measured_state.csv: more than 16 rows'
+          msr_n = msr_n + 1
+          READ (ln_m,*,IOSTAT=ios_m) msr_day(msr_n), msr_zt(msr_n), msr_zb(msr_n), msr_nmin(msr_n)
+          IF (ios_m /= 0 .OR. msr_zb(msr_n) <= msr_zt(msr_n) .OR. msr_nmin(msr_n) < 0.0_wp .OR. &
+              soilN_layered /= 1) THEN
+            WRITE (*,'(A,A)') ' ERROR soilN_measured_state.csv (needs soilN_layered = 1): bad line: ', TRIM(ln_m)
+            ERROR STOP 'soilN_measured_state.csv: bad line'
+          END IF
+        END DO
+        CLOSE (u_m)
+        WRITE (*,'(A,I0,A)') ' soilN_measured_state.csv: ', msr_n, ' dated measured mineral-N state(s) read'
+      END IF
+    END BLOCK
+  END IF
+  IF (msr_n > 0) THEN
+    BLOCK
+      INTEGER  :: k_m, l_m
+      REAL(wp) :: fr_m(NSoil_layers), cur_m, fac_m, zt_l, zb_l, dlt_m
+      DO k_m = 1, msr_n
+        IF (iD /= msr_day(k_m)) CYCLE
+        DO l_m = 1, NSoil_layers
+          zt_l = ABS(zb(l_m)); zb_l = ABS(zb(l_m+1))
+          fr_m(l_m) = MIN(1.0_wp, MAX(0.0_wp, (MIN(zb_l, msr_zb(k_m)) - MAX(zt_l, msr_zt(k_m))) / &
+                      MAX(1.0e-12_wp, zb_l - zt_l)))
+        END DO
+        cur_m = SUM(fr_m * (NO3_lay + NH4_lay))
+        IF (cur_m > 1.0e-12_wp) THEN
+          fac_m = msr_nmin(k_m) / cur_m
+          NO3_lay = NO3_lay * (1.0_wp + fr_m * (fac_m - 1.0_wp))
+          NH4_lay = NH4_lay * (1.0_wp + fr_m * (fac_m - 1.0_wp))
+        ELSE
+          ! empty span: place the measurement at uniform solution concentration within it
+          NO3_lay = NO3_lay + msr_nmin(k_m) * fr_m * theta * tk / MAX(1.0e-12_wp, SUM(fr_m * theta * tk))
+        END IF
+        dlt_m = msr_nmin(k_m) - cur_m
+        msr_delta_cum = msr_delta_cum + dlt_m
+        N_soil_min = SUM(NO3_lay); N_NH4_soil = SUM(NH4_lay)
+        WRITE (*,'(A,I0,A,F5.2,A,F5.2,A,F9.4,A,F9.4,A,F9.4,A)') ' soilN_measured_state: day ', iD, ' span ', &
+          msr_zt(k_m), '-', msr_zb(k_m), ' m: model ', cur_m, ' -> measured ', msr_nmin(k_m), &
+          ' g N m-2 (change ', dlt_m, ')'
+      END DO
+    END BLOCK
+  END IF
   ! Soil nitrogen (urea, ammonium, nitrate, residue and microbial) before today
   ! external inputs, for the closure.
   soilN_before_day = N_urea_soil + N_NH4_soil + TAN_surf + N_soil_min + res_fast_N + res_slow_N + soil_mic_N
@@ -8755,6 +9275,7 @@ END DO
   ! residual instead of hiding in it. Under record 93 = 0 the sum is the same as
   ! the line above.
   IF (soil_n_mech >= 1) soilN_before_day = soilN_before_day + NHUM_soil
+  IF (rhizo_immob == 1) soilN_before_day = soilN_before_day + rhz_Norg   ! rec 197 pool
   N_hydrolysis_day = 0.0_wp; N_nitrification_day = 0.0_wp
   decomp_C_day = 0.0_wp; decomp_N_day = 0.0_wp; respired_C_day = 0.0_wp
   net_min_NH4_day = 0.0_wp; immob_NH4_day = 0.0_wp; immob_NO3_day = 0.0_wp
@@ -8767,6 +9288,8 @@ END DO
   DO I_fert = 1, N_fert_n_apps
     IF (iD == N_fert_DAS_arr(I_fert) + iD_sowing .AND. N_fert_applied < I_fert) THEN
       N_urea_soil = N_urea_soil + N_fert_N_arr(I_fert) * N_fert_furea_arr(I_fert)
+      ! rec 190: urea is placed in layer 1 and moved by water from there (scalar kept as the mirror).
+      IF (urea_transport == 1) urea_lay(1) = urea_lay(1) + N_fert_N_arr(I_fert) * N_fert_furea_arr(I_fert)
       ! Surface-applied ammonium-form fertilizer enters the SURFACE ammoniacal pool,
       ! the emission layer, and not the bulk pool, because ammonia volatilization is
       ! a surface process (Sommer et al. 2004 Adv Agron 82:557, sec. III.B).
@@ -8859,6 +9382,47 @@ END DO
       humus_min_total = humus_min_total + humus_min_day
     END BLOCK
     N_mineral_day = humus_min_day
+  ELSE IF (soil_orgN_law == 1) THEN
+    ! Record 194 (SHARED.f90): Vale (2006) measured law over the mineralization depth. The pool is uniform over
+    ! 0..n_min_depth_m, so the profile sum is k_ref f(T) Norg times the thickness-weighted mean of g(theta).
+    BLOCK
+      REAL(wp) :: zt_v, ov_v, ovs_v, hw_v, pf_v, tk_v
+      INTEGER  :: iLv
+      tk_v = MIN(T_nspan_day, vale_T_max_c) + 273.15_wp
+      vale_fT_day = EXP(vale_Ea / R_gas_vale * (1.0_wp / vale_Tref_K - 1.0_wp / tk_v))
+      zt_v = 0.0_wp; ovs_v = 0.0_wp; hw_v = 0.0_wp
+      DO iLv = 1, NSoil_layers
+        ov_v = MAX(0.0_wp, MIN(zt_v + tk(iLv), n_min_depth_m) - zt_v)
+        IF (ov_v > 0.0_wp) THEN
+          ! Vale 2006 Eqs 9-10 p.31-32: the linear water function his 55-field k_ref was computed with
+          ! (p.103: "nouvelle fonction temperature et ancienne fonction humidite (lineaire)"):
+          ! g = 1 at theta >= theta_CC, 0 at theta <= theta_0, linear between, with
+          ! theta_0 = theta_CC - (theta_CC - theta_PF)/(1 - gPF), gPF = 0.20 (Rodrigo et al. 1997, FLAGGED:
+          ! a normalization convention; Vale's own incubations give 0.51-0.60 at wilting). theta_CC = the
+          ! layer's pF 2.5 water content (Vale: field capacity at pF 2.2-2.7), theta_PF = pF 4.2.
+          pf_v = theta_33(iLv) - (theta_33(iLv) - theta_1500(iLv)) / (1.0_wp - vale_gPF)   ! theta_0
+          hw_v  = hw_v + MIN(1.0_wp, MAX(0.0_wp, (theta(iLv) - pf_v) / MAX(1.0e-9_wp, theta_33(iLv) - pf_v))) * ov_v
+          ovs_v = ovs_v + ov_v
+        END IF
+        zt_v = zt_v + tk(iLv)
+        IF (zt_v >= n_min_depth_m) EXIT
+      END DO
+      vale_h_day = 1.0_wp
+      IF (ovs_v > 1.0e-9_wp) vale_h_day = hw_v / ovs_v
+      IF (min_water_unity == 1) vale_h_day = 1.0_wp   ! rec 198 diagnostic
+      vale_min_day = MIN(vale_Norg, vale_k_ref * vale_fT_day * vale_h_day * vale_Norg)
+      vale_Norg    = vale_Norg - vale_min_day
+      vale_min_cum = vale_min_cum + vale_min_day
+      IF (.NOT. vale_open) THEN
+        vale_open = .TRUE.
+        OPEN (newunit=unit_vale, file='output/daily_soilN_drivers.csv', status='replace', action='write')
+        WRITE (unit_vale,'(A)') 'day,T_soil_surface_C,T_mineralizing_span_C,fT_vale,h_moist_vale,' // &
+          'Norg_gN_m2,mineralized_day_gN_m2,mineralized_cum_gN_m2'
+      END IF
+      WRITE (unit_vale,'(I0,7(",",G14.6))') iD, T_soil_day, T_nspan_day, vale_fT_day, vale_h_day, &
+        vale_Norg, vale_min_day, vale_min_cum
+    END BLOCK
+    N_mineral_day = vale_min_day
   ELSE
   N_mineral_day = N_mineral_rate
   END IF
@@ -8888,6 +9452,47 @@ END DO
     END BLOCK
   ELSE
   N_NH4_soil = N_NH4_soil + N_mineral_day
+  END IF
+
+  ! (2a') Record 197 (SHARED.f90): crop-driven microbial immobilization on rhizodeposit carbon, drawn from the
+  !       rooted layers (0..max(0.1 m, root_dep), as for uptake), NH4 first, then NO3, each in proportion to the
+  !       layer pools. The N goes to rhz_Norg and is not released within the season.
+  rhz_imm_day = 0.0_wp; rhz_dem_day = 0.0_wp
+  IF (rhizo_immob == 1) THEN
+    BLOCK
+      REAL(wp) :: zt_r, ovf(NSoil_layers), nh4_rz, no3_rz, take_a, take_o
+      INTEGER  :: iLr
+      rhz_dem_day = rhz_r_rd * MAX(0.0_wp, mnp_dw_root_day) * rhz_c_frac * rhz_y_mic / rhz_CN_mic
+      IF (rhz_dem_day > 0.0_wp) THEN
+        zt_r = 0.0_wp; ovf = 0.0_wp; nh4_rz = 0.0_wp; no3_rz = 0.0_wp
+        DO iLr = 1, NSoil_layers
+          ovf(iLr) = MAX(0.0_wp, MIN(zt_r + tk(iLr), MAX(0.1_wp, root_dep)) - zt_r) / tk(iLr)
+          nh4_rz = nh4_rz + NH4_lay(iLr) * ovf(iLr)
+          no3_rz = no3_rz + NO3_lay(iLr) * ovf(iLr)
+          zt_r = zt_r + tk(iLr)
+        END DO
+        take_a = MIN(rhz_dem_day, nh4_rz)
+        take_o = MIN(rhz_dem_day - take_a, no3_rz)
+        DO iLr = 1, NSoil_layers
+          IF (ovf(iLr) <= 0.0_wp) CYCLE
+          IF (nh4_rz > 0.0_wp) NH4_lay(iLr) = NH4_lay(iLr) - take_a * NH4_lay(iLr) * ovf(iLr) / nh4_rz
+          IF (no3_rz > 0.0_wp) NO3_lay(iLr) = NO3_lay(iLr) - take_o * NO3_lay(iLr) * ovf(iLr) / no3_rz
+        END DO
+        N_NH4_soil = SUM(NH4_lay); N_soil_min = SUM(NO3_lay)   ! aggregate mirrors
+        rhz_imm_day = take_a + take_o
+        rhz_Norg = rhz_Norg + rhz_imm_day
+        rhz_imm_NH4_cum = rhz_imm_NH4_cum + take_a
+        rhz_imm_NO3_cum = rhz_imm_NO3_cum + take_o
+      END IF
+      IF (.NOT. rhz_open) THEN
+        rhz_open = .TRUE.
+        OPEN (newunit=unit_rhz, file='output/daily_rhizo_immob.csv', status='replace', action='write')
+        WRITE (unit_rhz,'(A)') 'day,root_depth_m,dw_root_prevday_gDM_m2,N_demand_gN_m2,N_immob_gN_m2,' // &
+          'immob_cum_gN_m2,from_NH4_cum_gN_m2,from_NO3_cum_gN_m2'
+      END IF
+      WRITE (unit_rhz,'(I0,7(",",G14.6))') iD, root_dep, mnp_dw_root_day, rhz_dem_day, rhz_imm_day, &
+        rhz_Norg, rhz_imm_NH4_cum, rhz_imm_NO3_cum
+    END BLOCK
   END IF
 
   ! (2b) Organic residue treatments. In-season events are added on their day
@@ -8924,7 +9529,8 @@ END DO
       BLOCK
         REAL(wp) :: nh4_b, no3_b, d_nh4, d_no3, ssum
         nh4_b = N_NH4_soil; no3_b = N_soil_min
-        CALL decompose_residue_day(T_soil_day, MIN(1.0_wp, vwc_root / MAX(1.0e-6_wp, theta_ref_dec)), &
+        CALL decompose_residue_day(T_nspan_day, &
+          MERGE(vale_h_day, MIN(1.0_wp, vwc_root / MAX(1.0e-6_wp, theta_ref_dec)), soil_orgN_law == 1), &
           decomp_C_day, decomp_N_day, respired_C_day, net_min_NH4_day, immob_NH4_day, immob_NO3_day, turnover_N_day)
         d_nh4 = N_NH4_soil - nh4_b; d_no3 = N_soil_min - no3_b
         IF (d_nh4 >= 0.0_wp) THEN
@@ -8941,7 +9547,8 @@ END DO
         END IF
       END BLOCK
     ELSE
-    CALL decompose_residue_day(T_soil_day, MIN(1.0_wp, vwc_root / MAX(1.0e-6_wp, theta_ref_dec)), &
+    CALL decompose_residue_day(T_nspan_day, &
+          MERGE(vale_h_day, MIN(1.0_wp, vwc_root / MAX(1.0e-6_wp, theta_ref_dec)), soil_orgN_law == 1), &
       decomp_C_day, decomp_N_day, respired_C_day, net_min_NH4_day, immob_NH4_day, immob_NO3_day, turnover_N_day)
     END IF
   END IF
@@ -8955,10 +9562,32 @@ END DO
   !     Stanford & Smith (1972).
   BLOCK
     REAL(wp) :: k_hyd, k_nit
-    k_hyd = k_hyd_ref * Q10_hyd ** ((T_soil_day - T_ref_hyd) / 10.0_wp)
-    k_nit = k_nit_ref * Q10_nit ** ((T_soil_day - T_ref_nit) / 10.0_wp)
+    k_hyd = k_hyd_ref * Q10_hyd ** ((T_nspan_day - T_ref_hyd) / 10.0_wp)
+    k_nit = k_nit_ref * Q10_nit ** ((T_nspan_day - T_ref_nit) / 10.0_wp)
+    IF (urea_transport == 1) THEN
+      ! rec 190: hydrolysis in the layer the urea has reached, same rate law. Layer 1
+      ! feeds the surface ammoniacal pool (volatilization path unchanged, below);
+      ! deeper layers feed that layer's ammonium directly.
+      BLOCK
+        REAL(wp) :: dU_l
+        INTEGER  :: iLh
+        N_hydrolysis_day = 0.0_wp
+        DO iLh = 1, NSoil_layers
+          dU_l = MIN(urea_lay(iLh), MAX(0.0_wp, k_hyd) * urea_lay(iLh))
+          urea_lay(iLh) = urea_lay(iLh) - dU_l
+          IF (iLh == 1) THEN
+            N_hydrolysis_day = N_hydrolysis_day + dU_l
+          ELSE
+            NH4_lay(iLh) = NH4_lay(iLh) + dU_l
+            N_NH4_soil = N_NH4_soil + dU_l
+          END IF
+        END DO
+        N_urea_soil = SUM(urea_lay)
+      END BLOCK
+    ELSE
     N_hydrolysis_day    = MIN(N_urea_soil, MAX(0.0_wp, k_hyd) * N_urea_soil)
     N_urea_soil = N_urea_soil - N_hydrolysis_day
+    END IF
     ! Hydrolysis of surface-applied urea feeds the SURFACE ammoniacal pool, the
     ! emission layer, and not the bulk pool. In layered mode the routing is
     ! identical, urea being layer-1 only by design, which preserves the
@@ -9279,6 +9908,7 @@ END DO
         ! same above-ground basis as AGB_kg_m2 above.
         g_nmax_shoot = MAX(0.0_wp, (Nc_pct / 100.0_wp) * (W_green + W_dead + W_dead_stem + W_stem + &
                   MERGE(W_grain + W_chaff, W_storage, gnf_critN_basis)) - n_shoot)
+        nup_droot_day = 0.0_wp   ! rec 187: set to d_root below on pre-anthesis days; read by no statement when OFF
         IF (dvs2_growth < 1.0_wp) THEN
           ! The leaf share of the prospective demand is bounded by the remaining
           ! leaf-nitrogen holding capacity, as coded:
@@ -9316,6 +9946,7 @@ END DO
                       + MAX(0.0_wp, MERGE(n2_chaff_nmax, n4_stem_nmax, grainN_partition == 1) &
                                     * W_chaff - N_chaff)
           d_root = phen_params%init_rootN_frac * n5_dwroot_prev
+          nup_droot_day = d_root
           veg_N_demand_day = d_growth + d_reservoir + d_root
           ! ================================================================ !
           ! Record 176 at or above 2: THE PRE-ANTHESIS DEMAND GAINS ITS STOCK-DEFICIT
@@ -9401,6 +10032,13 @@ END DO
           END IF
           veg_N_demand_day = d_leaf_maint
           grain_N_demand_postanth_day = n4_grain_deficit_prev
+          ! rec 195: with a source-limited grain the post-anthesis uptake demand is the critical-N flux of
+          ! the crop's own dry-matter growth, U_c = Nc'(W) dW/dt with Nc = 5.35 W^-0.442 % (Justes et al. 1994
+          ! Ann Bot 74:397, Eq. p.402; marginal form (1-b) a W^-b; W floored at 1.55 t ha-1; beyond 12 t ha-1
+          ! EXTRAPOLATED, flagged). Observed at Braunschweig N3 2015: post-anthesis uptake 0.209 vs U_c 0.212
+          ! g N m-2 d-1 . The grain is fed from the mobile pool (FPB Eq. 11).
+          IF (grain_n_source_phase == 1) grain_N_demand_postanth_day = 5.35_wp * (1.0_wp - 0.442_wp) * &
+            MAX(AGB_kg_m2, 1.55_wp)**(-0.442_wp) * 0.01_wp * r195_dagb
           N_demand_day = MIN(veg_N_demand_day + grain_N_demand_postanth_day, g_nmax_shoot)
         END IF
         ! ================================================================ !
@@ -9514,14 +10152,31 @@ END DO
         F_if = q_iface_day_mm(iLu) * dt_adv * c_up
         NO3_lay(iLu)   = NO3_lay(iLu)   - F_if
         NO3_lay(iLu+1) = NO3_lay(iLu+1) + F_if
+        IF (urea_transport == 1) THEN
+          ! rec 190: urea, uncharged and unsorbed, moves with the same water as nitrate
+          IF (q_iface_day_mm(iLu) >= 0.0_wp) THEN
+            c_up = urea_lay(iLu)   / w_lay(iLu)
+          ELSE
+            c_up = urea_lay(iLu+1) / w_lay(iLu+1)
+          END IF
+          F_if = q_iface_day_mm(iLu) * dt_adv * c_up
+          urea_lay(iLu)   = urea_lay(iLu)   - F_if
+          urea_lay(iLu+1) = urea_lay(iLu+1) + F_if
+        END IF
       END DO
       IF (q_iface_day_mm(NSoil_layers) > 0.0_wp) THEN
         F_if = q_iface_day_mm(NSoil_layers) * dt_adv * NO3_lay(NSoil_layers) / w_lay(NSoil_layers)
         F_if = MIN(F_if, NO3_lay(NSoil_layers))
         NO3_lay(NSoil_layers) = NO3_lay(NSoil_layers) - F_if
         N_leach_d = N_leach_d + F_if                 ! bottom export = leaching
+        IF (urea_transport == 1) THEN
+          F_if = MIN(urea_lay(NSoil_layers), q_iface_day_mm(NSoil_layers) * dt_adv * urea_lay(NSoil_layers) / w_lay(NSoil_layers))
+          urea_lay(NSoil_layers) = urea_lay(NSoil_layers) - F_if
+          N_leach_d = N_leach_d + F_if               ! rec 190: urea leached below the profile
+        END IF
       END IF
     END DO
+    IF (urea_transport == 1) N_urea_soil = SUM(urea_lay)   ! rec 190: aggregate mirror
     ! ---- (c) per-layer uptake ---- !
     U_act_NO3_day = 0.0_wp; U_act_NH4_day = 0.0_wp
     N_uptake_massflow_day = 0.0_wp; N_uptake_active_day = 0.0_wp
@@ -9551,6 +10206,15 @@ END DO
     w_shoot_tha = (W_green + W_dead + W_dead_stem + W_stem + &
               MERGE(W_grain + W_chaff, W_storage, gnf_critN_basis)) / 100.0_wp
     n_shoot_up  = N_leaf + N_dead_leaf + N_stem + N_storage
+    ! Record 187: the plant-N status that feeds back on the transporters counts the
+    ! shoot NITRATE store too. The dilution curves are TOTAL shoot N, and the measured
+    ! feedback acts through tissue nitrate as well as its assimilation products
+    ! (Siddiqi et al. 1990 Plant Physiol 93:1426, Figs 5-6; Vidmar et al. 2000 Plant
+    ! Physiol 123:307). Under record 187 the store is no longer kept near zero by the
+    ! demand gate, so leaving it out would blind both the feedback and the cap.
+    IF (preanth_supply_uptake == 1) n_shoot_up = n_shoot_up + MAX(0.0_wp, N_NO3_shoot)
+    ! Record 191: the mobile reduced store is shoot N too (SHARED.f90).
+    IF (organ_n_storage_basis == 1) n_shoot_up = n_shoot_up + MAX(0.0_wp, N_mobile_veg)
     nni_up = 0.0_wp
     IF (w_shoot_tha > 1.0e-6_wp) THEN
       IF (w_shoot_tha <= 1.55_wp) THEN
@@ -9651,8 +10315,41 @@ END DO
       ! below 2 or the delivery is not the binding constraint.
         act_no3_eff(iLu) = act_no3(iLu)
         act_nh4_eff(iLu) = act_nh4(iLu)
+        IF (n_delivery_series_bound == 1) THEN
+          ! Record 188: transport to the root surface and membrane uptake in SERIES.
+          ! The transporters absorb at most what mass flow and diffusion deliver, so
+          ! the layer supply is MIN(pool, MIN(active, delivery)) (SHARED.f90).
+          act_no3_eff(iLu) = MIN(act_no3(iLu), mf_no3(iLu) + diff_no3(iLu))
+          act_nh4_eff(iLu) = MIN(act_nh4(iLu), mf_nh4(iLu) + diff_nh4(iLu))
+          p_no3(iLu) = MIN(MAX(0.0_wp, NO3_lay(iLu)), act_no3_eff(iLu))
+          p_nh4(iLu) = MIN(MAX(0.0_wp, NH4_lay(iLu)), act_nh4_eff(iLu))
+        ELSE
         p_no3(iLu) = MIN(MAX(0.0_wp, NO3_lay(iLu)), act_no3_eff(iLu) + mf_no3(iLu) + diff_no3(iLu))
         p_nh4(iLu) = MIN(MAX(0.0_wp, NH4_lay(iLu)), act_nh4_eff(iLu) + mf_nh4(iLu) + diff_nh4(iLu))
+        END IF
+        IF (n_radial_uptake == 1) THEN
+          ! Record 189: the layer supply is the radial root-surface solve
+          ! (NITROGEN_RADIAL_MODULE): transporters on the root and hair surface
+          ! at the local solution concentration, fed by diffusion and mass flow.
+          ! The whole uptake passes the transporters, so it is booked as active;
+          ! the mass-flow and diffusion terms above stay diagnostics only.
+          BLOCK
+            REAL(wp) :: nr_Lv, nr_T, nr_bnh4
+            nr_Lv   = W_root * MAX(fr_lay(iLu), 0.0_wp) * nud_SRL / MAX(tk(iLu), 1.0e-6_wp)
+            nr_T    = t_leaf_growth_mean
+            IF (ALLOCATED(Tsoil_prof)) nr_T = Tsoil_prof(iLu)
+            IF (nud_bulk_density <= 0.0_wp) ERROR STOP 'rec 189 needs the measured bulk density (driver_N.csv position 70)'
+            IF (nud_clay_frac < 0.0_wp .OR. nud_silt_frac < 0.0_wp) ERROR STOP 'rec 189 needs clay and silt fractions (driver_N.csv rows 68-69) for theta_th'
+            nr_bnh4 = theta(iLu) + nud_bulk_density * Kd_NH4   ! Mg m-3 x L kg-1 = m3 m-3
+            CALL nrad_layer_day(iLu, theta(iLu), tk(iLu), nr_T, nr_Lv, rootup_layer_day_mm(iLu), &
+                                NO3_lay(iLu), NH4_lay(iLu), u_max_dw * f_Nstatus * a_root, &
+                                u_max_nh4_dw * f_Nstatus * a_root, Km_c_no3, Km_nh4, nr_bnh4, &
+                                p_no3(iLu), p_nh4(iLu))
+          END BLOCK
+          act_no3_eff(iLu) = p_no3(iLu) ; act_nh4_eff(iLu) = p_nh4(iLu)
+          mf_no3(iLu) = 0.0_wp ; mf_nh4(iLu) = 0.0_wp
+          diff_no3(iLu) = 0.0_wp ; diff_nh4(iLu) = 0.0_wp
+        END IF
         nud_bound_lay(iLu) = 0
       U_pot_sum = U_pot_sum + p_no3(iLu) + p_nh4(iLu)
       S_active_pot_day   = S_active_pot_day   + act_no3(iLu) + act_nh4(iLu)
@@ -9692,11 +10389,34 @@ END DO
       IF (pur_gain_day > 1.0e-12_wp) pur_days_bind = pur_days_bind + 1
     ELSE
     IF (DVS > 0) U_pot = MIN(N_demand_day, U_pot_sum)
+    ! Record 187: before anthesis the potential is the soil supply itself (already
+    ! scaled by the measured f_Nstatus feedback), capped by the maximum-curve shoot
+    ! stock gap plus the root structural demand; no demand x E_N gate (SHARED.f90).
+    ! The stock gap counts the shoot nitrate store as shoot N (the dilution curves are
+    ! total shoot N): nur_cap_nmax_day excludes it, so it is subtracted here.
+    IF (preanth_supply_uptake == 1 .AND. DVS > 0 .AND. dvs2_growth < 1.0_wp) THEN
+      BLOCK
+        REAL(wp) :: nup_cap
+        nup_cap = MAX(0.0_wp, nur_cap_nmax_day - MAX(0.0_wp, N_NO3_shoot)) + nup_droot_day
+        ! Record 191: the mobile reduced store is shoot N as well.
+        IF (organ_n_storage_basis == 1) nup_cap = MAX(0.0_wp, nur_cap_nmax_day - MAX(0.0_wp, N_NO3_shoot) &
+                                                     - MAX(0.0_wp, N_mobile_veg)) + nup_droot_day
+        nup_cum_gain = nup_cum_gain + (MIN(U_pot_sum, nup_cap) - U_pot)
+        U_pot = MIN(U_pot_sum, nup_cap)
+        nup_days_pre = nup_days_pre + 1
+        IF (U_pot_sum > nup_cap) nup_days_capbind = nup_days_capbind + 1
+      END BLOCK
+    END IF
+    END IF
+    IF (n_delivery_series_bound == 1) THEN
+      IF (ANY(act_no3_eff < act_no3 - 1.0e-12_wp) .OR. ANY(act_nh4_eff < act_nh4 - 1.0e-12_wp)) &
+        nsb_days_bound = nsb_days_bound + 1
     END IF
     U_pot_day = U_pot
     ratio = 0.0_wp
     IF (U_pot_sum > 1.0e-12_wp) ratio = U_pot / U_pot_sum
     DO iLu = 1, NSoil_layers
+      IF (n_radial_uptake == 1) CALL nrad_commit(iLu, ratio)   ! rec 189: keep the fraction actually taken
       NO3_lay(iLu) = NO3_lay(iLu) - ratio * p_no3(iLu)
       NH4_lay(iLu) = NH4_lay(iLu) - ratio * p_nh4(iLu)
       U_act_NO3_day = U_act_NO3_day + ratio * p_no3(iLu)
@@ -9926,6 +10646,13 @@ END DO
           END IF
           veg_N_demand_day = d_leaf_maint
           grain_N_demand_postanth_day = n4_grain_deficit_prev
+          ! rec 195: with a source-limited grain the post-anthesis uptake demand is the critical-N flux of
+          ! the crop's own dry-matter growth, U_c = Nc'(W) dW/dt with Nc = 5.35 W^-0.442 % (Justes et al. 1994
+          ! Ann Bot 74:397, Eq. p.402; marginal form (1-b) a W^-b; W floored at 1.55 t ha-1; beyond 12 t ha-1
+          ! EXTRAPOLATED, flagged). Observed at Braunschweig N3 2015: post-anthesis uptake 0.209 vs U_c 0.212
+          ! g N m-2 d-1 . The grain is fed from the mobile pool (FPB Eq. 11).
+          IF (grain_n_source_phase == 1) grain_N_demand_postanth_day = 5.35_wp * (1.0_wp - 0.442_wp) * &
+            MAX(AGB_kg_m2, 1.55_wp)**(-0.442_wp) * 0.01_wp * r195_dagb
           N_demand_day = MIN(veg_N_demand_day + grain_N_demand_postanth_day, g_nmax_shoot)
         END IF
         ! ================================================================ !
@@ -10195,7 +10922,7 @@ END DO
       S_massflow_pot_day = S_massflow
       U_pot_day          = U_pot
     END BLOCK
-    f_Tr_N  = MIN(1.0_wp, trans_act / MAX(0.01_wp, trans_ref_N))   ! diagnostic only (mass flow now explicit)
+    f_Tr_N  = MIN(1.0_wp, trans_act / MAX(0.01_wp, trans_ref_N))   ! diagnostic only (mass flow is explicit)
     f_CO2_N = 1.0_wp                                               ! DEPRECATED: removed from core (Gojon D deferred)
     ! diagnostics (§5.4): pre/post-anthesis uptake split
     IF (dvs2_growth < 1.0_wp) THEN
@@ -10228,6 +10955,8 @@ END DO
                         - soilN_before_day - N_fert_day - N_mineral_day - residue_N_in_day &
                         + N_leach_d + N_soil_uptake_day + N_volat_day + N_denit_day
   END IF
+  ! rec 197: the immobilized pool is a soil pool (in soilN_before_day), so the transfer is internal.
+  IF (rhizo_immob == 1) soilN_balance_resid = soilN_balance_resid + rhz_Norg
 
   ! -------------------------------------------------------------------- !
   ! Nitrogen allocation follows wheat physiology:
@@ -10299,6 +11028,11 @@ END DO
   ! IDENTICAL basis the live nitrogen-nutrition-index term uses, for the
   ! deposition law inside the allocation. Nothing executes and nothing is read at
   ! record 172 = 0.
+  IF (stem_reserve_deposition_n_basis >= 1) THEN   ! rec 172: publish the nni_up AGB / shoot-N basis
+    vhw_w_tha_in = (W_green + W_dead + W_dead_stem + W_stem + &
+                    MERGE(W_grain + W_chaff, W_storage, gnf_critN_basis)) / 100.0_wp
+    vhw_n_sh_in  = N_leaf + N_dead_leaf + N_stem + N_storage
+  END IF
   CALL allocate_daily_biomass(dvs2_growth, t_leaf_growth_mean, An_growth_day, W_green, W_dead, W_stem, W_root, W_storage, &
     rm_growth_day, rg_growth_day)
   dW_storage_day = MAX(0.0_wp, W_storage - W_storage_prev_day)   ! daily reproductive DM gain (g m-2)
@@ -10332,6 +11066,11 @@ END DO
   ! later in this day loop. It is set unconditionally and read only when
   ! record 130 is at or above 1.
   gnm_N_grain_in = MAX(0.0_wp, N_storage - N_chaff)
+  ! rec 192: fraction of today before the anthesis threshold, in thermal time (1 = whole day before).
+  ani_frac = 1.0_wp
+  IF (anthesis_event_interp == 1 .AND. phen_state%current_dtdu > 0.0_wp) &
+    ani_frac = MIN(1.0_wp, MAX(0.0_wp, (phen_params%stage_thresh(6) - (phen_state%cum_tdu - phen_state%current_dtdu)) &
+                                       / phen_state%current_dtdu))
   CALL allocate_yield_components_daily(dvs2_growth, dW_storage_day, W_stem, W_grain, W_chaff, &
     kernel_number_m2, grain_number_set, dW_grain_day, T_air_day, iD, W_storage)
   ! Record 105, on only: the day terms and the RESERVE LEDGER identity, the pool
@@ -10671,6 +11410,12 @@ END DO
       BLOCK
         REAL(wp) :: back_to_mobile
         back_to_mobile = MIN(pool, mobile_in)
+        IF (organ_n_storage_basis == 1) THEN
+          ! Record 191: the assimilation-origin overflow is reduced N; it stays mobile
+          ! (SHARED.f90) instead of being relabeled as shoot nitrate.
+          back_to_mobile = pool
+          ons_ovf_cum = ons_ovf_cum + (pool - MIN(pool, mobile_in))
+        END IF
         N_mobile_veg = N_mobile_veg + back_to_mobile
         N_NO3_shoot = N_NO3_shoot + (pool - back_to_mobile)
       END BLOCK
@@ -11139,6 +11884,8 @@ END DO
   ! rule at the SAME place. Written unconditionally as a variable nothing reads
   ! at record 155 = 0, and read only by limb (a).
   nur_dwgreen_prev = MAX(0.0_wp, W_green - W_green_prev_day)
+  r195_dagb     = MAX(0.0_wp, (W_green + W_dead + W_dead_stem + W_stem + W_storage) - r195_agb_prev)
+  r195_agb_prev = W_green + W_dead + W_dead_stem + W_stem + W_storage
   ! R6: + Tcan_act_C (committed Tuzet/SPAC canopy temperature; energy_balance_mode
   ! >= 1 only -- 0.0 under mode 0, where the model holds no committed canopy node).
   WRITE (unit_tleaf,'(I0,4(",",G14.6))') iD, T_leaf_day, T_air_day, (T_leaf_day - T_air_day), &
@@ -11683,7 +12430,7 @@ END DO
       shortfall_spac_mm = trans_pot_unstressed_mm - e_spac_mm
     END IF
     WRITE (unit_spac_daily,'(I0,",",I0,2(",",G14.6),2(",",I0),4(",",G14.6),2(",",I0),5(",",G14.6))') iD, spac_mode, &
-      spac_psi_f, spac_K_plant, spac_psi_s_valid, spac_psi_s_fallback, spac_psi_s_conv(1), spac_psi_s_conv(2), &
+      spac_psi_f, spac_K_L, spac_psi_s_valid, spac_psi_s_fallback, spac_psi_s_conv(1), spac_psi_s_conv(2), &
       spac_psi_s_conv(3), spac_psi_s_MPa, spac_calls_day, spac_iters_max_day, spac_resid_max_day, &
       trans_pot_unstressed_mm, e_spac_mm, trans_act, shortfall_spac_mm
     ! Record 173, on only: what was SENT to the sink this day, what the sink
@@ -12078,7 +12825,16 @@ IF (n_payment_gate >= 1) THEN
     '  (Batch 2 closes this)'
   WRITE (*,'(A,G14.6,A,G14.6,A,G14.6)') ' rec 121 CARBON CLOSURE max|organ-state - dm_gain| = ', bgn_dm_close_max, &
     ' ; max|[SFL] supply ledger| = ', sfl_ledger_max, ' ; max|rec-100 identity - refused - N-unpaid| = ', sdm_close_max
+  WRITE (*,'(A,G14.6,A,G14.6,A,G14.6,A)') ' rec 121 unpaid carbon cum (g CH2O m-2) = ', npg_unpaid_ch2o_cum, &
+    ' ; to stem WSC (g DM m-2) = ', npg_wsc_cum, ' ; explicit residual (g CH2O m-2) = ', npg_resid_cum, ''
+  IF (unpaid_lamina_root_fate == 1) WRITE (*,'(A,G14.6,A,G14.6)') &
+    ' rec 193 root built from refused lamina carbon, cum (g DM m-2) = ', ulr_dw_root_cum, ' ; N paid (g N m-2) = ', ulr_n_cum
 END IF
+  IF (soil_orgN_law == 1) WRITE (*,'(A,G14.6,A,G14.6)') &
+    ' rec 194 soil organic N mineralized, season (g N m-2) = ', vale_min_cum, ' ; organic N left (g N m-2) = ', vale_Norg
+  IF (rhizo_immob == 1) WRITE (*,'(A,G14.6,A,G14.6,A,G14.6)') &
+    ' rec 197 rhizodeposit immobilization, season (g N m-2) = ', rhz_Norg, ' ; from NH4 = ', rhz_imm_NH4_cum, &
+    ' ; from NO3 = ', rhz_imm_NO3_cum
 IF (lai_n_arrest >= 1) THEN
   WRITE (*,'(A,I0,A,I0,A,G14.6,A,G14.6,A)') ' rec 122 LAMINA N ARREST: arrest days = ', lna_days_arrest, &
     ' ; shed days = ', lna_days_shed, ' ; unpaid area removed cum (m2 m-2) = ', lna_removed_cum, &
@@ -12094,7 +12850,7 @@ IF (tiller_n_afford >= 1) THEN
 END IF
 IF (root_front_law >= 1) THEN
   WRITE (*,'(A,F5.1,A,I0,A,G14.6,A,G14.6,A,I0)') ' rec 124 ROOT FRONT: r_z = ', rfl_rz, ' mm d-1 ; days since emergence = ', &
-    rfl_days_emerged, ' ; final z_root (m) = ', rfl_z_new, ' (legacy Borg & Grimes would be ', rfl_z_legacy, &
+    rfl_days_emerged, ' ; final z_root (m) = ', rfl_z_new, ' (baseline Borg & Grimes would be ', rfl_z_legacy, &
     ') ; day z_max reached = ', rfl_day_zmax
 END IF
 IF (kernel_potential_law >= 1) THEN
@@ -12160,7 +12916,7 @@ IF (nitrate_drain_rate_basis >= 1) THEN
     ' rec 158 NITRATE DRAIN RATE BASIS (mode ', nitrate_drain_rate_basis, &
     '): season mean N_max ACTUALLY used (umol m-2leaf s-1) = ', &
     ndb_nmax_used_cum / MAX(1.0_wp, REAL(ndb_days_live, wp)), &
-    ' ; season mean N_max the incumbent STORE basis would have used = ', &
+    ' ; season mean N_max the mode-0 STORE basis would have used = ', &
     ndb_nmax_store_cum / MAX(1.0_wp, REAL(ndb_days_live, wp)), &
     ' ; season sum of the shoot de novo N-reduction demand (g N m-2) = ', ndb_rate_cum, &
     ' ; N_max days = ', ndb_days_live, &
@@ -12171,7 +12927,7 @@ END IF
 IF (justes_nmax_floor_basis >= 1) THEN
   WRITE (*,'(A,F6.3,A,I0,A,I0)') &
     ' rec 160 JUSTES Nmax FLOOR BASIS (mode 1): sub-floor Nmax cap used (%DM) = ', jnf_cap_pct, &
-    ' (the printed Eqn (17) curve at its own floor, 8.3 x 1.55^-0.44; the legacy mode-0 value is the undocumented 6.6 %)' // &
+    ' (the printed Eqn (17) curve at its own floor, 8.3 x 1.55^-0.44; the mode-0 value is the undocumented 6.6 %)' // &
     ' ; days with shoot DM <= 1.55 t ha-1 = ', jnf_days_floor, &
     ' ; of those, days the Nmax stock gap BOUND the day''s N demand = ', jnf_days_bind
 END IF
@@ -12184,6 +12940,18 @@ IF (postanth_uptake_regulation >= 1) THEN
     ' ; season sum of the extra uptake POTENTIAL granted (g N m-2) = ', pur_cum_gain, &
     ' ; mean E_N over those days = ', pur_EN_sum / MAX(1.0_wp, REAL(pur_days_post, wp)), &
     ' ; minimum E_N = ', pur_EN_min
+END IF
+! rec 187 / rec 188 season summaries -- ON-only, so a mode-0 run.log is unchanged.
+IF (preanth_supply_uptake == 1) THEN
+  WRITE (*,'(A,I0,A,I0,A,G12.4)') &
+    ' rec 187 PRE-ANTHESIS SUPPLY UPTAKE (soil supply x f_Nstatus, capped by the Justes Nmax stock gap, no demand gate):' // &
+    ' pre-anthesis days = ', nup_days_pre, ' ; of those, days the Nmax stock cap bound = ', nup_days_capbind, &
+    ' ; season sum of (record-187 - demand-gated) uptake potential (g N m-2) = ', nup_cum_gain
+END IF
+IF (n_delivery_series_bound == 1) THEN
+  WRITE (*,'(A,I0)') &
+    ' rec 188 SERIES DELIVERY BOUND (active uptake <= mass flow + diffusion): days on which delivery bound' // &
+    ' any layer active term = ', nsb_days_bound
 END IF
 ! rec 164 season summary -- ON-only, so a mode-0 run.log is unchanged.
 IF (lamina_capacity_profile_basis >= 1) THEN
@@ -12260,7 +13028,7 @@ IF (mineral_impedance_basis >= 1) THEN
   WRITE (*,'(A,G12.4,A,G12.4,A,G12.4,A,I0,A,I0,A,G12.4,A,G12.4)') &
     ' rec 168 MINERAL IMPEDANCE BASIS (Olesen 2001 p.94 Eq.7a CSIF): theta_th (m3 m-3) = ', nud_theta_th, &
     ' ; season-mean f_l under Eq.(7a) = ', mib_fl_sum / MAX(1.0_wp, REAL(mib_fl_days, wp)), &
-    ' ; season-mean f_l under the retired MAX(0, 1.60*theta - 0.17) pair on the SAME days = ', &
+    ' ; season-mean f_l under the mode-0 MAX(0, 1.60*theta - 0.17) pair on the SAME days = ', &
     mib_fl_off_sum / MAX(1.0_wp, REAL(mib_fl_days, wp)), &
     ' ; ELEMENT-days the live diffusion locus ran (5 non-Ca elements x days) = ', mib_fl_days, &
     ' ; element-days theta <= theta_th so Eq.(7b) returned exactly 0 = ', mib_days_at_zero, &
@@ -12323,6 +13091,14 @@ IF (mineral_n_coupling_basis >= 1) THEN
   END IF
 END IF
 ! rec 174 season summary -- ON-only, so a mode-0 run.log is unchanged.
+IF (canopy_fln_prediction >= 1) THEN
+  WRITE (*,'(A,I0,A,F8.4,A,F10.3,A,I0,A,I0)') &
+    ' rec 174 CANOPY FLN PREDICTION: FLN_pred = ', clr_FLN_pred, &
+    ' from closed-form HS = ', cfp_HS_pred, &
+    ' at tau_boot_target (degCd since emergence) = ', clr_tau_boot_target, &
+    ' ; FLN realized at the Booting freeze = ', cfp_FLN_realized, &
+    ' ; mismatch (realized - predicted, REPORTED NEVER CORRECTED) = ', cfp_mismatch
+END IF
 ! rec 175 season summary -- ON-only, so a mode-0 run.log is unchanged.
 IF (grain_n_partition_basis >= 1) THEN
   WRITE (*,'(A,I0,A,I0,A,G12.4,A,G12.4)') &
@@ -12454,11 +13230,29 @@ IF (clr_diag_open) THEN
     ! Record 174: the prediction, its closed-form Haun stage, the target clock
     ! reading and the confirmation are appended as FOUR EXTRA COLUMNS only when the
     ! record is on, so that a mode-0 file keeps its exact column list.
+    IF (canopy_fln_prediction >= 1) THEN
+      WRITE (unit_clr,'(A)') 'rank,tau_app_Cd,tau_lig_Cd,day_app,day_lig,tau_app_evers_Cd,' // &
+        'tau_lig_evers_Cd,is_flag_leaf,FLN_emergent,FLN_tip,FLN_evers,FLN_evers_tip,' // &
+        'tau_boot_Cd,LED_Cd,phyllochron_ref_Cd,FLN_predicted,HS_pred_closed_form,' // &
+        'tau_boot_target_Cd,FLN_pred_mismatch'
+    ELSE
       WRITE (unit_clr,'(A)') 'rank,tau_app_Cd,tau_lig_Cd,day_app,day_lig,tau_app_evers_Cd,' // &
         'tau_lig_evers_Cd,is_flag_leaf,FLN_emergent,FLN_tip,FLN_evers,FLN_evers_tip,' // &
         'tau_boot_Cd,LED_Cd,phyllochron_ref_Cd'
+    END IF
     DO i_rank = 1, CLR_MAXRANK
       IF (clr_tau_lig(i_rank) < 0.0_wp .AND. clr_tau_lig_ev(i_rank) < 0.0_wp) CYCLE
+      IF (canopy_fln_prediction >= 1) THEN
+        WRITE (unit_clr,'(I0,2(",",G14.6),2(",",I0),2(",",G14.6),5(",",I0),3(",",G14.6),' // &
+          '(",",I0),2(",",G14.6),(",",I0))') &
+          i_rank, clr_tau_app(i_rank), clr_tau_lig(i_rank), &
+          clr_day_app(i_rank), clr_day_lig(i_rank), &
+          clr_tau_app_ev(i_rank), clr_tau_lig_ev(i_rank), &
+          MERGE(1, 0, i_rank == clr_FLN), &
+          clr_FLN, clr_FLN_tip, clr_FLN_ev, clr_FLN_ev_tip, &
+          clr_tau_boot, clr_LED_Cd, clr_phyllochron_Cd, &
+          clr_FLN_pred, cfp_HS_pred, clr_tau_boot_target, cfp_mismatch
+      ELSE
         WRITE (unit_clr,'(I0,2(",",G14.6),2(",",I0),2(",",G14.6),5(",",I0),3(",",G14.6))') &
           i_rank, clr_tau_app(i_rank), clr_tau_lig(i_rank), &
           clr_day_app(i_rank), clr_day_lig(i_rank), &
@@ -12466,6 +13260,7 @@ IF (clr_diag_open) THEN
           MERGE(1, 0, i_rank == clr_FLN), &
           clr_FLN, clr_FLN_tip, clr_FLN_ev, clr_FLN_ev_tip, &
           clr_tau_boot, clr_LED_Cd, clr_phyllochron_Cd
+      END IF
     END DO
     CLOSE(unit_clr)
     clr_diag_open = .FALSE.
@@ -12490,6 +13285,7 @@ IF (cba_diag_open) THEN
     nmax_used = MERGE(clr_FLN, cba_Nl_fit, clr_frozen .AND. clr_FLN >= 1)
     ! rec 174: the diagnostic table must show the SAME top the model
     ! actually used; clr_FLN_pred is 0 on a mode-0 run, so this is inert there.
+    IF (canopy_fln_prediction >= 1 .AND. clr_FLN_pred >= 1) nmax_used = clr_FLN_pred
     DO i_rank = 1, MIN(MIN(MAX(clr_n_app, clr_n_lig), nmax_used), CLR_MAXRANK)
       WRITE (unit_cba,'(I0,",",I0,7(",",G14.6))',ADVANCE='NO') &
         i_rank, nmax_used - i_rank + 1, cba_L_pot(i_rank), cba_W_pot(i_rank), cba_ft_rank(i_rank), &
@@ -12712,9 +13508,9 @@ IF (d2_diag_open) THEN
     WRITE (unit_d2,'("SLA_out_end_m2_kg,",G14.6,",m2 kg-1")')    lfo_sla_out
     ! (rec 84 leaf-death coupling) season totals; all zero when rec 84 is OFF.
     IF (lai_from_organs == 1) THEN
-      WRITE (unit_d2,'("leaf_death_clock,",A)') 'organ law (Abichou M-law) carries W_green and N_leaf out with the dead area (v14)'
+      WRITE (unit_d2,'("leaf_death_clock,",A)') 'organ law (Abichou M-law) carries W_green and N_leaf out with the dead area'
     ELSE
-      WRITE (unit_d2,'("leaf_death_clock,",A)') 'legacy Yin/Teh biomass law (rec 84 OFF)'
+      WRITE (unit_d2,'("leaf_death_clock,",A)') 'baseline Yin/Teh biomass law (rec 84 OFF)'
     END IF
     WRITE (unit_d2,'("sen_dm_cum_gDM,",G14.6,",g DM m-2 lamina shed by the organ clock")')            lfo_sen_dm_cum
     WRITE (unit_d2,'("sen_N_out_cum_gN,",G14.6,",g N m-2 out of N_leaf with the dead area")')         lfo_sen_N_out_cum
@@ -12860,7 +13656,7 @@ IF (grain_number_mech >= 1) THEN
     WRITE (unit_gnx,'(A)') '# --- the partitioning coefficient (Fischer 1985 p.452: 0.44 of the ABOVE-GROUND increment) ---'
     WRITE (unit_gnx,'("window_AGB_increment_g_m2,",G14.6,",SUM dm_gain*(1-f_root) in window")') gnx_win_dagb
     WRITE (unit_gnx,'("window_spike_increment_g_m2,",G14.6,",SUM dm_gain*f_storage in window")') gnx_win_dspike
-    WRITE (unit_gnx,'("window_spike_share_realised,",G14.6,",TARGET Fischer 0.44 p.452 = ITEM-D GATE")') gnx_share_real
+    WRITE (unit_gnx,'("window_spike_share_realised,",G14.6,",TARGET Fischer 0.44 p.452 = GATE")') gnx_share_real
     WRITE (unit_gnx,'("spike_share_clamp_days,",I0,",days lamina left < 0.44*(1-f_root) room")') gnx_clamp_days
     WRITE (unit_gnx,'("spike_share_clamp_max,",G14.6,",share units")') gnx_clamp_max
     WRITE (unit_gnx,'(A)') '# --- the chain (Fischer 1985 p.449 florets, p.447 kernels) ---'
@@ -12904,8 +13700,8 @@ IF (grain_number_mech >= 1) THEN
     WRITE (unit_gnx,'(A)') '# --- DECLARED: not a measurement ---'
     WRITE (unit_gnx,'("per_axis_share_rule,",A)') &
       'green lamina area of the axis class (ct_dens*ct_area_axis_real), from the CROP' // &
-      ' window onward - DECLARED CONSTRUCTION; no measured per-axis sharing law is on' // &
-      ' this machine. A per-axis sub-window was built first and REMOVED: see growth_module'
+      ' window onward - DECLARED CONSTRUCTION; no measured per-axis sharing law was found,' // &
+      ' and a per-axis sub-window is not used: see growth_module'
     IF (floret_survival_mech >= 1) THEN
       IF (floret_survival_mech == 4) THEN
         WRITE (unit_gnx,'("rec90_floret_survival_mech,",I0,",0 OFF / 1 chain / 2 survival only / 3 hyperbola arm' // &
@@ -12951,7 +13747,7 @@ IF (grain_number_mech >= 1) THEN
         ' reproductive sink, NOT a cited law; the choice of one rather than two is the implementer''s' // &
         ' and rec 90 = 2 prices it. Backhaus et al. 2023 JXB 74:5088 is an ANALOGY ONLY: its unit is' // &
         ' the rudimentary basal SPIKELET of an otherwise fertile spike, it removes no spike and' // &
-        ' reports no axis-level analysis (independent audit 59a4951 sec.3). Youngest culled first' // &
+        ' reports no axis-level analysis. Youngest culled first' // &
         ' (Abichou 2016 Ch.1 sec.2.5 p.29, verbatim); the main stem is never culled.'
       END IF
       IF (floret_survival_mech == 4) THEN
@@ -13015,18 +13811,16 @@ IF (grain_number_mech >= 1) THEN
         ' FIELD CROP 1.98 kernels/spikelet / 0.853-0.916 kernels per competent floret (Tab 4 p.451)' // &
         ' = 2.16-2.32 fertile florets per spikelet")') &
         MERGE(gnx_florets_m2/(gnx_ears_m2*gnx_spikelets), 0.0_wp, gnx_ears_m2*gnx_spikelets > 0.0_wp)
-      WRITE (unit_gnx,'("env_floret_survival_range,",A)') 'CORRECTED 2026-09-17, bound AND basis.' // &
-        ' WAS "0.40 - 0.60 across 30 modern cultivars (Guo, Slafer & Schnurbusch 2016 JXB 67:4241)",' // &
-        ' printed beside the model CROP MEAN. The source sentence is "the relative variation in floret' // &
+      WRITE (unit_gnx,'("env_floret_survival_range,",A)') 'MAIN-SHOOT survival 0.337-0.441, the six control' // &
+        ' (normally tillered) means of Guo & Schnurbusch 2015. Guo, Slafer & Schnurbusch 2016 JXB 67:4241' // &
+        ' report "the relative variation in floret' // &
         ' survival (~50% difference FROM <0.4 TO ~0.55-0.6)" -- "<0.4" is not a measured floor of 0.40 --' // &
-        ' and it defines survival as "the proportion of the maximum number of floret primordia that' // &
+        ' and define survival as "the proportion of the maximum number of floret primordia that' // &
         ' reached the stage of fertile florets (FFS MFS-1)", measured on MAIN SHOOTS (Guo & Schnurbusch' // &
         ' 2015 Materials and methods: "main shoots of three plants for each cultivar were randomly' // &
         ' selected to measure floret primordia and fertile floret number per spikelet") at apical,' // &
-        ' central and basal spikelet positions. IS NOW: MAIN-SHOOT survival 0.337-0.441, the six control' // &
-        ' (normally tillered) means of Guo & Schnurbusch 2015 -- NARROWER at the top than the old gate,' // &
-        ' not widened to admit the model -- with the 30-cultivar genotypic spread "<0.4 to ~0.55-0.6"' // &
-        ' reported alongside but not used as the gate. WHICH COMPARISON IS THE GATE: the model grain' // &
+        ' central and basal spikelet positions. The 30-cultivar genotypic spread "<0.4 to ~0.55-0.6"' // &
+        ' is reported alongside but not used as the gate. WHICH COMPARISON IS THE GATE: the model grain' // &
         ' number is a CROP quantity and Fischer 1985 p.450 measured a FIELD CROP (1.98 kernels/spikelet,' // &
         ' 436 spikes/m2), while Guo measured MAIN SHOOTS of selected plants and reports NO spike dry' // &
         ' weight, so Guo cannot be compared at equal spike mass - and survival here is a function of' // &
@@ -13038,20 +13832,20 @@ IF (grain_number_mech >= 1) THEN
       WRITE (unit_gnx,'("env_kernels_per_fertile_floret,",A)') '0.853 - 0.916 (Fischer 1985 Table 4 p.451,' // &
         ' kernels at maturity / competent florets at anthesis) REPORTED; the model applies 0.78 (p.447/p.449)'
       WRITE (unit_gnx,'("NOT_VERIFIED_Fischer1983,",A)') 'the "1 floret per 10 mg" SLOPE at Fischer 1985' // &
-        ' p.449 is a SECONDARY citation of Fischer (1983), which is not on this machine. The VALUE is' // &
+        ' p.449 is a SECONDARY citation of Fischer (1983), which was not available. The VALUE is' // &
         ' rested on first-hand measurement instead: Fischer Table 4 p.451 102.3/103.3 florets g-1 and' // &
         ' Prieto et al. 2020 JXB 71:2703 100.9-123.8 florets g-1.'
       WRITE (unit_gnx,'("NOT_MODELLED,",A)') 'genotypic variation in spikelet number; post-anthesis grain' // &
         ' abortion as a separate process (folded into kernels per fertile floret); Abichou Eqn T4.4 ramp' // &
         ' (its Ne is an experimental INPUT, and the shipped die fraction 0.632 rests on Evers 2006, whose' // &
-        ' file here is a 1816-byte anti-bot HTML page = NOT VERIFIED).'
+        ' paper was not available = NOT VERIFIED).'
     ELSE
       ! Record 90 = 0 reproduces the record-89 file including these three
       ! statements. They are true of the record-90 = 0 path and false of the floret
       ! chain, which is why they are branched.
       WRITE (unit_gnx,'("spikelets_per_spike,",A)') 'NOT DETERMINED - not modelled; no primary' // &
-        ' source on this machine (Kirby 1985 = anti-bot HTML page; Evers 2006 and Moreau 2012 =' // &
-        ' 1816-byte stubs; Ferrante / Gonzalez / Serrago / Miralles absent)'
+        ' source available (Kirby 1985, Evers 2006, Moreau 2012, Ferrante, Gonzalez, Serrago and' // &
+        ' Miralles were not obtained)'
       WRITE (unit_gnx,'("florets_INITIATED_per_spikelet,",A)') 'NOT DETERMINED - not modelled; same sweep'
       WRITE (unit_gnx,'("tiller_mortality_law,",A)') 'NOT DETERMINED - no axis dies under rec 82;' // &
         ' ears m-2 above is the axis population that carries >= 1 kernel'
@@ -13070,8 +13864,8 @@ IF (grain_number_mech >= 1) THEN
         WRITE (unit_gnx,'("fruiting_efficiency_trait,",G14.6,",READ under rec 151 = 1: m_floret,cv = 0.78/FE; scale ",G14.6)') &
           fruiting_efficiency, gnx_floret_scale
       END IF
-      WRITE (unit_gnx,'("retired_storage_onset_dvs2,",G14.6,",NOT READ under rec 89 = 1")') storage_onset_dvs2
-      WRITE (unit_gnx,'("retired_storage_peak_frac,",G14.6,",NOT READ under rec 89 = 1")') storage_peak_frac
+      WRITE (unit_gnx,'("mode0_storage_onset_dvs2,",G14.6,",NOT READ under rec 89 = 1")') storage_onset_dvs2
+      WRITE (unit_gnx,'("mode0_storage_peak_frac,",G14.6,",NOT READ under rec 89 = 1")') storage_peak_frac
     END IF
     ! Record 138: on-only summary rows, written only when the record is at or above
     ! 1.
@@ -13314,7 +14108,7 @@ IF (grain_fill_mech >= 1) THEN
       ' FALSIFIER vs Yang & Zhang 2006 New Phytol 169:223 Table 3 p.228 wheat MEASURED 0.95-1.94")') rate_mean
     IF (grain_fill_mech == 3) THEN
       WRITE (unit_gfb,'("sink_demand_total_g_m2,",A)') 'NOT DEFINED on this arm: rec 91 = 3 keeps the' // &
-        ' legacy STOCK capacity cap, so a cumulative FLUX demand has no meaning here'
+        ' mode-0 STOCK capacity cap, so a cumulative FLUX demand has no meaning here'
       WRITE (unit_gfb,'("unmet_demand_total_g_m2,",A)') 'NOT DEFINED on this arm, same reason'
     ELSE
       WRITE (unit_gfb,'("sink_demand_total_g_m2,",G14.6,",g m-2, integral of the potential demand")') gfb_demand_tot
@@ -13325,14 +14119,12 @@ IF (grain_fill_mech >= 1) THEN
     WRITE (unit_gfb,'("supplied_to_grain_g_m2,",G14.6,",g m-2, assimilate + reserve actually delivered")') &
       gfb_supplied_tot
     WRITE (unit_gfb,'("reserve_C_pool_end_g_m2,",G14.6,",g m-2 W_reserve after supply on the LAST day the law' // &
-      ' was live (report fix 2026-10-15: the harvest-day value printed before this was zeroed by the rec 105' // &
-      ' release). FALSIFIER: it was 58.5-451.8 across the 20 ceiling-pinned decks under the capacity cap, and' // &
-      ' must FALL where the real sink is larger")') gfb_reserve_end
+      ' was live, read before the rec 105 release empties the pool at harvest")') gfb_reserve_end
     WRITE (unit_gfb,'("N_floor_refused_dm_total_g_m2,",G14.6,",g m-2 CUMULATIVE grain DM refused by the rec 130' // &
       ' structural-N floor AFTER supply (same quantity as run.log refused grain DM)")') gnm_refused_dm_cum
     WRITE (unit_gfb,'("demand_cut_before_supply_g_m2,",G14.6,",g m-2 = sink_demand_total - supplied_to_grain' // &
       ' - unmet_demand_total: the part of the potential demand removed by the N floor and the other caps' // &
-      ' BEFORE the carbon supply saw it (report fix 2026-10-15; 0 where no cap bound)")') &
+      ' BEFORE the carbon supply saw it (0 where no cap bound)")') &
       gfb_demand_tot - gfb_supplied_tot - gfb_unmet_tot
     WRITE (unit_gfb,'("grain_number_m2,",G14.6,",from the grain-number chain (rec 89/90);' // &
       ' the grain-filling law does not touch it")') &
@@ -13367,7 +14159,7 @@ IF (grain_fill_mech >= 1) THEN
       ' (10.1071/PP9950391), Chowdhury & Wardlaw 1978 (Aust J Agric Res 29:205, 10.1071/AR9780205 -- the' // &
       ' "Aust J Plant Physiol 5:195" form does not exist), Panozzo & Eagles 1999 (10.1071/AR98146) and' // &
       ' Pararajasingham & Hunt 1991 (10.4141/cjps91-007, the one paper that DERIVES a grain-filling base' // &
-      ' temperature) are all CLOSED ACCESS with no route from this machine. No number from any of them is used.'
+      ' temperature) are all CLOSED ACCESS and were not consulted. No number from any of them is used.'
     CLOSE(unit_gfb)
   END BLOCK
 END IF
@@ -13398,13 +14190,13 @@ IF (stem_wsc_mech >= 1) THEN
     WRITE (unit_wsl,'("wsc_accum_end_dpa,",I0,",d after anthesis; MIDPOINT of Schnyder 1993 p.238' // &
       ' measured 10-20 d, and p.233 three weeks. Corroborated by Gebbing & Schnyder 1999 Plant Physiol' // &
       ' 121:871 p.875 (mobilisation starts about mid-grain filling)")') wsc_accum_end_dpa
-    WRITE (unit_wsl,'("reserve_conv_eff,",G14.6,",g grain DM per g reserve DM. UNCHANGED by item C.' // &
+    WRITE (unit_wsl,'("reserve_conv_eff,",G14.6,",g grain DM per g reserve DM.' // &
       ' Gebbing & Schnyder 1999 p.877: MEWSC = 0.97 +- 0.07 se; 0.95 is inside one se")') reserve_conv_eff
     WRITE (unit_wsl,'("stem_reserve_frac,",G14.6,",share of the pre-anthesis stem increment LABELLED as' // &
-      ' WSC. NOT a measured law and NOT touched by item C: Ruuska et al. 2006 Funct Plant Biol 33:799 is' // &
-      ' NOT ON THIS MACHINE, so it is NOT VERIFIED. The OUTCOME is what is tested (next rows)")') &
+      ' WSC. NOT a measured law: Ruuska et al. 2006 Funct Plant Biol 33:799 was' // &
+      ' not available, so it is NOT VERIFIED. The OUTCOME is what is tested (next rows)")') &
       stem_reserve_frac
-    WRITE (unit_wsl,'("reserve_remob_rate_input,",G14.6,",d-1, the legacy first-order throttle. NOT READ' // &
+    WRITE (unit_wsl,'("reserve_remob_rate_input,",G14.6,",d-1, the baseline first-order throttle. NOT READ' // &
       ' under rec 92 = 1, 3 or 4; still read under rec 92 = 2 (the attribution arm that keeps it)")') &
       reserve_remob_rate
     WRITE (unit_wsl,'(A)') '# --- what the crop actually did ---'
@@ -13440,8 +14232,8 @@ IF (stem_wsc_mech >= 1) THEN
     WRITE (unit_wsl,'("fraction_of_draw_after_16dpa,",G14.6,",-  FALSIFICATION: Gebbing & Schnyder 1999' // &
       ' p.875 measured 83 % of stem pre-anthesis C mobilisation occurring after their 16-d sample")') f_after16
     WRITE (unit_wsl,'("carbon_closure_max_g_m2_d,",G14.6,",g DM m-2 d-1, max |dW_grain + dW_stem + dW_chaff' // &
-      ' + respired - assimilate_taken| over the run. THIS REPLACES THE RETIRED TAUTOLOGY (item-B audit' // &
-      ' note N4): the old cres_ledger_resid was (-draw)+gain+(draw-gain), identically 0 for any inputs")') &
+      ' + respired - assimilate_taken| over the run, from organ state; a residual' // &
+      ' built as (-draw)+gain+(draw-gain) would be identically 0 for any inputs")') &
       wsc_closure_max
     WRITE (unit_wsl,'(A)') '# --- measured envelopes: falsification targets, never tuning targets ---'
     WRITE (unit_wsl,'("env_wsc_frac_of_stem_at_anthesis,",A)') '0.125 - 0.250, DERIVED from Schnyder 1993' // &
@@ -13461,14 +14253,14 @@ IF (stem_wsc_mech >= 1) THEN
     WRITE (unit_wsl,'("DECLARED_TENSIONS,",A)') 'the 15 d close is CALENDAR, as both sources state it, on' // &
       ' temperate crops -- at a hot short-season site it is a larger fraction of the fill; Schnyder''s 50 %' // &
       ' is of INTERNODES while this W_stem includes sheaths, so the cap is GENEROUS; and at NL/AU the cap' // &
-      ' inherits item M''s early stem over-build, so their capacity is over-large.'
+      ' inherits the early stem over-build of those decks, so their capacity is over-large.'
     ! rec 148 -- ON-ONLY rows (nothing below is written at
     ! wsc_fate_law = 0, so the OFF file is unchanged).
     IF (wsc_fate_law >= 1) THEN
       WRITE (unit_wsl,'(A)') '# --- rec 148 wsc_fate_law: the fate of the stem WSC reserve ---'
       WRITE (unit_wsl,'("rec148_wsc_fate_law,",I0,",0 OFF / 1 the law (term A + term B) / 2 term A' // &
         ' only / 3 term B only")') wsc_fate_law
-      WRITE (unit_wsl,'("wfl_term_a_refused_g_m2,",G14.6,",g DM m-2 refused by the RESTORED deposition' // &
+      WRITE (unit_wsl,'("wfl_term_a_refused_g_m2,",G14.6,",g DM m-2 refused by the deposition' // &
         ' close for the grain-sink-full surplus and booked to the existing rec-129 overflow loss' // &
         ' cfo_loss_cum. Schnyder 1993 New Phytol 123:233 p.238 (10-20 d), p.233 Summary (three weeks)")') &
         wfl_a_refused_cum
@@ -13488,10 +14280,10 @@ IF (stem_wsc_mech >= 1) THEN
       WRITE (unit_wsl,'("wfl_pool_end_g_m2,",G14.6,",g DM m-2 W_reserve at the last day. FALSIFICATION' // &
         ' read-out: the only stem-WSC measurement in the deck set is Braunschweig 11.6-20.3 mg g-1 of' // &
         ' stem DM at maturity (Manderscheid et al. 2020 ODjAR 6:28-33). NO FLOOR IS APPLIED (missing' // &
-        ' quantity M-A1): the law empties to ~0 and the undershoot is reported, not calibrated away")') &
+        ' quantity): the law empties to ~0 and the undershoot is reported, not calibrated away")') &
         W_reserve
       WRITE (unit_wsl,'("wfl_draw_deficit_g_m2,",G14.6,",g DM m-2 drawn by the PRE-GATE deficit limb,' // &
-        ' which this record makes reachable again under rec 105 = 2 (the E1 blackout removed)")') &
+        ' which this record makes reachable under rec 105 = 2")') &
         wfl_draw_def_cum
       WRITE (unit_wsl,'("wfl_draw_deficit_days,",I0,",days the pre-gate deficit limb drew")') wfl_draw_def_days
       WRITE (unit_wsl,'("wfl_days_grain_fed,",I0,",FALSIFIER: days term B delivered any carbon to the' // &
@@ -13632,10 +14424,10 @@ IF (grainN_sink_mech >= 1 .AND. grainN_sink_mech /= 3) THEN
     OPEN (NEWUNIT=unit_gnl, FILE='output/grain_n_sink_law.csv', STATUS='REPLACE', ACTION='WRITE')
     WRITE (unit_gnl,'(A)') 'quantity,value,units_or_source'
     WRITE (unit_gnl,'("rec86_grainN_sink_mech,",I0,",0 OFF / 1 THE ITEM / 2 law-only arm /' // &
-      ' 3 critical-N-basis-only arm / 4 law+uptake-demand arm / 5 mode-1-without-Eqn-6 arm = the' // &
-      ' REJECTED v24 build, for attribution only")') grainN_sink_mech
+      ' 3 critical-N-basis-only arm / 4 law+uptake-demand arm / 5 mode-1-without-Eqn-6 arm,' // &
+      ' for attribution only")') grainN_sink_mech
     WRITE (unit_gnl,'("eqn6_synthesis_active,",L1,",FPB Eqn 6 lamina photosynthetic-N synthesis ON' // &
-      ' (.T. on modes 1, 2 and 4; .F. on mode 5 = the v24 build)")') gnf_eqn6
+      ' (.T. on modes 1, 2 and 4; .F. on mode 5)")') gnf_eqn6
     WRITE (unit_gnl,'(A)') '# --- the constants, ONE table, ONE paper (SHARED.f90) ---'
     WRITE (unit_gnl,'("n_g0_per_ear_mgN,",G14.6,",mg N ear-1 at anthesis; Bertheloot, Martre & Andrieu' // &
       ' 2008 Funct Plant Biol 35:781-796 doi 10.1071/FP08064 Table 1 p.784 (2.4e-6 kg) and p.786' // &
@@ -13655,22 +14447,20 @@ IF (grainN_sink_mech >= 1 .AND. grainN_sink_mech /= 3) THEN
       ' for which FPB supplies no synthesis term -- see DECLARED_DEPARTURE")') n2_delta_TT
     WRITE (unit_gnl,'("sigma_lamina_synthesis_per_degCd,",G14.6,",[degCd]-1 relative rate of lamina' // &
       ' photosynthetic-N SYNTHESIS, FPB Eqn 6 + Table 1 p.784 ""sigma ... 0.0015"", read at first' // &
-      ' hand. RESTORED 2026-09-21 after the independent audit REJECTED the v24 build for deleting' // &
-      ' Eqn 6: FPB p.786 says sigma, delta, k1 and k2 (Eqns 5 AND 6) were estimated by minimising the' // &
+      ' hand. FPB p.786 says sigma, delta, k1 and k2 (Eqns 5 AND 6) were estimated by minimising the' // &
       ' RMSE, so delta is one of FOUR JOINTLY FITTED parameters and is un-sourced without sigma. NOT' // &
-      ' this tree n2_sigma_lam = 1.5e-4: that value''s Bertheloot 2011b source is NOT on this machine and its' // &
+      ' the alternative n2_sigma_lam = 1.5e-4: that value''s Bertheloot 2011b source was not available and its' // &
       ' misprint argument is refuted by FPB p.791 -- see SHARED.f90")') gnf_sigma_lam
     WRITE (unit_gnl,'("k1_Nmob_MM_gN_gDM,",G14.6,",kg kg-1; FPB Eqn 6 + Table 1 p.784")') n2_k1_Nmob
     WRITE (unit_gnl,'("k2_PAR_MM_J_m2_d,",G14.6,",J m-2 d-1 = FPB Table 1 p.784 k2 = 10 J m-2 s-1 x' // &
       ' 86400 s d-1, an EXACT unit conversion; the ratio PAR/(PAR+k2) is unchanged by it")') n2_k2_PAR
     WRITE (unit_gnl,'("r_mobile_to_photosynthetic_N,",G14.6,",dimensionless; FPB Eqn 1 p.783 gives' // &
       ' N^tot = (1+r)N^ph + N^struct, so N^ph = (N^tot - N^struct)/(1+r), and p.786 sets r = 0.10,' // &
-      ' reached after the first time steps irrespective of the initial value. The v24 build omitted' // &
-      ' the (1+r) and so degraded about 10 per cent MORE POOL than Eqn 5 addresses")') gnf_r_mob_ph
+      ' reached after the first time steps irrespective of the initial value. Omitting the (1+r)' // &
+      ' would degrade about 10 per cent MORE POOL than Eqn 5 addresses")') gnf_r_mob_ph
     WRITE (unit_gnl,'("struct_N_lamina_gN_gDM,",G14.6,",Bertheloot et al. 2008 Plant Physiol 148:1707' // &
-      ' p.1711; the 0.0035 [degCd]-1 RATE with the same digits is on p.1712. PAGE RE-CHECKED BY PDF' // &
-      ' PAGE INDEX 2026-09-21 -- item F 2026-09-20 changed this to p.1710 and the audit verified that' // &
-      ' wrongly; both misread a running head in an interleaved two-column dump")') n2_struct_lam
+      ' p.1711; the 0.0035 [degCd]-1 RATE with the same digits is on p.1712. Page checked against the' // &
+      ' PDF page index (p.1710 is a running head, not the source)")') n2_struct_lam
     WRITE (unit_gnl,'("struct_N_sheath_internode_chaff_gN_gDM,",G14.6,",same page, same sentence")') &
       n2_struct_stem
     WRITE (unit_gnl,'("thermal_time_basis,base 0 C after anthesis,",A)') 'FPB p.782 ""Time is expressed' // &
@@ -13694,26 +14484,26 @@ IF (grainN_sink_mech >= 1 .AND. grainN_sink_mech /= 3) THEN
       ' through the linear phase FALSIFIES this parameterisation")') gnf_bind_after_15d
     WRITE (unit_gnl,'(A)') '# --- the source ladder, season totals (g N m-2) ---'
     WRITE (unit_gnl,'("from_assimilation,",G14.6,",g N m-2 the GRAIN took straight from today assimilation' // &
-      ' (Jamieson & Semenov 2000 FCR 68:21 p.24 source order). Under the repaired law this EXCLUDES the' // &
+      ' (Jamieson & Semenov 2000 FCR 68:21 p.24 source order). Under the law (rec 86 = 1, 2 or 4) this EXCLUDES the' // &
       ' share FPB Eqn 6 routes to lamina photosynthetic-N synthesis, which is not a grain source")') gnf_cum_assim
     WRITE (unit_gnl,'("from_common_mobile_pool,",G14.6,",g N m-2 the GRAIN drew from the culm-common mobile' // &
       ' pool -- FPB Eqn 11 p.785: the ONLY other source of N for the grains. Filled by senescence' // &
       ' resorption, the rec-87 leaf-capacity export, and the organ inflows listed next")') gnf_cum_mob
-    WRITE (unit_gnl,'("ROW_BASIS_organ_rows,",A)') 'Under the repaired law (rec 86 = 1, 2 or 4) the three' // &
+    WRITE (unit_gnl,'("ROW_BASIS_organ_rows,",A)') 'Under the law (rec 86 = 1, 2 or 4) the three' // &
       ' organ rows below are POOL INFLOWS, not grain sources: the organs reach the grain only through' // &
       ' the common pool, so source_total is assimilation + pool and adding the organs would DOUBLE-COUNT.' // &
-      ' Under rec 86 = 5 (the rejected v24 build) the organs ARE direct grain sources and source_total' // &
+      ' Under rec 86 = 5 (the attribution arm without Eqn 6) the organs ARE direct grain sources and source_total' // &
       ' is the five-term sum.'
     WRITE (unit_gnl,'("from_lamina,",G14.6,",NET lamina export = Eqn 5 degradation MINUS Eqn 6' // &
       ' synthesis, above 0.0079 gN gDM-1. NEGATIVE means the lamina was a net N SINK over the fill,' // &
       ' which is a DECLARED FAILURE, not a result: FPB p.789 verbatim ""laminae N mass decreased in' // &
       ' all treatments, including Apache ... in all cases"". The p.791 ""or even increases"" defence' // &
-      ' is WITHDRAWN (item E 2026-09-22): it is doubly conditioned on JUST AFTER ANTHESIS and on' // &
+      ' is NOT USED: it is doubly conditioned on JUST AFTER ANTHESIS and on' // &
       ' significant post-anthesis root uptake, so it licenses a TRANSIENT, never a season total.")') gnf_cum_lam
     WRITE (unit_gnl,'("eqn5_lamina_degradation_total,",G14.6,",g N m-2, delta*N^ph*dTT summed' // &
       ' UNCONDITIONALLY over the fill (FPB Eqn 5 p.784)")') gnf_cum_deg_lam
     WRITE (unit_gnl,'("eqn6_lamina_synthesis_total,",G14.6,",g N m-2 returned to the lamina from the' // &
-      ' common pool (FPB Eqn 6 p.784). ZERO on mode 5 and in the REJECTED v24 build")') gnf_cum_syn_lam
+      ' common pool (FPB Eqn 6 p.784). ZERO on mode 5")') gnf_cum_syn_lam
     WRITE (unit_gnl,'("from_stem,",G14.6,",delta-limited above 0.0035 gN gDM-1; see ROW_BASIS_organ_rows")') gnf_cum_stem
     ! This row prints the chaff structural-nitrogen floor IN FORCE, so that the
     ! published diagnostic can never disagree with the executable: record 178 = 1
@@ -13724,9 +14514,9 @@ IF (grainN_sink_mech >= 1 .AND. grainN_sink_mech /= 3) THEN
       ' (rec 178 = 0: the sheath/internode n2_struct_stem = 3.5e-3; rec 178 = 1: the chaff own' // &
       ' measured n2_struct_chaff = 5.10e-3, Bertheloot 2011b Table 1(c) column Chaff; rec 178 = 2: Pask 2012' // &
       ' chaff structural minimum 3.80e-3 PLUS the NRE floor (1 - 0.56) x N_chaff(anthesis); rec 178' // &
-      ' = 3: the same NRE law on the 5.10e-3 floor). THIS ROUTE DID NOT' // &
-      ' EXIST BEFORE THE GRAIN-N SINK LAW: N_chaff was FROZEN from anthesis to maturity on 22 of 22 baseline decks,' // &
-      ' stranding 0.6-3.6 g N m-2 that PP148 p.1711 measures as mobile; see ROW_BASIS_organ_rows")') &
+      ' = 3: the same NRE law on the 5.10e-3 floor). Without this route N_chaff would stay FROZEN' // &
+      ' from anthesis to maturity, stranding chaff N that PP148 p.1711 measures as mobile;' // &
+      ' see ROW_BASIS_organ_rows")') &
       gnf_cum_chaff, n2_struct_chaff_use
     WRITE (unit_gnl,'("source_total,",G14.6,",g N m-2, must equal realised grain N to machine precision")') tot_src
     WRITE (unit_gnl,'(A)') '# --- measured envelopes: falsification targets, never tuning targets ---'
@@ -13741,31 +14531,31 @@ IF (grainN_sink_mech >= 1 .AND. grainN_sink_mech /= 3) THEN
     WRITE (unit_gnl,'("organ_state_N_closure_max_gN_m2_d,",G14.6,",max |dN_leaf + dN_stem + dN_storage' // &
       ' + dN_mobile - N_assimilated| over the run, read from ORGAN STATE captured on entry -- NOT the' // &
       ' flux identity re-arranged. A dropped decrement or a double-counted import surfaces at its own' // &
-      ' size. Written because the item-C auditor showed the old carbon check was a tautology")') gnf_nres_max
-    WRITE (unit_gnl,'("DECLARED_DEPARTURE,",A)') 'CONFINED TO STEM AND CHAFF as of the 2026-09-21' // &
-      ' Eqn-6 repair. The LAMINA now runs FPB Eqn 4 in full (Eqn 5 degradation, unconditional, PLUS' // &
+      ' size; a check built from the flux identity itself would be a tautology")') gnf_nres_max
+    WRITE (unit_gnl,'("DECLARED_DEPARTURE,",A)') 'CONFINED TO STEM AND CHAFF.' // &
+      ' The LAMINA runs FPB Eqn 4 in full (Eqn 5 degradation, unconditional, PLUS' // &
       ' Eqn 6 synthesis), so delta acts inside the calibration that produced it. Stem and chaff keep' // &
       ' the demand-gated delta potential because FPB models the stem as a FORCED variable (Eqn 14' // &
-      ' p.784) and gives it no sigma; a sigma for them exists only in Bertheloot 2011b, which is NOT on this' // &
-      ' machine. Making their degradation unconditional with no synthesis limb would repeat the very' // &
-      ' error being repaired, one organ over. CONSEQUENCE: where the sink binds, STEM and CHAFF N is' // &
-      ' retained rather than degraded; the LAMINA is no longer stripped bare.'
+      ' p.784) and gives it no sigma; a sigma for them exists only in Bertheloot 2011b, which was not' // &
+      ' available. Unconditional degradation with no synthesis limb would drain stem and chaff N' // &
+      ' with nothing to balance it. CONSEQUENCE: where the sink binds, STEM and CHAFF N is' // &
+      ' retained rather than degraded, while the LAMINA keeps the N that Eqn 6 synthesises.'
     WRITE (unit_gnl,'("NOT_MODELLED,",A)') 'any CO2 term in the grain-N law -- FPB Eqn 11-12 has none,' // &
       ' so this model reproduces ONLY the growth-DILUTION half of the eCO2 protein decline. Pleijel &' // &
       ' Uddling 2012 Glob Change Biol 18:596-605 p.599 measured, over 57 experiments, y = 0.75x - 0.072' // &
       ' with intercept 0.072 +- 0.038 P < 0.001: at ZERO CO2-induced yield change grain protein yield' // &
       ' still falls about 7 %. THE YIELD-INDEPENDENT HALF IS ABSENT BY CONSTRUCTION and is NOT absorbed' // &
       ' into a tuned sink. Also not modelled: FPB Eqn 6 for the STEM and CHAFF (no sigma exists for' // &
-      ' them in any source on this machine); FPB p.786 [N]mob = 1e-4 kg kg-1 grain cut-off, which that' // &
+      ' them in any available source); FPB p.786 [N]mob = 1e-4 kg kg-1 grain cut-off, which that' // &
       ' page introduces expressly to avoid TRANSITORY NEGATIVE N_c^mob -- a solver guard, not a' // &
       ' physiological floor, and the daily pool here cannot go negative; any grain protein' // &
       ' FRACTION (albumin/gliadin/glutenin, Martre 2003); nitrate-assimilation inhibition (Bloom 2014).'
-    WRITE (unit_gnl,'("RETIRED_BY_THIS_ITEM,",A)') 'the grain taking 100 % of N_assim_avail and 100 % of' // &
+    WRITE (unit_gnl,'("NOT_USED,",A)') 'the grain taking 100 % of N_assim_avail and 100 % of' // &
       ' N_mobile_veg unconditionally; the organ draw paced by n3_eff*N_organ(0)*prog with prog linear in' // &
       ' dvs2 and the Pask 2012 efficiency caps 0.76/0.48; and (on modes 1 and 4) the Jamieson & Semenov' // &
       ' 2000 NHI trajectory AS THE POST-ANTHESIS UPTAKE DEMAND. J&S is NOT called wrong: on their own' // &
       ' data H1 BEAT the per-grain sink H2 (R2 0.95 / RMSD 0.18 N% vs 0.19 / 0.88, pp.27-28). What is' // &
-      ' retired is its use as a PUMP; inside min(sink, source) the sink is only a CEILING.'
+      ' not used is its use as a PUMP; inside min(sink, source) the sink is only a CEILING.'
     CLOSE(unit_gnl)
   END BLOCK
 END IF
@@ -13849,6 +14639,11 @@ IF (energy_balance_mode == 2) THEN
   END BLOCK
 END IF
 
+IF (stem_reserve_deposition_n_basis >= 1) WRITE (*,'(A,F8.3,A,2F8.3,A,I0)') &
+  ' rec 172 van Herwaarden WSC share: last NNI ', vhw_nni_last, ' ; f min/max ', vhw_frac_min, vhw_frac_max, &
+  ' ; days ', vhw_days_live
+IF (organ_n_storage_basis == 1) WRITE (*,'(A,F10.3)') &
+  ' rec 191 organ_n_storage_basis = 1: assimilated overflow kept as mobile reduced N, season sum (g N m-2) = ', ons_ovf_cum
 !==============================================================================!
 CONTAINS
 
@@ -13868,12 +14663,12 @@ SUBROUTINE reject_retired_option (rec_no, rec_var, got, allowed_txt)
     ' (', TRIM(rec_var), ') = ', got
   WRITE (*,'(A,I0,A,A)') '   M&M-CO2Wheat v1.0 implements only these values of record ', &
     rec_no, ': ', TRIM(allowed_txt)
-  WRITE (*,'(A)') '   The code of every other value of this record was removed from the'
+  WRITE (*,'(A)') '   No other value of this record is implemented in the'
   WRITE (*,'(A)') '   v1.0 release. It is refused here so that it can never fall through'
   WRITE (*,'(A)') '   to a different mechanism or to an undefined value.'
   WRITE (*,'(A)') '   This option is not available in v1.0 (see Part 1, Table 6).'
   WRITE (*,'(A)') ' ------------------------------------------------------------'
-  ERROR STOP 'retired driver option: see the record number printed above'
+  ERROR STOP 'unsupported driver option: see the record number printed above'
 END SUBROUTINE reject_retired_option
 
   ! The root and shoot nitrate-reduction block, as an internal procedure so that

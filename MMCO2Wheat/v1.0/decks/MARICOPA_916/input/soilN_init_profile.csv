@@ -1,0 +1,21 @@
+! Maricopa FACE TRNO 916 MEASURED initial mineral N by layer - archive yield.ods Init_conditions_Soil_layers
+! (icno3, icnh4 ppm) x bulk density (Soil_layers slbdm, AZMC920001) x thickness; sampled 1996-12-19.
+! Unsampled depths carry no initial mineral N. Columns: z_top_m,z_bot_m,NO3_gN_m2,NH4_gN_m2
+! 0-0.9 m layers SCALED x6.90 to the MEASURED 1997 total of Wall et al. (2000) Photosynth Res 66:79, p.81:
+! "During 1997, soil had 14.5 g N m-2 as ammonium plus nitrate in the top 0.9 m profile".
+! The 1997 archive values are ~7x below Wall in both N treatments (1996 archive agrees with Wall 8.0: 10.0). Archive depth SHAPE kept
+! (FLAGGED); layers below 0.9 m unchanged (archive). Archive 0-0.9 m total was 2.10 g N m-2.
+0.00,0.05,1.89710,0.08130
+0.05,0.15,3.67834,0.15764
+0.15,0.30,1.37941,0.23646
+0.30,0.50,3.63972,0.32273
+0.50,0.60,0.70960,0.11151
+0.60,0.70,0.66905,0.10137
+0.70,0.90,1.34252,0.17323
+0.90,1.10,0.16642,0.03140
+1.10,1.20,0.06908,0.01884
+1.20,1.30,0.06908,0.01884
+1.30,1.50,0.13816,0.03768
+1.50,1.70,0.13816,0.03768
+1.70,1.90,0.13816,0.03768
+1.90,2.10,0.13816,0.03768

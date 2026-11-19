@@ -1,6 +1,6 @@
 input/weather.csv
 100                        ! NTsteps: Number of time steps
-0.30                       ! Initial root depth (m) [CAL_MARICOPA 2026-10-09: corrected from the 0.01 m generic template to the archive's own stated 1993/94-season value 0.30 m (Kimball et al. 2017 ODJAR 3:29-38 management/initial-conditions data, finding recorded in the FACE-sites tables note (internal; not distributed) Sect. Maricopa); allowed-range basis: plan Sect. B.3 row 'Initial soil water / root depth']
+0.30                       ! Initial root depth (m) [CAL_MARICOPA: set to the archive's own stated 1993/94-season value 0.30 m (Kimball et al. 2017 ODJAR 3:29-38 management/initial-conditions data, finding recorded in the FACE-sites tables note (internal; not distributed) Sect. Maricopa); allowed-range basis: plan Sect. B.3 row 'Initial soil water / root depth']
 .FALSE.                    ! wt_pres: Water table presence
 10                         ! Number of soil layers used in the simulation
 0.30200

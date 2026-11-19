@@ -3,11 +3,11 @@
 
 # File inventory — M&M-CO2Wheat v1.0
 
-Written 2026-10-21. Three parts: **what ships** (sources, build, documentation, tools,
-test case), **what a run reads** (the input files), and **what a run writes** (the 88
+Updated 2026-11-18. Three parts: **what ships** (sources, build, documentation, tools,
+test case), **what a run reads** (the input files), and **what a run writes** (the 90
 output files, one line each).
 
-The output list was derived from the reference simulation itself — the 88 files in
+The output list was derived from the reference simulation itself — the 90 files in
 `testcase/output/`, with their own header rows — not from memory. Units are given as the
 file states them; where a column name already carries the unit (`_mm_d`, `_gN_m2`,
 `_W_m2`, `_degCd`) the line names the quantity and the basis instead of repeating every
@@ -17,12 +17,12 @@ column.
 
 ## 1. What ships
 
-### 1.1 Sources — 19 files, 18 compiled units
+### 1.1 Sources — 20 files, 19 compiled units
 
 | file | one line |
 |---|---|
 | `TYPES.f90` | working-precision kind parameters `wp`, `ik`; declaration only |
-| `SHARED.f90` | the global store: constants, measured parameters, the 183 driver switches, every pool and ledger, six helper routines |
+| `SHARED.f90` | the global store: constants, measured parameters, the 198 driver switches, every pool and ledger, six helper routines |
 | `csv_file.f90` | minimal CSV writer (reduced form of Arjen Markus's public-domain module) |
 | `csv_file_1d.f90` | `include` body of `csv_file.f90`'s array write routine; not a separate program unit |
 | `count_lines.f90` | counts the records of an input file so the daily arrays can be sized |
@@ -32,6 +32,7 @@ column.
 | `radiation_module.f90` | component shortwave split and gray-body longwave radiosity; net radiation of canopy and soil |
 | `soil_heat_module.f90` | 1-D soil heat conduction on a grid extended to about 5 m; backward Euler, Thomas algorithm |
 | `soiln_module.f90` | residue and microbial C-N turnover; mineralization and immobilization |
+| `nitrogen_radial_module.f90` | radial Barber-Cushman nitrate and ammonium uptake at the root surface, per soil layer (driver record 189) |
 | `assim.f90` | leaf gas exchange: Farquhar-Busch photosynthesis, Leuning conductance, optional leaf water potential |
 | `energy_balance_module.f90` | three-node canopy / soil / canopy-airspace energy balance, damped Newton on a 3x3 Jacobian |
 | `hydro.f90` | mixed-form Richards soil water in adaptive implicit sub-steps; van Genuchten-Mualem, Feddes uptake |
@@ -39,7 +40,7 @@ column.
 | `phenology_module.f90` | thermal time, vernalization, photoperiod, the eight stage dates and the 0-2 development stage |
 | `CANOPY_MODEL.f90` | the hourly canopy integration and the canopy-temperature solve |
 | `growth_module.f90` | the daily carbon and nitrogen economy, organ-level canopy, grain number and filling |
-| `main_MMCO2Crop.f90` | `PROGRAM mmco2crop`: reads the decks, refuses retired options, runs the day loop, writes the 88 outputs |
+| `main_MMCO2Crop.f90` | `PROGRAM mmco2crop`: reads the decks, refuses retired options, runs the day loop, writes the 90 outputs |
 
 Per-module detail, including what calls what and which module consumes each output:
 `docs/MODULES.md`.
@@ -57,20 +58,21 @@ Per-module detail, including what calls what and which module consumes each outp
 | `README.md` | the release README: what the model is, dependencies, build, run, verify, the two tolerance statements, source table, citation, licence, contact |
 | `INPUT_GUIDE.md` | the input manual: every input file, its format and units, mandatory versus defaulted, and the allowed value of every driver record |
 | `LICENSE` | M&M-CO2Crop Research Licence v1.0 |
-| `CITATION.cff` | machine-readable citation; version 1.0.0, both companion papers, DOIs marked pending |
+| `CITATION.cff` | machine-readable citation; version 1.0.0, both companion papers (submitted to Geoscientific Model Development); the DOI of this package, 10.5281/zenodo.23687586 |
 | `docs/MODULES.md` | per-module reference: role, calls, called by, outputs and consumers, time step, spatial unit |
 | `docs/ARCHITECTURE.dot` | the module call and data-flow graph, the source of truth for the diagram |
 | `docs/ARCHITECTURE.png` | the rendered diagram: modules as boxes grouped by time step, arrows labelled with the main variables |
 | `docs/FILE_INVENTORY.md` | this file |
 | `docs/V1_KNOWN_LIMITATIONS.md` | the optional diagnostics that v1.0 cannot produce, with the record and the file name of each |
 | `testcase/README.md` | how to run and compare the Part 1 reference simulation |
+| `testcase/compare.py` | the acceptance check of a run against `testcase/output` (IDENTICAL / PASS / DIFFERENT-DIAGNOSTIC / FAIL); fixed tolerances listed in `testcase/README.md`. Standard library only |
 
 ### 1.4 Tools
 
 | file | one line |
 |---|---|
 | `tools/compare_outputs.py` | compares a produced `output/` tree against the shipped expected one; per file, byte identity or the maximum absolute and relative difference per numeric column with the row at which it occurs. Standard library only |
-| `scripts/release_acceptance.py` | the release acceptance harness: rebuilds nothing, runs all 42 release decks against a sealed reference arm and reports identical / differing / missing / extra. Standard library only |
+| `scripts/release_acceptance.py` | the acceptance harness: rebuilds nothing, runs every deck of a reference arm and reports identical / differing / missing / extra. Standard library only |
 | `scripts/render_architecture.py` | renders `docs/ARCHITECTURE.png` from `docs/ARCHITECTURE.dot` without Graphviz; fails if the two disagree. Standard library plus the macOS system thumbnailer |
 
 `scripts/release_acceptance.py` stays in `scripts/`, where every existing evidence file
@@ -80,19 +82,19 @@ and the release handoff already point; it was not moved into `tools/`.
 
 | path | one line |
 |---|---|
-| `testcase/input/` | the 31 input files of the Part 1 reference simulation `WDF25_Ruta_aCO2_WW`, byte-copied from the frozen v1.0 reference run |
-| `testcase/output/` | the 88 expected result files of that simulation, byte-copied from the same arm |
-| `testcase/run.log` | the console log of that simulation, produced by the CURRENT build (see `testcase/README.md`) |
-| `testcase/MD5SUMS` | 120 digests covering `input/`, `output/` and `run.log` |
+| `testcase/input/` | the 21 input files of the Part 1 reference simulation `WDF25_Ruta_aCO2_WW`, byte-copied from `decks/WDF25_Ruta_aCO2_WW/input` |
+| `testcase/output/` | the 90 expected result files of that simulation, written by the build of this package |
+| `testcase/run.log` | the console log of that simulation, produced by the build of this package (see `testcase/README.md`) |
+| `testcase/MD5SUMS` | 112 digests covering `input/`, `output/` and `run.log` |
 | `testcase/README.md` | what the case is, the exact run command, the exact compare command, and the `run.log` note |
 
-### 1.6 Not part of the release set
+### 1.6 Shipped but not itemized here
 
-The working tree also carries development material: the remaining `docs/` and `scripts/`
-files, the analysis and figure scripts at the top level, the local literature library, the
-input decks other than the reference case, and the historical plan and status documents.
-None of it is needed to build, run or verify the model, and none of it is covered by this
-inventory.
+`decks/` (the 38 input decks of the evaluated experiments, with `decks/DECK_MANIFEST.csv`),
+`paper_scripts/` (the figure and table scripts of both papers, with the processed
+observation tables they read) and the remaining files of `tools/` (calibration and
+soil-parameter helper scripts) ship with this package. None of them is needed to build,
+run or verify the model, and none of them is covered by this inventory.
 
 ---
 
@@ -106,7 +108,7 @@ the driver record table are in `INPUT_GUIDE.md`.
 
 | file | one line |
 |---|---|
-| `input/driver_main.txt` | the 183 positional run-control records: weather file path, site, canopy, soil, CO2, and every process switch. Record 1 names the weather file |
+| `input/driver_main.txt` | the 198 positional run-control records: weather file path, site, canopy, soil, CO2, and every process switch. Record 1 names the weather file |
 | `input/input_daily_meteo.csv` | the daily weather forcing named by record 1: year, month, day, sunrise hour, Tmax, Tmin, RHmax, RHmin, wind, precipitation, irrigation, radiation |
 | `input/driver_swtr.txt` | soil-profile setup: hydraulic CSV path, Richards sub-step count, initial root depth, water-table flag, layer count, initial volumetric water content per layer, layer depth boundaries |
 | `input/SoilLayer_vgm.csv` | per-layer van Genuchten-Mualem parameters; header `Layer,theta_r,theta_s,alpha_m-1,n,l,ksat_m_d` |
@@ -117,10 +119,13 @@ the driver record table are in `INPUT_GUIDE.md`.
 | `input/driver_minerals.csv` | one row per element (Fe, Zn, Ca, Cu, Mg, Mn): buffer power, uptake kinetics, ceilings, phloem mobility, remobilization rate, initial labile pool |
 | `input/N_fertilizer.csv` | fertilizer applications: `DAS, N_kg_per_ha[, form]`; form defaults to urea |
 | `input/N_organic_treatments.csv` | organic residue and amendment events: count line, then type, DAS, dry mass, N%, C%, fast fraction, age before sowing |
+| `input/presow_daily.csv` | optional: daily pre-run soil temperature and water factor for pre-sowing residue decomposition (driver record 194 = 1) |
+| `input/soilN_init_profile.csv` | optional: measured initial mineral N by layer (Maricopa decks) |
+| `input/soilN_measured_state.csv` | optional: mineral N reset on a measurement day (Braunschweig decks) |
 
 ### 2.2 Carried in the reference deck but not read by the model
 
-Byte-copied with the deck so that `testcase/input/` is exactly what the frozen run was
+Byte-copied with the deck so that `testcase/input/` is exactly what the reference run was
 fed. They change nothing.
 
 | file | one line |
@@ -134,7 +139,7 @@ fed. They change nothing.
 
 ---
 
-## 3. What a run writes — the 88 output files
+## 3. What a run writes — the 90 output files
 
 All are comma-separated with a header row, written to `output/`. "Daily" means one row
 per simulated day (160 rows in the reference case), "per layer" means one row per day and
@@ -204,7 +209,7 @@ class, rank, or named quantity.
 | `daily_wsc_fate.csv` | the record-148 fate law: reserve before and after (g m-2), the refused and the released terms, the deficit-driven draw and the respired part (g m-2 d-1) |
 | `daily_carbon_overflow.csv` | surplus carbon when the sink is full: the day's surplus, what the reserve stored, what was lost, their cumulatives (g m-2) and the sink-full flag |
 | `daily_repro_surplus_fate.csv` | the reproductive-phase surplus: cumulative surplus and labelled reserve, carbon refused to the residual pool per day and cumulatively (g m-2), and the number of refused days |
-| `daily_root_front.csv` | root front descent: the daily rate (mm d-1), the legacy and the current root depth and the maximum (m) |
+| `daily_root_front.csv` | root front descent: the daily rate (mm d-1), the baseline (Borg & Grimes) and the current root depth and the maximum (m) |
 
 ### 3.4 Canopy architecture (organ-level)
 
@@ -252,6 +257,8 @@ class, rank, or named quantity.
 | `daily_leafN_capacity.csv` | the lamina nitrogen capacity route: assimilating LAI, green mass, leaf nitrogen before and after, the exported and surplus nitrogen, nitrogen per assimilating area (g N m-2) and leaf nitrogen as percent of dry matter |
 | `daily_lai_n_arrest.csv` | the nitrogen arrest of leaf expansion: the mode and whether it is live, the priority fraction, the area increment, area removed and shed with their cumulatives (m2 m-2), the dry matter removed and the specific leaf nitrogen before and after |
 | `daily_organ_n_turnover.csv` | the NEMA organ-nitrogen turnover, one row per post-anthesis day: the mobile pool before, the uptake credit, the demand and supply of lamina, stem, chaff and root, the grain import and what bound it (g N m-2) |
+| `daily_rhizo_immob.csv` | microbial immobilization of mineral N on root-released carbon (driver record 197): root depth, root dry matter of the previous day, the day's N demand and immobilization, and the cumulatives from ammonium and nitrate (g N m-2) |
+| `daily_soilN_drivers.csv` | the soil organic N law of driver record 194: surface soil temperature, mean temperature of the mineralizing span, the temperature and moisture factors, the soil organic N stock and the daily and cumulative mineralization (deg C, g N m-2) |
 | `daily_itemF_nclose.csv` | the nitrogen closure check: assimilating LAI, leaf nitrogen, the specific-leaf-nitrogen cap and the mean, the synthesis and mobile clipping per day and cumulatively, and the post-anthesis grain demand (g N m-2) |
 | `daily_tiller_n_afford.csv` | the nitrogen term of the tiller-survival ledger: the priority fraction, the lamina concentration, the days it bound, and per axis class the density, nitrogen demand and supply and the three affordability factors |
 | `daily_tiller_afford4.csv` | the carbon tiller-survival ledger (record 99 mode 4): the previous day's supply, leaf and floret totals, the identity check, cumulative deaths, the target densities and, per axis class, density, Haun stage, survival and death terms |

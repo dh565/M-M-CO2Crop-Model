@@ -293,6 +293,9 @@ REAL(wp), PARAMETER :: tol_theta = 1.0e-5_wp
     END BLOCK
     CALL Get_Hydraulic_Props(i_layer, r_theta(i_layer), r_h(i_layer), r_k(i_layer), r_cap(i_layer))
   END DO
+  ! Rec 81 mode 5 partitions by the CURRENT heads and conductivities, so its
+  ! sink is refreshed once the state of this call is known.
+  IF (spac_mode >= 5) CALL apply_root_sink(.FALSE.)   ! modes 5 and 6
 
   !--------------------------------------------------------------------!
   ! ADAPTIVE TIME STEPPING LOOP
@@ -1682,6 +1685,37 @@ CONTAINS
     DO j = 1, NSoil_layers
       sink_source(j) = transpiration_rate_day * root_dist(j) * uptake_alpha(j) / MAX(eps_len, tk(j))
     END DO
+    ! Rec 81 mode 5 (SHARED.f90, spac_root_psi): the sink IS the canopy
+    ! transpiration, split over the layers by Duursma & Medlyn (2012) Eq. 12,
+    ! E_i = g_i MAX(0, psi_i - psi_R), with g_i and psi_i of the current state and
+    ! psi_R the common root potential at which SUM E_i = E. The shares are applied
+    ! to the demand itself, so SUM sink = demand to round-off. The Feddes sink
+    ! above stays only where no layer has a root conductance (counted).
+    IF (spac_mode >= 5 .AND. transpiration_rate_day > 0.0_wp) THEN   ! modes 5 and 6
+      BLOCK
+        REAL(wp) :: g5(NSoil_layers), psi5(NSoil_layers), u5(NSoil_layers), psiR5
+        DO j = 1, NSoil_layers
+          g5(j) = spac_layer_g(MAX(0.0_wp, root_dist(j)), W_root * MAX(0.0_wp, root_dist(j)) * nud_SRL, &
+                               tk(j), r_k(j))
+          psi5(j) = spac_rho_g * r_h(j)
+        END DO
+        IF (SUM(g5) > 0.0_wp) THEN
+          psiR5 = spac_root_psi(NSoil_layers, g5, psi5, &
+                                transpiration_rate_day / 86400.0_wp * (1.0e6_wp / 18.015_wp))
+          u5 = g5 * MAX(0.0_wp, psi5 - psiR5)
+          IF (SUM(u5) > 0.0_wp) THEN
+            DO j = 1, NSoil_layers
+              sink_source(j) = transpiration_rate_day * u5(j) / SUM(u5) / MAX(eps_len, tk(j))
+            END DO
+            hydro_m5_psiR_MPa = psiR5
+          ELSE
+            hydro_m5_nog_steps = hydro_m5_nog_steps + 1
+          END IF
+        ELSE
+          hydro_m5_nog_steps = hydro_m5_nog_steps + 1
+        END IF
+      END BLOCK
+    END IF
     IF (store_diag) THEN
       hydro_Fraw_diag = Fraw
       hydro_comp_denom_diag = denom

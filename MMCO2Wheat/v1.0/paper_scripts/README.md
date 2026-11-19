@@ -36,7 +36,7 @@ the model output files (by deck) and observation files it reads.
 ## Software
 
 The figures of the papers were made with Python 3.13.16, NumPy 2.5.3, pandas 3.0.5, SciPy 1.18.1,
-Matplotlib 3.11.2, odfpy 1.4.1 and cmcrameri 1.10 on Linux, with the fonts Liberation Sans /
+Matplotlib 3.11.2 and odfpy 1.4.1 on Linux, with the fonts Liberation Sans /
 DejaVu Sans. Any Python 3.9+ with the packages of `requirements.txt` reproduces the content of
 every figure; a pixel-identical PNG additionally needs Matplotlib 3.11.2 and the same fonts.
 
@@ -45,8 +45,7 @@ every figure; a pixel-identical PNG additionally needs Matplotlib 3.11.2 and the
 ### 1. The reference-outputs archive (`REF_OUTPUTS`)
 
 `MMCO2Wheat_v1.0_FACE_reference_outputs` — 38 deck folders, each with `input/`, `output/`
-(88 files) and `run.log`, as published with the code package `MMCO2Wheat_v1.0` (source commit
-`1cab3d55` with the 27 Oct 2026 re-seal, executable md5 `65eb0273a9a543ab807d9f0920072bf1`; see `PROVENANCE.md`). Every Part 2 and Supplement
+and `run.log`, produced with the code package `MMCO2Wheat_v1.0` (see `PROVENANCE.md`). Every Part 2 and Supplement
 number comes from these files.
 
 ### 2. The model executable (`MODEL_EXE`) — Part 1 Figs. 2–5 and Table 5 only
@@ -63,8 +62,9 @@ package's `docs/START_HERE.md`).
 Observations from the two open data sets are redistributed in `observations/` and need no
 action. The WheatDryFACE files the scripts read are the **processed** per-treatment files of
 the experiment (treatment means and standard deviations over the replicate rings, daily
-sensor series, campaign means, porometer and thermal-image means); these are deposited openly
-with the WheatDryFACE data set (the plot-level raw data stay under embargo until 2029-01-01).
+sensor series, campaign means, porometer and thermal-image means); these are deposited openly at Zenodo in this layout, https://doi.org/10.5281/zenodo.23688951 (the same
+observations in ICASA format: Helman and Mulero 2026a, https://doi.org/10.5281/zenodo.24352317; the raw data:
+Helman and Mulero 2026b, https://doi.org/10.5281/zenodo.24352486).
 They must be placed under `OBS_DIR` with exactly this layout and these names:
 
 ```

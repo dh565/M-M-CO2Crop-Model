@@ -1,19 +1,19 @@
 quantity,value,units
 LMA_used,   48.5000    ,g DM m-2
 LMA_implied_SLA,   20.6186    ,m2 kg-1
-lamina_area_built_total,   3.69134    ,m2 m-2
-lamina_C_demanded_total,   179.030    ,g DM m-2
+lamina_area_built_total,   4.25720    ,m2 m-2
+lamina_C_demanded_total,   206.474    ,g DM m-2
 backlog_end,   0.00000    ,g DM m-2
-backlog_max,   1.96791    ,g DM m-2
-limited_days,9,days
+backlog_max,   2.03592    ,g DM m-2
+limited_days,7,days
 fln_cut,0,leaves
 cohorts_aborted,0,count
 births_suspended,0,days
-partition_sum_err_max,  0.111022E-15,-
-realized_SLA_end,   20.0765    ,m2 kg-1
-LAI_sink_end,  0.697623E-01,m2 m-2
-PAI_diag_end,   6.03572    ,m2 m-2
-lai_basis_Ncapacity_end,  0.625469E-01,m2 m-2
+partition_sum_err_max,  0.222045E-15,-
+realized_SLA_end,   19.5885    ,m2 kg-1
+LAI_sink_end,  0.647570E-01,m2 m-2
+PAI_diag_end,   6.77867    ,m2 m-2
+lai_basis_Ncapacity_end,  0.595056E-01,m2 m-2
 
 inversion_input,value,units_or_status
 row_spacing,NOT A MODEL VARIABLE,the model is 1-D and carries no row geometry; the SITE value (0.175 m rows) is a site input (see INPUT_GUIDE.md)

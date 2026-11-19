@@ -115,12 +115,12 @@ def fig_tcan(out):
     def _st(x, y):
         x = np.array(x, float); y = np.array(y, float); m = np.isfinite(x) & np.isfinite(y); x, y = x[m], y[m]
         return "n = %d, r = %.2f, RMSD = %.2f K, bias %+.2f K" % (len(x), np.corrcoef(x, y)[0, 1], np.sqrt(np.mean((y - x) ** 2)), np.mean(y - x))
-    sys.stderr.write("FIG10B WDF %s | MAR %s\n" % (_st(XO, YM), _st(Xm, Ym)))
+    sys.stderr.write("FIG10B WDF %s | MAR %s | both %s\n" % (_st(XO, YM), _st(Xm, Ym), _st(XO + Xm, YM + Ym)))
     onetoone(axb, XO + Xm, YM + Ym)
-    def _sts(x, y):
-        x = np.array(x, float); y = np.array(y, float); m = np.isfinite(x) & np.isfinite(y); x, y = x[m], y[m]
-        return "r %.2f, RMSD %.1f K, n %d" % (np.corrcoef(x, y)[0, 1], np.sqrt(np.mean((y - x) ** 2)), len(x))
-    axb.text(0.04, 0.865, "WDF: %s\nMaricopa: %s" % (_sts(XO, YM), _sts(Xm, Ym)), transform=axb.transAxes, ha="left", va="top", fontsize=4.6, zorder=7, bbox=dict(facecolor="white", edgecolor="none", pad=0.4, alpha=0.9))
+    # one pooled n, r, RMSD for both sites, in the text and top-left box of the Fig. 6 panels (place_stats),
+    # without its range widening, so the axes stay as they are
+    axb.text(0.04, 0.865, PF.stats_txt(XO + Xm, YM + Ym), transform=axb.transAxes, va="top", ha="left", fontsize=5.6, zorder=6,
+             bbox=dict(facecolor="white", edgecolor="none", pad=0.4, alpha=0.85))
     hb = [Line2D([], [], marker=SITE_M["WDF25"], ls="", mfc=SITE_C["WDF25"], mec=SITE_C["WDF25"], label="WheatDryFACE"),
           Line2D([], [], marker=SITE_M["MARICOPA"], ls="", mfc="none", mec=SITE_C["MARICOPA"], label="Maricopa")]
     axb.legend(handles=hb, loc="lower right", fontsize=5.8, handletextpad=0.3, borderpad=0.3, frameon=False, ncol=1)

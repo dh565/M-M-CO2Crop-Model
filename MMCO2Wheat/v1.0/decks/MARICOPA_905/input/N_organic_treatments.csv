@@ -1,4 +1,7 @@
-! Maricopa FACE TRNO 905 initial surface residue - archive Init_conditions
-! icpcr=WHB icrag=1100 kg/ha icrn=0.53 %N icdat=1993-12-09
-1
-cereal_residue,2,1100.0,0.530,40.0,-1,4,Maricopa initial residue (previous crop WHB)
+! Maricopa FACE TRNO 905 residue of the previous crop - archive yield.ods Init_conditions
+! icdat=1993-12-09 icpcr=WHB icrag=1100 kg/ha icrt=500 kg/ha (roots) icrn=0.53 %N icrip=100 % icrdp=30 cm
+! In-season event at DAS 2 (age 0).
+! Root residue: N % NOT in the archive -> derived from the cereal_residue C:N (80) at C 40 % (0.50 % N), FLAGGED ESTIMATE.
+2
+cereal_residue,2,1100.0,0.530,40.0,-1,0,Maricopa residue (previous crop WHB) archive icrag/icrn
+cereal_residue,2,500.0,-1,40.0,-1,0,Maricopa root residue of previous crop archive icrt (N from C:N 80 ESTIMATE)

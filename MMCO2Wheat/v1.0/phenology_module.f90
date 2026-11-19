@@ -240,9 +240,9 @@ CONTAINS
     CALL read_int(iunit, params%gdd_method, dummy_label, ios_out)
     IF (ios_out /= 0) GOTO 900
     ! ------------------------------------------------------------------------- !
-    ! RETIRED-OPTION REJECTION (v1.0). calc_dtt below implements GDD_Method 1 only
-    ! (simple growing-degree day, max(0, T - Tb)); the code of every other method was
-    ! removed by the v1.0 clean-up, so any other value is refused here rather than
+    ! RETIRED-OPTION REJECTION. calc_dtt below implements GDD_Method 1 only
+    ! (simple growing-degree day, max(0, T - Tb)); no other method is
+    ! implemented, so any other value is refused here rather than
     ! left to return an undefined thermal-time increment.
     ! ------------------------------------------------------------------------- !
     IF (params%gdd_method /= 1) THEN
@@ -251,11 +251,11 @@ CONTAINS
       WRITE (*,'(A,I0)') '   read ', params%gdd_method
       WRITE (*,'(A)') '   M&M-CO2Wheat v1.0 implements only GDD_Method = 1 (simple'
       WRITE (*,'(A)') '   growing-degree day, max(0, T_mean - T_base)). The code of every'
-      WRITE (*,'(A)') '   other method was removed from the release; it is refused here so'
+      WRITE (*,'(A)') '   other method is not implemented; it is refused here so'
       WRITE (*,'(A)') '   that calc_dtt can never return an undefined value.'
       WRITE (*,'(A)') '   This option is not available in v1.0 (see Part 1, Table 6).'
       WRITE (*,'(A)') ' ------------------------------------------------------------'
-      ERROR STOP 'phenology_cultivar.txt: retired GDD_Method'
+      ERROR STOP 'phenology_cultivar.txt: unsupported GDD_Method'
     END IF
     CALL read_real(iunit, params%t_base, dummy_label, ios_out)
     IF (ios_out /= 0) GOTO 900
@@ -746,8 +746,8 @@ CONTAINS
     ! ------------------------------------------------------------------------- !
     ! Daily thermal time. Method 1, the simple growing-degree-day form
     ! max(0, T - Tb) with the genotype base temperature, is the only method
-    ! implemented: the code of every other method was removed by the v1.0
-    ! clean-up. read_phenology_cultivar refuses any other GDD_Method, so the
+    ! implemented; no other method has code.
+    ! read_phenology_cultivar refuses any other GDD_Method, so the
     ! ELSE below is unreachable in a run that started; it exists so that this
     ! function can never return an undefined value.
     ! ------------------------------------------------------------------------- !
@@ -757,7 +757,7 @@ CONTAINS
       calc_dtt = 0.0_wp
       WRITE (*,'(A,I0)') ' REFUSING TO RUN: calc_dtt reached with GDD_Method = ', method
       WRITE (*,'(A)') '   Only GDD_Method = 1 is implemented in M&M-CO2Wheat v1.0.'
-      ERROR STOP 'calc_dtt: retired GDD_Method'
+      ERROR STOP 'calc_dtt: unsupported GDD_Method'
     END IF
   END FUNCTION calc_dtt
 

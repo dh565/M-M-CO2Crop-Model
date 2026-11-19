@@ -34,7 +34,7 @@
 !       scale leaf fluxes to the canopy in CANOPY_MODEL.f90; I_drrad_h and
 !       I_dfrad_h, the canopy-intercepted direct and diffuse total solar
 !       radiation (W m-2 ground), returned as diagnostics with no downstream
-!       consumer in v1.0.
+!       consumer.
 ! Called by: CANOPY_MODEL.f90, once per hourly step before the canopy-temperature
 !       and assimilation solution.
 !===============================================================================!
@@ -183,6 +183,49 @@ Absor_IPAR_shaded_h &
 IF (Kdr > zero) THEN
   sunlit_lai = (1. - tao_drrad) / Kdr
   shaded_lai = gParam_lai - sunlit_lai
+END IF
+!------------------------------------------------------------------------------!
+! 3. Driver record 185 = 1: absorbed PAR that conserves the intercepted PAR.
+!    Per unit leaf area at cumulative leaf area l, the absorbed flux is the depth
+!    derivative of the attenuated fluxes of Eqs. 3.31 and 3.33-3.34 (same kdr,
+!    kdf, sqrt(alpha) and p):
+!      diffuse          (1-p) kd' Q_df exp(-kd' l),             kd' = sqrt(alpha) kdf
+!      beam + scatter   (1-p) kb' Q_dr exp(-kb' l),             kb' = sqrt(alpha) kdr
+!      direct beam      alpha kdr Q_dr exp(-kdr l)  (sunlit leaves only)
+!    The sunlit class integrates these weighted by the sunlit probability
+!    exp(-kdr l); the shaded class is the canopy total minus the sunlit part.
+!    The canopy totals are then exactly the intercepted fluxes of Eqs. 3.8 and
+!    3.32, which the default branch (Eqs. 3.36-3.39) does not conserve.
+!    Sources (read in full): absorbed irradiance per
+!    unit leaf area is the depth derivative of the flux, Spitters (1986) Agric
+!    For Meteorol 38:231, Eqs. 9-14 pp. 234-235, and de Pury & Farquhar (1997)
+!    Plant Cell Environ 20:537, Table A1 Eqs. A1-A8 and A11 p. 553; the sunlit
+!    integrals below are the complements of their shaded-leaf integrals,
+!    Eqs. A26b (diffuse) and A26c (scattered beam), p. 555, term for term,
+!    with this model's own coefficients (alpha = 1 - sigma, p for rho).
+!------------------------------------------------------------------------------!
+IF (par_absorb_conserving == 1 .AND. gParam_lai > 1.0e-6_wp) THEN
+  BLOCK
+    REAL(wp) :: kdp, kbp, sa, L, Ic_df, Ic_bt, Ic_bd, Isun
+    sa  = sqrt(const_alpha_par)
+    L   = gParam_lai
+    kdp = Kdf * sa
+    Ic_df = (1. - const_P_par) * IPAR_df * (1. - exp(-kdp * L))
+    IF (Kdr > zero) THEN
+      kbp   = Kdr * sa
+      Ic_bt = (1. - const_P_par) * IPAR_dr * (1. - exp(-kbp * L))
+      Ic_bd = const_alpha_par * IPAR_dr * (1. - tao_drrad)
+      Isun  = Ic_bd &
+            + (1. - const_P_par) * IPAR_df * kdp / (kdp + Kdr) * (1. - exp(-(kdp + Kdr) * L)) &
+            + IPAR_dr * ( (1. - const_P_par) * kbp / (kbp + Kdr) * (1. - exp(-(kbp + Kdr) * L)) &
+                        - const_alpha_par * (1. - exp(-2. * Kdr * L)) / 2. )
+      Absor_IPAR_sunlit_h = Isun / MAX(sunlit_lai, 1.0e-9_wp)
+      Absor_IPAR_shaded_h = MAX(zero, Ic_df + Ic_bt - Isun) / MAX(shaded_lai, 1.0e-9_wp)
+    ELSE
+      Absor_IPAR_sunlit_h = zero
+      Absor_IPAR_shaded_h = Ic_df / L
+    END IF
+  END BLOCK
 END IF
 !------------------------------------------------------------------------------!
 END SUBROUTINE solar

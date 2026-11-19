@@ -106,7 +106,7 @@ MODULE MINERAL_MODULE
                     mib_fl_sum, mib_fl_off_sum, mib_fl_days, &               ! record 168 season ledgers
                     mib_days_at_zero, mib_vwc_min, mib_vwc_max, &
                     zn_uptake_kinetic_basis, &   ! record 169: saturating root-surface zinc transport
-                    mg_solution_basis, &   ! record 181: magnesium solution concentration; off in v1.0, magnesium keeping the sorption partition below
+                    mg_solution_basis, &   ! record 181: magnesium solution concentration; off in the deck configuration, magnesium keeping the sorption partition below
                     mineral_buffer_power_basis, &   ! record 183: linear-isotherm buffer power of the diffusion coefficient
                     nud_bulk_density, &   ! the deck's own measured topsoil bulk density, reused from the nitrogen-uptake law
                     bpb_rho_b_used, bpb_rho_fallback, bpb_kd_used, &   ! record 183 season ledgers
@@ -598,10 +598,10 @@ CONTAINS
         ! therefore stays one-dimensional for the availability calibration. This
         ! is NOT a Michaelis-Menten term: there is no Km and no saturation, and
         ! A_e is a linear availability index, not a literal concentration.
-        ! Retired in turn when record 140 is on - the only change to the gate
+        ! Not applied when record 140 is on - the only change to the gate
         ! above being the trailing `.AND. mineral_supply_mech < 1`, the same
-        ! retirement technique this record used on zinc's field rate - and
-        ! superseded by the diffusion and zinc-transport terms below. The
+        ! switch-off technique this record uses on zinc's field rate - and
+        ! replaced there by the diffusion and zinc-transport terms below. The
         ! impedance it uses is the one of record 168, so the same factor appears
         ! at both places. SHARED.f90.
         ! -------------------------------------------------------------- !
@@ -820,7 +820,7 @@ CONTAINS
       ! grain base while the phloem is continuous, so the grain's OWN water
       ! import cannot carry a phloem-immobile element, which is why the grain
       ! water-import term and the ear-area share of record 166 below are
-      ! superseded here.
+      ! not used here.
       ! NO REMOBILIZATION: the calcium export fraction is 0.0 in every deck's
       ! driver, so the senescence-export limb below is already a no-op for
       ! calcium and this branch adds no clause to it (White & Broadley 2003
@@ -850,8 +850,8 @@ CONTAINS
           gcl_ca_veg_cum = gcl_ca_veg_cum + uptake
         END IF
       ELSE IF (mm_xylem(i) >= 0.5_wp) THEN
-        ! Record 166: the earlier calcium route, superseded by record 180 above
-        ! wherever that record is on. No phloem entry: the grain receives its
+        ! Record 166: the alternative calcium route, used only where record 180
+        ! above is off. No phloem entry: the grain receives its
         ! xylem WATER IMPORT times the solution concentration, the import being
         ! 0.7625 g H2O per g of final grain dry matter (Lizana et al. 2010,
         ! J Exp Bot 61:1147, DOI 10.1093/jxb/erp380, Tables 2+3) times the GRAIN
@@ -1047,8 +1047,8 @@ CONTAINS
         IF (mineral_n_coupling_basis == 1) THEN
           mnc_allow = mm_grain_eN(i) * mnc_dngrain           ! mg (gN)-1 x g N m-2 = mg m-2
         ELSE
-          ! RETIRED-OPTION REJECTION (v1.0): record 171 mode 2 had its own allowance
-          ! formula removed by the v1.0 clean-up, which left mnc_allow undefined here.
+          ! RETIRED-OPTION REJECTION: record 171 mode 2 is not implemented, so
+          ! mnc_allow has no definition on this branch.
           ! The startup validation in main_MMCO2Crop.f90 refuses record 171 /= 1, so
           ! this arm is unreachable in a run that started; it exists so that no path
           ! can read mnc_allow undefined.
@@ -1056,7 +1056,7 @@ CONTAINS
           WRITE (*,'(A,I0)') ' REFUSING TO RUN: mineral loading reached with record 171 = ', &
             mineral_n_coupling_basis
           WRITE (*,'(A)') '   Only record 171 = 1 is implemented in M&M-CO2Wheat v1.0.'
-          ERROR STOP 'rec 171: retired mineral_n_coupling_basis'
+          ERROR STOP 'rec 171: unsupported mineral_n_coupling_basis'
         END IF
         IF (g_load > mnc_allow + 1.0e-15_wp) THEN
           mnc_excess = g_load - mnc_allow

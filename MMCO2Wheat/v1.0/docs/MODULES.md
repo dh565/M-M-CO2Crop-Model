@@ -3,13 +3,13 @@
 
 # Module reference — M&M-CO2Wheat v1.0
 
-Written 2026-10-21. One section per compiled source file: what it does, what it calls,
+Updated 2026-11-18. One section per compiled source file: what it does, what it calls,
 what calls it, what it produces and which unit consumes each product, its time step and
 its spatial unit. The content is taken from the release header of each file and was
 verified against the code of this commit: every `USE` dependency below was re-extracted
 from the sources, and the external-subroutine calls were checked at their call sites.
 
-Nineteen source files are compiled. `TYPES.f90` and `SHARED.f90` carry declarations only;
+Twenty source files ship and nineteen are compiled. `TYPES.f90` and `SHARED.f90` carry declarations only;
 `csv_file_1d.f90` is an `include` body, not a program unit. The build order is the `OBJS`
 line of the `Makefile` and is fixed by these dependencies: `TYPES` first, `SHARED` second,
 everything else above them, `main_MMCO2Crop` last.
@@ -36,7 +36,8 @@ everything else above them, `main_MMCO2Crop` last.
 | `phenology_module.f90` | `TYPES` | `main_MMCO2Crop` | daily | whole plant (the apex) |
 | `CANOPY_MODEL.f90` | `SHARED`, `TYPES`, `energy_balance_module` (+ external `assim`, `meteo`, `solar`, `th`, `et`) | `main_MMCO2Crop` | hourly, 24 per day, with a nested fixed point | canopy as two leaf classes |
 | `growth_module.f90` | `SHARED`, `TYPES` | `main_MMCO2Crop` | daily | plant organ, tiller axis, leaf rank |
-| `main_MMCO2Crop.f90` | `SHARED`, `TYPES`, `csv_file`, `CANOPY_MODEL`, `energy_balance_module`, `soil_heat_module`, `growth_module`, `mineral_module`, `soiln_module`, `phenology_module` (+ external `hydro`, `count_lines`) | nothing — it is the main program | all four | all |
+| `nitrogen_radial_module.f90` | `SHARED`, `TYPES` | `main_MMCO2Crop` | hourly steps within a day, per soil layer | one representative root per layer (radial grid) |
+| `main_MMCO2Crop.f90` | `SHARED`, `TYPES`, `csv_file`, `CANOPY_MODEL`, `energy_balance_module`, `soil_heat_module`, `growth_module`, `mineral_module`, `soiln_module`, `nitrogen_radial_module`, `phenology_module` (+ external `hydro`, `count_lines`) | nothing — it is the main program | all four | all |
 
 `CANOPY_MODEL` reaches `assim`, `meteo`, `solar`, `th` and `et` as external subroutines
 through explicit interfaces rather than through `USE`; `main_MMCO2Crop` reaches `hydro`
@@ -45,7 +46,7 @@ callers above.
 
 ---
 
-## 1. `TYPES.f90` (32 lines)
+## 1. `TYPES.f90` (34 lines)
 
 **Role.** Declares the working-precision kind parameters: `wp` for double-precision reals
 (`SELECTED_REAL_KIND(15, 307)`) and `ik` for integers (`SELECTED_INT_KIND(9)`).
@@ -62,7 +63,7 @@ Declaration-only; no state, no executable statement.
 
 **Time step / spatial unit.** None.
 
-## 2. `SHARED.f90` (4 388 lines)
+## 2. `SHARED.f90` (4 852 lines)
 
 **Role.** The model's single global store of parameters and state: the physical constants,
 the measured plant, soil, canopy and soil-nitrogen parameters with their sources, the
@@ -145,7 +146,7 @@ array with it.
 **Time step / spatial unit.** Once per file at initialization, before the simulation
 starts; no spatial unit.
 
-## 6. `th.f90` (62 lines)
+## 6. `th.f90` (63 lines)
 
 **Role.** Solar geometry of the day at the site: solar declination from day of year,
 sunset and sunrise solar time at the site latitude, and daylength as their difference.
@@ -162,7 +163,7 @@ solar time, h) and `dIval` (daylength, h), returned to `CANOPY_MODEL` as `Solar_
 **Time step / spatial unit.** Once per simulated day, before the 24 hourly steps; the
 point (one site latitude).
 
-## 7. `solar.f90` (187 lines)
+## 7. `solar.f90` (231 lines)
 
 **Role.** Canopy radiation geometry for the two-big-leaf photosynthesis scheme. From solar
 elevation and the direct/diffuse split of global radiation it computes the beam and
@@ -188,7 +189,7 @@ diagnostics with no downstream consumer in v1.0.
 
 **Time step / spatial unit.** Hourly; the point, canopy as two leaf classes.
 
-## 8. `meteo.f90` (410 lines)
+## 8. `meteo.f90` (418 lines)
 
 **Role.** Builds the hourly weather forcing from one daily weather record: solar geometry;
 hourly global, direct and diffuse irradiance; hourly air temperature and relative humidity
@@ -212,7 +213,7 @@ hourly radiation and aerodynamic diagnostics.
 **Time step / spatial unit.** The daily record expanded to hourly, one call per hour; the
 point, at the above-canopy reference height.
 
-## 9. `radiation_module.f90` (174 lines)
+## 9. `radiation_module.f90` (182 lines)
 
 **Role.** Component radiation for the three-node energy balance. Splits incoming shortwave
 between canopy and soil by Beer's law with separate canopy and moisture-dependent soil
@@ -235,7 +236,7 @@ soil and mixed albedo, shortwave and longwave transmissivity) — read by `CANOP
 **Time step / spatial unit.** Hourly, once per energy-balance iterate; the canopy layer and
 the soil surface.
 
-## 10. `soil_heat_module.f90` (368 lines)
+## 10. `soil_heat_module.f90` (385 lines)
 
 **Role.** One-dimensional soil heat conduction. Builds the heat grid (the hydrology layers
 extended geometrically to about 5 m), initializes the prognostic temperature profile,
@@ -261,7 +262,7 @@ soil-temperature output and the heat-closure diagnostics.
 **Time step / spatial unit.** One energy-balance sub-step (hourly); the soil layer on the
 heat grid.
 
-## 11. `soiln_module.f90` (149 lines)
+## 11. `soiln_module.f90` (150 lines)
 
 **Role.** Crop-residue decomposition and the microbial carbon-nitrogen turnover that feeds
 the soil nitrogen chain. Decays a fast (metabolic) and a slow (structural) residue pool by
@@ -287,7 +288,7 @@ stocks; the respired carbon drives denitrification; the fluxes are written to
 **Time step / spatial unit.** Daily; the residue pools and the soil mineral nitrogen as
 bulk stocks (g m-2).
 
-## 12. `assim.f90` (672 lines)
+## 12. `assim.f90` (697 lines)
 
 **Role.** Leaf gas exchange for one leaf class in one hour. Solves the coupled
 photosynthesis-conductance system: the Farquhar et al. (1980) minimum of the Rubisco-,
@@ -310,7 +311,7 @@ diagnostics and the leaf-water-potential solve counters are written back into `S
 **Time step / spatial unit.** Hourly, per leaf class; one leaf (sunlit, shaded or flag
 leaf).
 
-## 13. `energy_balance_module.f90` (1 001 lines)
+## 13. `energy_balance_module.f90` (1 038 lines)
 
 **Role.** The three-node canopy / soil / canopy-airspace energy balance, solved once per
 hour and once per iterate of the canopy-temperature solve. The canopy-airspace temperature
@@ -341,7 +342,7 @@ diagnostic files.
 soil surface, and the canopy airspace between them, with the soil heat flux taken from the
 1-D soil temperature profile layer by layer.
 
-## 14. `hydro.f90` (1 661 lines)
+## 14. `hydro.f90` (1 743 lines)
 
 **Role.** Soil water movement by the one-dimensional mixed-form Richards equation, solved
 over one day in adaptive sub-steps by implicit backward Euler with Picard (and Newton)
@@ -365,7 +366,7 @@ by `growth_module` through the water-stress state.
 **Time step / spatial unit.** The adaptive Richards sub-step inside one day; the ten
 cell-centered soil layers to 1.20 m plus the surface store.
 
-## 15. `mineral_module.f90` (1 086 lines)
+## 15. `mineral_module.f90` (1 087 lines)
 
 **Role.** Grain minerals, six elements (Fe, Zn, Ca, Cu, Mg, Mn). One daily step per
 element: soil-solution concentration, uptake by mass flow, diffusion to the root surface
@@ -390,7 +391,7 @@ energy state is written here.
 **Time step / spatial unit.** Daily, per element; one labile soil pool over the whole
 0-0.6 m profile plus the crop's organ pools, every pool in mg element m-2 of ground.
 
-## 16. `phenology_module.f90` (828 lines)
+## 16. `phenology_module.f90` (855 lines)
 
 **Role.** Wheat development on one thermal clock: the daily thermal-time increment and its
 vernalization and photoperiod factors, the cumulative thermal development units, the dates
@@ -418,7 +419,7 @@ the grain-filling and canopy clocks in `main_MMCO2Crop`; and `calc_dtt` and
 **Time step / spatial unit.** Daily, one call per simulated day; the whole plant, the
 stages being properties of the apex.
 
-## 17. `CANOPY_MODEL.f90` (887 lines)
+## 17. `CANOPY_MODEL.f90` (976 lines)
 
 **Role.** The canopy integration of leaf gas exchange and the canopy-temperature solve:
 24 hourly steps per day, each a bracketed root-find for the canopy temperature wrapped
@@ -449,7 +450,7 @@ the solver counters.
 classes, sunlit and shaded, with depth entering only through the vertical leaf-nitrogen
 profile. The day's means and totals are returned to the caller.
 
-## 18. `growth_module.f90` (5 549 lines)
+## 18. `growth_module.f90` (5 975 lines)
 
 **Role.** The crop carbon and nitrogen economy on a daily step. It partitions the day's
 assimilate between lamina, true stem, root and spike, charges maintenance and growth
@@ -485,9 +486,9 @@ by `main_MMCO2Crop`, which writes them out.
 active, the tiller axis, the leaf rank and the individual blade or sheath. All pools are
 per square metre of ground.
 
-## 19. `main_MMCO2Crop.f90` (13 975 lines)
+## 19. `main_MMCO2Crop.f90` (14 885 lines)
 
-**Role.** The program. It reads the 183 positional records of `input/driver_main.txt` and
+**Role.** The program. It reads the 198 positional records of `input/driver_main.txt` and
 the deck input files (weather, soil water and van Genuchten-Mualem layers, soil nitrogen,
 fertilizer and organic-residue schedules, cultivar phenology, yield and mineral
 parameters), refuses every retired driver option, initializes the soil water, heat,
@@ -503,12 +504,12 @@ economy, and the daily water, energy, carbon and nitrogen closures.
 (`initialize_soil_heat`); `GROWTH_MODULE` (allocation, structure, senescence, the
 organ-level canopy chain, grain number and filling, organ nitrogen turnover, the internode
 height law); `MINERAL_MODULE`; `SOILN_MODULE` (`decompose_residue_day`);
-`PHENOLOGY_MODULE`; and the external subroutines `hydro` and `count_lines` through explicit
+`NITROGEN_RADIAL_MODULE` (`nrad_layer_day`, `nrad_commit`); `PHENOLOGY_MODULE`; and the external subroutines `hydro` and `count_lines` through explicit
 interfaces.
 
 **Called by.** Nothing — this is the executable's main program (`PROGRAM mmco2crop`).
 
-**Outputs and their consumers.** The 88 files of `output/` — the daily and hourly
+**Outputs and their consumers.** The 90 files of `output/` — the daily and hourly
 energy-balance, radiation, gas-exchange and leaf-temperature files, the soil profile,
 water-balance and Feddes diagnostics, the soil- and plant-nitrogen, mineral,
 canopy-architecture, reserve, grain-number, grain-filling and organ-nitrogen files, the
@@ -520,3 +521,27 @@ per-file list is in `FILE_INVENTORY.md`.
 hourly canopy and energy-balance step, the daily crop and soil step, the season) and all
 spatial units (the sunlit and shaded leaf class, the leaf rank and tiller axis, the plant
 organ, the soil layer, the point).
+
+## 20. `nitrogen_radial_module.f90` (259 lines)
+
+**Role.** Nitrate and ammonium uptake at the root surface, per soil layer (driver record
+189 = 1). Around one representative root of each rooted layer it solves the radial
+diffusion and mass-flow equation of Barber and Cushman on a 25-cell logarithmic grid
+(implicit finite volume, hourly steps, Picard iteration on the kinetics), with
+Michaelis-Menten transporter uptake on the root and root-hair surfaces at the local
+solution concentration. Diffusivities after Li & Gregory (1974), the texture impedance
+after Olesen et al. (2001), the root and hair geometry after Gahoonia et al. (1997); the
+transporter capacity and Km are the model's own existing values. The radial profile keeps
+its shape between days and is rescaled each day to the layer's ion pool.
+
+**Calls.** `SHARED` (`nud_SRL`, `nud_csif_slope`, `nud_theta_th`) and `TYPES`.
+
+**Called by.** `main_MMCO2Crop.f90`: `nrad_layer_day` once per rooted layer and day returns
+the potential uptake; `nrad_commit` blends the profile back when only a fraction of it is
+taken. The root radius `r0` is also read by driver record 81 mode 4.
+
+**Outputs and their consumers.** The potential uptake of nitrate and ammonium per layer
+(g N m-2 d-1), consumed by the soil-nitrogen uptake of `main_MMCO2Crop`.
+
+**Time step / spatial unit.** Hourly steps within the daily call; one representative root
+per soil layer, with a radial grid.

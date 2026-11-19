@@ -284,15 +284,26 @@ CONTAINS
   ! theta_0/theta_r/tk all ALLOCATED with SIZE >= nlayer. If any fails the routine
   ! does NOT modify Tsoil_prof and returns heat_resid = -HUGE (clearly invalid);
   ! it never silently solves a partial column.
-  SUBROUTINE advance_soil_heat(nlayer, dt_s, G_surface_actual, heat_resid)
+  SUBROUTINE advance_soil_heat(nlayer, dt_s, G_surface_actual, heat_resid, k_surf, G_used)
     INTEGER,  INTENT(IN)  :: nlayer
     REAL(wp), INTENT(IN)  :: dt_s, G_surface_actual
     REAL(wp), INTENT(OUT) :: heat_resid
+    ! k_surf = dG/d(-T_node1) of the surface balance (W m-2 K-1). When given,
+    ! the surface flux is linearised about the start-of-step node value and taken
+    ! IMPLICITLY, G = G_surface_actual - k_surf*(T1_new - T1_old), returned in G_used.
+    ! The explicit (lagged-node) coupling grows a period-2 oscillation when
+    ! k_surf*dt exceeds about twice the top-layer heat capacity (wet, conductive soil).
+    REAL(wp), INTENT(IN),  OPTIONAL :: k_surf
+    REAL(wp), INTENT(OUT), OPTIONAL :: G_used
+    REAL(wp) :: ks, G_eff
     INTEGER  :: i, n
     LOGICAL  :: ok
     REAL(wp), ALLOCATABLE :: sub(:), dia(:), sup(:), rhs(:), Told(:), Tnew(:)
     REAL(wp), ALLOCATABLE :: gf(:), ccap(:), thick(:)
     heat_resid = 0.0_wp
+    ks = 0.0_wp
+    IF (PRESENT(k_surf)) ks = MAX(0.0_wp, k_surf)
+    IF (PRESENT(G_used)) G_used = G_surface_actual
     ok = (nlayer >= 1) .AND. (dt_s > 0.0_wp)
     ok = ok .AND. ALLOCATED(Tsoil_prof) .AND. ALLOCATED(Cv_soil) .AND. ALLOCATED(lambda_soil)
     ok = ok .AND. ALLOCATED(theta) .AND. ALLOCATED(theta_0) .AND. ALLOCATED(theta_r) &
@@ -332,9 +343,12 @@ CONTAINS
       IF (i < n) THEN; sup(i) = -gf(i);   dia(i) = dia(i) + gf(i);   END IF
       rhs(i) = ccap(i) * Told(i)
     END DO
-    rhs(1) = rhs(1) + G_surface_actual              ! surface Neumann flux (downward +)
+    rhs(1) = rhs(1) + G_surface_actual + ks * Told(1)   ! surface flux (downward +), implicit in T1
+    dia(1) = dia(1) + ks
     CALL thomas_solve(n, sub, dia, sup, rhs, Tnew)
-    heat_resid = -dt_s * G_surface_actual           ! G_bottom = 0
+    G_eff = G_surface_actual - ks * (Tnew(1) - Told(1))
+    IF (PRESENT(G_used)) G_used = G_eff
+    heat_resid = -dt_s * G_eff                      ! G_bottom = 0
     DO i = 1, n
       Tsoil_prof(i) = Tnew(i)
       heat_resid = heat_resid + Cv_soil(i) * thick(i) * (Tnew(i) - Told(i))

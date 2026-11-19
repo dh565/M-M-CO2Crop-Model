@@ -3,9 +3,9 @@
 
 # Input manual — M&M-CO2Wheat v1.0
 
-Updated 2026-10-21 for the v1.0 release. This file states what a user must provide, in
+Updated 2026-11-18 for the v1.0 release. This file states what a user must provide, in
 which file, in which order and in which units; which entries are mandatory and which have
-a documented default; and what value each of the 183 driver records may take in this
+a documented default; and what value each of the 198 driver records may take in this
 release.
 
 A complete working example of everything below is `testcase/input/`, the Part 1 reference
@@ -26,18 +26,21 @@ record 1 names the daily weather file. Every other name below is fixed in the co
 
 | file | status | format |
 |---|---|---|
-| `input/driver_main.txt` | **mandatory** | 183 positional records, one value per line, optional `!` comment after the value (section 2) |
+| `input/driver_main.txt` | **mandatory** | 198 positional records, one value per line, optional `!` comment after the value (section 2) |
 | the weather file named by driver record 1 | **mandatory** | CSV, header row then one row per day (section 3) |
 | `input/driver_swtr.txt` | **mandatory** | positional; a missing file stops the run (section 4) |
 | `input/SoilLayer_vgm.csv` | **mandatory** | CSV with a fixed header; fixed file name (section 5) |
 | `input/phenology_cultivar.txt` | **mandatory** | positional; rows 1-35 required, 36+ optional with compiled defaults (section 6) |
 | `input/cultivar_yield.csv` | **mandatory** | positional, value first; 6, 8 or 10 values (section 7) |
-| `input/driver_N.csv` | **mandatory** | positional, 70 values (section 8) |
+| `input/driver_N.csv` | **mandatory** | positional, 72 values (section 8) |
 | `input/driver_minerals.csv` | **mandatory in practice** | CSV, header plus one row per element (section 9) |
 | `input/N_fertilizer.csv` | **mandatory** | CSV, count line then one row per application (section 10) |
 | `input/N_organic_treatments.csv` | optional | CSV, count line then one row per event; absent, or a count of 0, is the no-residue baseline (section 11) |
 | `input/tsoil_init.csv` | optional | CSV `z_m,T_C` anchors; absent means the driver record-50 initialization is used (section 12) |
 | `input/cultivar_partition.csv` | optional | CSV; absent means the WOFOST baseline leaf-partition window, and the run prints a NOTE saying so (section 13) |
+| `input/soilN_init_profile.csv` | optional | CSV, measured initial mineral N by layer (section 13.1) |
+| `input/soilN_measured_state.csv` | optional | CSV, mineral N reset on a measurement day (section 13.2) |
+| `input/presow_daily.csv` | optional | daily pre-run soil temperature and water factor for pre-sowing residue decomposition (section 13.3) |
 
 **Mandatory versus defaulted, in one rule.** A file marked mandatory must exist: the run
 stops with a message naming it. Inside a file, an entry is mandatory unless this manual
@@ -58,17 +61,16 @@ refused outright rather than run with silently zeroed availabilities.
 ## 2. `input/driver_main.txt` — the run-control file
 
 > **Which copy is the released configuration.** A deck's own `input/driver_main.txt` is
-> the file the model reads. The configuration v1.0 was frozen, gated and evaluated on is
+> the file the model reads. The released configuration is
 > `docs/V1_CONFIGURATION_driver_main_v1.0.txt`, which is byte-identical to
 > `testcase/input/driver_main.txt` and to the deck `decks/WDF25_Ruta_aCO2_WW/input/driver_main.txt`.
-> Cite and compare against those. The development repository also carries a template
-> `driver_main.txt` that differs from the released configuration at record 38 (`-0.35`
-> against the released `-0.3854`); that template is **not distributed in this package**, and
-> no file in this archive is a template.
+> Cite and compare against those. Records 184-198 take the same value in all 38 decks and
+> in the test case, and so do records 81, 124, 172, 174 and 179; the other records may
+> differ from deck to deck (site, canopy, soil, atmospheric CO2 and the like).
 
-**The file is POSITIONAL.** 183 records, in order, one value per line. Anything after a
+**The file is POSITIONAL.** 198 records, in order, one value per line. Anything after a
 `!` on a line is a comment and is stripped before the value is read. Record 1 is a file
-path; records 2-183 are numbers. Blank-looking records (record 73 in the reference deck)
+path; records 2-198 are numbers. Blank-looking records (record 73 in the reference deck)
 are permitted where this manual says so.
 
 > **Never delete or renumber a record.** Retired records keep their position and are
@@ -87,8 +89,9 @@ REFUSING TO RUN: driver_main.txt record <N> (<variable>) = <value>
 ```
 
 and exits non-zero. It never falls through to a different mechanism or to an undefined
-value. 123 mode and switch records are restricted this way; four more (119, 120, 170,
-182) are RESERVED rows that keep their positions. The remaining 56 records — the plain
+value. 140 mode and switch records are restricted (the 15 records 184-198 by an in-line
+range check that stops with an `ERROR STOP` naming the record); four more (119, 120, 170,
+182) are RESERVED rows that keep their positions. The remaining 54 records — the plain
 site, soil, weather, canopy, management and cultivar parameters — are **not restricted at
 all**, so a new site can use its own values freely.
 
@@ -98,7 +101,7 @@ The allowed sets tabulated below are taken from the `reject_retired_option` call
 `main_MMCO2Crop.f90` itself, and this table is the authoritative list for a user of the
 release.
 
-### 2.2 The 183 records
+### 2.2 The 198 records
 
 "accepted in v1.0" is the set the validator admits. "not restricted" means the record is
 an ordinary parameter and any value its own physical meaning allows is accepted. The
@@ -127,7 +130,7 @@ deck-value column is the Part 1 reference simulation `testcase/input/driver_main
 | 19 | -- | `0.18` | not restricted | pore size distribution index (-) |
 | 20 | -- | `0.39` | not restricted | saturation water content (m3 m-3) |
 | 21 | -- | `0.20` | not restricted | initial water content of the top layer (m3 m-3) |
-| 22 | -- | `420.0` | not restricted | atmospheric CO2 (umol mol-1) |
+| 22 | -- | `437.3` | not restricted | atmospheric CO2 (umol mol-1), held constant over the run; 437.3 is the measured ambient daytime mean of the WDF25 rings, and every deck carries its own value |
 | 23 | `water_stress_mode` | `1` | 1 | locus of the water-stress factor: 1 = on stomatal conductance, 2 = on assimilation |
 | 24 | `use_soil_water_stress` | `1` | 1 | soil-water stress on or off |
 | 25 | -- | `1` | not restricted | allow drainage beyond the last layer |
@@ -186,7 +189,7 @@ deck-value column is the Part 1 reference simulation `testcase/input/driver_main
 | 78 | `ft_pot_unstressed` | `1` | 1 | unstressed potential transpiration basis |
 | 79 | `ws_two_loci` | `1` | not restricted | two-loci soil-water stress |
 | 80 | `feddes_p2_hydrus` | `1` | not restricted | Feddes p2-node unit convention |
-| 81 | `spac_mode` | `3 -1.5` | not restricted | soil-plant-atmosphere mode and its leaf water potential threshold (MPa) |
+| 81 | `spac_mode` | `6 -1.5` | 0-6 | soil-plant-atmosphere mode and its leaf water potential threshold (MPa); modes 0-3 and 4-6 are described under section 2.3; the shipped decks use 6 |
 | 82 | `tiller_carbon_gate` | `1` | 1 | carbon gate on tiller birth |
 | 83 | `leaf_expansion_water` | `1` | 1 | water limit on leaf expansion |
 | 84 | `lai_from_organs` | `1` | 1 | leaf area index taken from the organ-level canopy |
@@ -229,7 +232,7 @@ deck-value column is the Part 1 reference simulation `testcase/input/driver_main
 | 121 | `n_payment_gate` | `2` | 2 | nitrogen payment gate |
 | 122 | `lai_n_arrest` | `2` | 2 | nitrogen arrest of leaf-area expansion |
 | 123 | `tiller_n_afford` | `1` | 1 | nitrogen term in the tiller survival ledger |
-| 124 | `root_front_law` | `2` | 2 | root front descent law (1/2/3 = 7.9/9.6/11.3 mm d-1) |
+| 124 | `root_front_law` | `4` | 2, 4 | root front descent law: 2 = constant 9.6 mm d-1 from emergence; 4 = thermal-time root front z = -0.08 + 1.34e-3 x (sum of daily mean air T > 0 C from sowing) in m (Thorup-Kristensen et al. 2009, Plant Soil 322:101, Fig. 4), held from anthesis and capped at the profile and at `root_max_depth` (section 4) |
 | 125 | `kernel_potential_law` | `1` | 1, 2, 3 | kernel potential law |
 | 126 | `mineral_grain_sink_cap` | `1` | 1 | cap on the grain mineral sink |
 | 127 | `repro_surplus_fate` | `1` | 1 | fate of the reproductive-phase surplus |
@@ -277,18 +280,33 @@ deck-value column is the Part 1 reference simulation `testcase/input/driver_main
 | 169 | `zn_uptake_kinetic_basis` | `1` | 1 | zinc uptake kinetic basis |
 | 170 | `RESERVED` | `0` | 0 (retired, unavailable in v1.0; read, no effect) | RESERVED (diffusion temperature; not built) |
 | 171 | `mineral_n_coupling_basis` | `1` | 1 | mineral-nitrogen coupling basis |
-| 172 | `stem_reserve_deposition_n_basis` | `0` | 0 | nitrogen basis of stem reserve deposition |
+| 172 | `stem_reserve_deposition_n_basis` | `1` | 0, 1 | nitrogen basis of stem reserve deposition: 0 = the constant rec-56 deposition fraction of 0.20; 1 = the share becomes f = MIN(0.35, MAX(0, (435.26 - 311.26 NNI) x 0.001)) with NNI the nitrogen nutrition index on the critical curve the model computes daily (van Herwaarden 1997, Australian National University PhD thesis, ch. 4); requires record 55 = 1 |
 | 173 | `spac_sink_coupling` | `1` | 1 | SPAC-to-sink coupling |
-| 174 | `canopy_fln_prediction` | `0` | 0 | final-leaf-number prediction |
+| 174 | `canopy_fln_prediction` | `2` | 0, 1, 2 | final-leaf-number prediction: 0 = the top rank of the blade profiles is the panel median 11 until the final leaf number is frozen at booting; 1 = the final leaf number is predicted on the emergence day and used as the top rank from emergence; 2 = as 1, and the blades below the elongated-internode phytomers are base-anchored (Abichou 2016, ch. 2, Eqn T2.7a). Modes 1 and 2 require records 64 = 1, 65 = 1, 162 = 1 and 161 = 0 |
 | 175 | `grain_n_partition_basis` | `4` | 4 | grain nitrogen partition basis |
 | 176 | `vegetative_n_demand_basis` | `0` | 0 | vegetative nitrogen demand basis |
 | 177 | `grain_n_potential_trait` | `0` | 0 | grain nitrogen potential as a cultivar trait |
 | 178 | `chaff_structural_n_basis` | `0` | 0, 1, 2 | measured structural-nitrogen floor of the chaff |
-| 179 | `lamina_expansion_n_limit` | `1` | 1 | nitrogen limit on the lamina expansion increment |
+| 179 | `lamina_expansion_n_limit` | `1` | 0, 1, 5 | nitrogen limit on the lamina expansion increment: 0 = off; 1 = the increment is limited to what the standing lamina nitrogen can hold at the measured functional minimum per unit area (Bertheloot et al. 2008, Funct Plant Biol 35:781, Eqn 8); 5 = a canopy lamina-N law. Requires records 84 = 1, 121 >= 1 and 122 >= 1 |
 | 180 | `grain_ca_loading_basis` | `1` | 1 | grain calcium loading basis |
 | 181 | `mg_solution_basis` | `0` | 0 | magnesium solution basis |
 | 182 | `RESERVED` | `0` | 0 (retired, unavailable in v1.0; read, no effect) | RESERVED (vegetative-N demand basis; not built) |
 | 183 | `mineral_buffer_power_basis` | `1` | 1 | soil buffer power of the mineral diffusion term |
+| 184 | `soil_heat_implicit` | `1` | 0, 1 | surface heat coupling of the soil heat module: 0 = explicit, 1 = implicit (no period-2 oscillation on wet soils) |
+| 185 | `par_absorb_conserving` | `1` | 0, 1 | absorbed PAR: 0 = Teh (2006) Eqs. 3.36-3.39; 1 = sunlit plus shaded absorbed PAR equals the intercepted PAR |
+| 186 | `resp_temp_basis` | `1` | 0, 1 | temperature response of respiration: 0 = Q10 of 2; 1 = measured Q10(T) = 2.243 - 0.0308 T (Gifford 1995, Table 4) |
+| 187 | `preanth_supply_uptake` | `0` | 0, 1 | pre-anthesis nitrogen uptake: 0 = MIN(demand x E_N, soil supply); 1 = soil supply times the measured nitrogen status factor, capped by the Justes N_max stock gap (tested and not used; 0 in every deck) |
+| 188 | `n_delivery_series_bound` | `0` | 0, 1 | 1 = active uptake bounded by mass flow plus diffusion (tested, not usable with the current diffusion term; 0 in every deck) |
+| 189 | `n_radial_uptake` | `1` | 0, 1 | nitrogen uptake: 0 = active plus mass flow plus diffusion added; 1 = radial Barber-Cushman root-surface uptake per layer (transporters at the local concentration, fed by diffusion with the Olesen 2001 texture impedance and by mass flow); needs bulk density, clay and silt (`driver_N.csv` positions 68-70) |
+| 190 | `urea_transport` | `1` | 0, 1 | urea: 0 = no location, reaches the soil only as immobile layer-1 ammonium; 1 = a per-layer pool moved by soil water like nitrate and hydrolyzed where it is; needs `soilN_layered` = 1 |
+| 191 | `organ_n_storage_basis` | `0` | 0, 1 | 1 = pre-anthesis overflow kept as mobile reduced N (tested only together with record 187; 0 in every deck) |
+| 192 | `anthesis_event_interp` | `1` | 0, 1 | anthesis: 0 = the whole crossing day; 1 = the crossing is located within the day in thermal time for the kernel-number basis and the grain-fill clock |
+| 193 | `unpaid_lamina_root_fate` | `1` | 0, 1 | lamina carbon refused for lack of nitrogen: 0 = goes to the stem WSC cap, then is deleted as the explicit residual; 1 = builds extra root the same day, paid at the root construction N concentration from the root's own reduced N before export; requires record 121 >= 1 |
+| 194 | `soil_orgN_law` | `1` | 0, 1 | soil organic nitrogen: 0 = flat `N_mineral_rate`; 1 = first-order mineralization of the soil organic N stock (`driver_N.csv` row 72) with the measured k_ref and the Arrhenius activation energy of 78 kJ mol-1 of Valé (2006, Table 4.8), at the mean temperature of the mineralizing span (row 62) and a linear moisture law between theta0 and field capacity; the same laws drive the residue module. Needs `soilN_layered` = 1 and record 93 = 0 (section 8) |
+| 195 | `grain_n_source_phase` | `0` | 0, 1 | 1 = after the 250 degC-day cell-division phase the grain N import is source-limited under the per-kernel ceiling (Martre et al. 2003) (tested and not used: grain N too high; 0 in every deck) |
+| 196 | `tiller_full_demand` | `0` | 0, 1 | 0 = off; `1 d r` = the record-99 = 4 tiller-death ledger also counts stem (Kirby 1988 rates, member d = 1-6, r = 1-3) and ear demand; requires records 99 = 4, 89 >= 1 and 66 = 1 (tested and not used; 0 in every deck) |
+| 197 | `rhizo_immob` | `1 0.5` | 0, 1 | `1 r_rd` = soil microbes immobilize mineral N (NH4 first, then NO3) on the carbon released by roots, N_imm = r_rd x (root dry-matter growth) x 0.425 x 0.82 / 5.8 per day, into an organic pool not released within the season; r_rd = 0.5 (measured range 0.02 to about 2); 0 = off; needs `soilN_layered` = 1; writes `output/daily_rhizo_immob.csv` |
+| 198 | `min_water_unity` | `0` | 0, 1 | DIAGNOSTIC ONLY: 1 = the record-194 mineralization water factor is held at 1; 0 = normal; 1 requires record 194 = 1 |
 
 ### 2.3 Notes on individual records
 
@@ -305,10 +323,34 @@ deck-value column is the Part 1 reference simulation `testcase/input/driver_main
 * **Records 73 and 74** (measured sub-daily wind file and its measurement height) are read
   only when record 71 >= 1. Record 71 is restricted to 0 in v1.0, so record 73 may be blank
   and record 74 may be `-1.0`, as in the reference deck.
-* **Record 81** carries **two** values on one line: the SPAC mode and its leaf water
-  potential threshold in MPa (`3 -1.5` in the reference deck).
+* **Record 81** keeps the syntax `<mode> [psi_f [K_plant]]`: the SPAC mode, its leaf water
+  potential threshold in MPa (default -1.5) and optionally the plant conductance. The
+  reference deck, like every shipped deck, has `6 -1.5`. Mode 0 is the legacy stomatal
+  treatment; modes 1, 2 and 3 form the root-weighted soil water potential by root
+  fraction, root fraction times the Feddes alpha, and root fraction times K/Ks; the
+  further modes are in `SHARED.f90` (comment blocks above `spac_K_plant`, `spac_K_rootL`
+  and `spac_Lpr_root`):
+  - 4: the Gardner (1960) soil-to-root conductance of each layer in series with `K_plant`
+    (Duursma & Medlyn 2012, Eq. 22-23), conductance-weighted soil potential;
+  - 5: one root water uptake law for the stomata and the Richards sink. Per layer
+    g_i = 1/(R_sr,i + R_rad,i), a common root xylem potential psi_R with
+    SUM g_i (psi_i - psi_R) = E (Duursma & Medlyn 2012, Eq. 12; Taylor & Klepper 1975), no
+    uptake from layers drier than the root, the leaf at psi_R - E/K_shoot. Root term
+    1/R_rad,i = K_root,L LAI f_i (Trillo & Fernandez 2005), shoot term
+    1/K_shoot = 1/K_plant - 1/K_root,L. Root uptake equals transpiration;
+  - 6: mode 5 with the root term scaled by the model's own root surface instead of its leaf
+    area: 1/R_rad,i = Lp_r x 2 pi r_root L_root,i, Lp_r = 5.74e-8 m s-1 MPa-1 (Bramley et
+    al. 2009, Plant Physiol 150:348, Table I, whole wheat root system), r_root = 80 um,
+    L_root,i = W_root f_i SRL. The field crop carries about 30 g root per m2 leaf against
+    920 in the pot plants behind mode 5; the measured soil-to-leaf conductance at Maricopa
+    (Wall et al. 2006) is 0.004-0.008 mol m-2 s-1 MPa-1.
 * **Records 119 and 120** are RESERVED and are checked: a value other than 0 stops the run
   with `ERROR rec 119/120: RESERVED rows must be 0`.
+* **Records 184-198** are range-checked (0 or 1; records 196 and 197 take further values
+  after the first one) and an out-of-range value stops the run with an `ERROR STOP`
+  naming the record. Records 187, 188, 191, 195, 196 and 198 are off in every deck. Records
+  that need another record or input are listed in the table; a missing requirement stops
+  the run with a message naming both.
 * **Records 170 and 182** are RESERVED rows read as integers with an end-of-file default of
   0 and no range check; they have no effect anywhere and exist to hold the positions of
   records 171-172 and 183.
@@ -324,8 +366,8 @@ deck-value column is the Part 1 reference simulation `testcase/input/driver_main
 
 ### 2.5 Optional diagnostics that v1.0 cannot produce
 
-Seven driver settings would have selected an optional diagnostic file whose writer the
-clean-up removed, and all seven are now refused: **record 99 = 2, records 134, 135, 136 and
+Seven driver settings would select an optional diagnostic file that is not written; all seven
+are refused: **record 99 = 2, records 134, 135, 136 and
 137 at 1 or above, and record 139 modes 2 and 3**. The diagnostic files they would have
 written — `daily_tiller_afford.csv`, `daily_n_afford_priority.csv`,
 `daily_n_payment_luxury_pass2.csv`, `daily_n_afford_standing_basis.csv`,
@@ -334,7 +376,7 @@ written — `daily_tiller_afford.csv`, `daily_n_afford_priority.csv`,
 because the only accepted value of their record leaves them off.
 
 The full list, with the record, the variable name and the file name of each, verified
-against the code, is `docs/V1_KNOWN_LIMITATIONS.md`. None of this affects the 88
+against the code, is `docs/V1_KNOWN_LIMITATIONS.md`. None of this affects the 90
 output files a v1.0 run writes.
 
 ---
@@ -376,6 +418,11 @@ Positional, one value per line, `!` comments after the value.
 | 5 | `NSoil_layers`, the number of soil layers | count; 10 in the reference deck |
 | 6..5+N | initial volumetric water content, one line per layer, top first | m3 m-3 |
 | then | layer depth boundaries, one line each | m, negative downward |
+| last, optional | `root_max_depth`, one value after the last layer boundary; without it the depth defaults to 1.5 m | m |
+
+The Braunschweig decks set `root_max_depth` to 0.60 m, the measured effective rooting zone
+(coarse sand below 0.6-0.7 m; Pacholski et al. 2015, Eur J Agron 63:36). The Maricopa and
+WDF decks keep the default, the rooting depth being unmeasured there.
 
 ---
 
@@ -475,7 +522,7 @@ from, so check that line.
 
 ## 8. `input/driver_N.csv` — soil and plant nitrogen parameters
 
-Positional: 70 values, one per non-comment line, each line carrying its own citation as a
+Positional: 72 values, one per non-comment line, each line carrying its own citation as a
 comment. The groups are the root/shoot nitrate partition (`f_shoot_min`, `f_shoot_max`,
 `K_partition_NO3`, after Andrews 1986 and Andrews et al. 1992), the root nitrate-reductase
 capacity `r_root_NR` (g N g-1 root DM d-1), the grain structural nitrogen `n_stru_grain`
@@ -487,11 +534,22 @@ hydrolysis and nitrification kinetics (`k_hyd_ref`, `Q10_hyd`, `k_nit_ref`, `Q10
 `k_fast_ref`, `k_slow_ref`, `Q10_dec`, `T_ref_dec`, `theta_ref_dec`, `e_mic`, `CN_mic`,
 `k_mic`, and the `presow_*` pre-decomposition conditions).
 
+Three positions serve the soil organic nitrogen law of driver record 194 and the placement
+of the initial mineral nitrogen: position 62 `n_min_depth_m` (m), the mineralizing span, which
+is also the depth over which the soil temperature for record 194, residue decay, hydrolysis and
+nitrification is averaged (the decks use 0.30 m, Valé's k_ref being per t of organic N of the
+0-30 cm plough layer); position 71 `N_soil_init_depth_m` (m), the sampling depth of the
+position-1 measurement (record 153; 0.40 in the Braunschweig decks, -1 elsewhere, a
+placeholder equal to the whole profile); and position 72 `soil_Norg_gN_m2` (g N m-2), the soil organic N stock over 0-0.30 m
+for record 194. Its values (Braunschweig 441.8, Maricopa 127.9, WDF 162.5) are estimates, flagged in
+the file: the Braunschweig value is measured total N times a bulk density without a source,
+and the soil total N and organic carbon of WDF were never measured.
+
 Some positions are retained for **index stability only** and reach no state variable:
 `k_N_canopy` (position 9) is not the canopy leaf-nitrogen extinction coefficient — that is
 a compiled value pinned on Moreau et al. 2012 and never read from input, and the two
 coefficients have near-identical names; `Ci_ref_N` and the `f_postanth_*` fractions belong
-to mechanisms the model no longer uses. Do not list any of them as sampled parameters.
+to mechanisms the model does not use. Do not list any of them as sampled parameters.
 Do not delete them either: the file is positional.
 
 ---
@@ -603,16 +661,55 @@ Read if present; if absent the run prints
 `NOTE: input/cultivar_partition.csv absent; leaf window = WOFOST baseline defaults.` and
 uses those compiled defaults. No shipped deck supplies it.
 
+### 13.1 `input/soilN_init_profile.csv` (optional): measured initial mineral N by layer
+
+Columns `z_top_m,z_bot_m,NO3_gN_m2,NH4_gN_m2`; `!` comments are allowed. Each measured
+interval is placed on the overlapping model layers by theta x thickness x overlap. The
+file's totals replace `driver_N.csv` positions 1 and 30, and any pre-sowing spin-up change
+is scaled to the profile. Without the file, a positive pre-sowing spin-up gain is placed
+on 0 to `n_min_depth_m`. The Maricopa decks supply it, built from the archive ppm x bulk
+density x thickness; for 1997 (decks 913-916) the 0-0.9 m layers are scaled to the measured
+totals of Wall et al. (2000, Photosynth Res 66:79, p. 81): 6.9 g N m-2 for low N and 14.5
+for high N (the 1997 archive is about 7 times lower in both treatments, the 1996 archive
+agrees with Wall; flagged).
+
+### 13.2 `input/soilN_measured_state.csv` (optional): mineral N reset on a measurement day
+
+Columns `model_day,z_top_m,z_bot_m,Nmin_gN_m2`. On that day, before the closure snapshot,
+the NO3 and NH4 in the span are rescaled to the measured total; the run log prints one
+line. The Braunschweig decks use it for the mid-March mineral N over 0-0.40 m (Dier et al.
+2018, Eur J Agron 101:38, p. 39): 14.2 kg N ha-1 in 2014 and 22.4 kg N ha-1 in 2015, with
+15 March assumed as the day (flagged).
+
+### 13.3 `input/presow_daily.csv` (optional): pre-run soil temperature and water factor
+
+Read only with record 194 = 1 and residue events (section 11). `!` comment lines, then one
+row `T_soil_C, f_water` per day counted back from the run start, the last row being the day
+before the run; an event of age A uses the last A rows; at most 2000 rows. Absent file =
+the constant `presow_Tsoil` and `presow_fwater` pair. The WDF25 decks supply it (ERA5-Land
+reanalysis soil temperature, not measured).
+
+### 13.4 Maricopa soil lower limit
+
+The Maricopa `SoilLayer_vgm.csv` was built from the archive soil table (Soil_layers,
+AZMC920001, from the 1989 cotton FACE experiment): theta_s = SLSAT, theta_r = SLLL/2, curve
+through SLDUL at -33 kPa and SLLL at -1.5 MPa. The wheat plots' own measured water contents
+(archive sheet Soil_moisture_Avg_over_Reps) fall below SLLL in every season, down to 0.075
+at 0.7-0.9 m in the 1994 FACE dry plots, so each layer's lower limit is the lower of SLLL
+and the driest measured value of any plot in the same rings and season; where it falls, the
+curve is rebuilt the same way. DUL, SAT and Ksat are unchanged; the wet plots take the value
+of their dry partner in the same rings. Generator: `tools/maricopa_soil_ll.py`.
+
 ---
 
 ## 14. Reference data that the decks carry but the model never reads
 
 `testcase/input/` also holds measurement and provenance files that are byte-copied with
-the deck so that the directory is exactly what the frozen run was fed. They change
+the deck so that the directory is exactly what the reference run was fed. They change
 nothing: `driver_main.template`, `driver_main_silledBottom.txt`, the four alternative
 `SoilLayer_vgm_*.csv` profiles, the orphan `driver_resp_mainten.txt` (read by no compiled
 unit of v1.0), `site_observed_phenology.csv` and `site_observed_targets.csv`. See
-`docs/FILE_INVENTORY.md` section 2.2. (The WheatDryFACE measurement tables that the frozen
+`docs/FILE_INVENTORY.md` section 2.2. (The WheatDryFACE measurement tables that the reference
 run directories also held are not read by the model and are not shipped here; they are the
 separate observation deposit cited in `README.md`.)
 
@@ -623,7 +720,7 @@ separate observation deposit cited in `README.md`.)
 | question | file |
 |---|---|
 | how do I build and run the model? | `README.md` |
-| what do the 88 output files contain? | `docs/FILE_INVENTORY.md` section 3 |
+| what do the 90 output files contain? | `docs/FILE_INVENTORY.md` section 3 |
 | why was a driver value refused? | this file, section 2.2 |
 | which optional diagnostics are gone? | `docs/V1_KNOWN_LIMITATIONS.md` |
 | what does each source file do? | `docs/MODULES.md` |
