@@ -19,7 +19,7 @@
 |---|---|
 | the model code | yes — 20 Fortran files (19 compiled units plus one `include` body) and the `Makefile` |
 | the input decks of the evaluated experiments | yes — all 38 FACE decks, 544 input files, under `decks/` |
-| the scripts that produce every figure and table | yes — `paper_scripts/`, 50 files: 20 Python files (`make_*.py` drivers, `run_sensitivity.py`, `config.py` and the modules under `lib/`), 25 files under `observations/`, `README.md`, `FIGURE_TABLE_MAP.md`, `requirements.txt`, `MANIFEST.md5`, `LICENSE` |
+| the scripts that produce every figure and table | yes — `paper_scripts/`, 59 files: 20 Python files (`make_*.py` drivers, `run_sensitivity.py`, `config.py` and the modules under `lib/`), 9 files under `table4_and_effects/` (7 Python scripts, `run_decks.sh` and its `README.md`: the Table 4 rows and text numbers that the `make_*` scripts do not write), 25 files under `observations/`, `README.md`, `FIGURE_TABLE_MAP.md`, `requirements.txt`, `MANIFEST.md5`, `LICENSE` |
 
 The figure and table scripts change no model file: they are read-only consumers of the companion reference-outputs archive. They
 reproduce every figure and table of both papers and of Supplement S2, and `FIGURE_TABLE_MAP.md`
@@ -74,8 +74,9 @@ build (`-O0 -fcheck=all`).
 ## Notes on the shipped input files
 
 `decks/*/input/driver_main.txt` carries 198 positional records; `testcase/input/driver_main.txt`,
-`decks/WDF25_Ruta_aCO2_WW/input/driver_main.txt` and
-`docs/V1_CONFIGURATION_driver_main_v1.0.txt` are byte-identical. Some of the comment text
+`decks/WDF25_Ruta_aCO2_WW/input/driver_main.txt` are byte-identical, and
+`docs/V1_CONFIGURATION_driver_main_v1.0.txt` has the same 198 record values (only the comments of ten
+records differ, and its last line states that the record values define v1.0). Some of the comment text
 inside the input files and the `.f90` comments refers to development steps; no comment is
 part of any value the model parses.
 

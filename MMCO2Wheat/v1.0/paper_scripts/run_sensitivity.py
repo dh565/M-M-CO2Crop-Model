@@ -39,6 +39,8 @@ ROOT = os.path.join(config.SENS_DIR, "runs")
 
 # driver_main.txt records edited (record N is line N of the file; see INPUT_GUIDE.md of the code package)
 REC_SLA, REC_DENSITY, REC_LEAF_WIDTH, REC_CO2, REC_ROOT_RATE = 7, 8, 16, 22, 28
+# CO2 of the control and of every run without its own CO2 edit (umol mol-1); the deck itself has 437.3
+CO2_CTRL = 420
 
 
 # ---------------------------------------------------------------- editors
@@ -146,6 +148,7 @@ def prepare(name):
     if os.path.exists(os.path.join(d, "metrics.json")): return d
     shutil.rmtree(d, ignore_errors=True); os.makedirs(d); shutil.copytree(CTRL, os.path.join(d, "input")); os.makedirs(os.path.join(d, "output"))
     inp = os.path.join(d, "input")
+    p = os.path.join(inp, "driver_main.txt"); edit_driver_main(p, driver_main_index(p, REC_CO2), "%.1f" % CO2_CTRL)
     for e in RUNS[name]:
         kind = e[0]
         if kind == "dm": edit_driver_main(os.path.join(inp, "driver_main.txt"), driver_main_index(os.path.join(inp, "driver_main.txt"), e[1]), e[2])

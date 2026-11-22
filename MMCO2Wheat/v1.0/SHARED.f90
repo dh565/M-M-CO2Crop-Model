@@ -3687,8 +3687,8 @@ REAL(wp) :: f_t
   LOGICAL  :: fnl_step_today = .FALSE.               ! TRUE on days the window is open and the test has not yet fired (diagnostic gate)
 
   ! ======================================================================== !
-  ! Root-front descent - driver record 124, accepted at the value 2, so the
-  ! front descends at a measured constant rate of 9.6 mm d-1. The measured
+  ! Root-front descent - driver record 124, accepted at the value 4, so the
+  ! front follows thermal time (values 1-3: constant 7.9-11.3 mm d-1). The measured
   ! wheat penetration rates are Borg & Grimes (2007) Aust J Exp Agric 47:590,
   ! doi:10.1071/ea06071, with Gregory, McGowan, Biscoe & Hunter (1978) J Agric
   ! Sci 91:91, Barraclough & Leigh (1984) J Agric Sci 103:59 and
@@ -4336,8 +4336,8 @@ REAL(wp) :: f_t
 
   ! ======================================================================== !
   ! Nitrogen basis of stem-reserve deposition - driver record 172, accepted at
-  ! the value 0, so the pre-anthesis reserve bank keeps its constant deposition
-  ! fraction. The nitrogen-status predictor the alternative would use is the
+  ! the value 1, so the pre-anthesis deposition share follows nitrogen status
+  ! (0 keeps the record-56 fraction). The nitrogen-status predictor used is the
   ! nitrogen nutrition index on the Justes et al. (1994) Ann Bot 74:397-407
   ! curve, and the measured reserve-versus-nitrogen relation it is judged
   ! against is the shoot nitrogen and shoot dry matter of Manderscheid, Dier,

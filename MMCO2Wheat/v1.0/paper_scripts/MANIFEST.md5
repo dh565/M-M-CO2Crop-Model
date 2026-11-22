@@ -1,6 +1,6 @@
-534493c7e45ca8f5c8801c97cfccc3da  FIGURE_TABLE_MAP.md
+27c540a126a29ad9f6fe2cc6860a369c  FIGURE_TABLE_MAP.md
 c7d074edbf2d417f1d0ea6ae7d7cd8c5  LICENSE
-9dd0ac3ee12e84b581a2ffea13a8dba2  README.md
+37bf1ac40a19198cf119cfa508f032be  README.md
 33e6cda8dd0ebaeddcba25077635eb14  config.py
 e2012f18cc9ba2932ea5a925386bad0f  lib/ebwb_gx.py
 c5aac02979cad1d3a353993287b8f166  lib/extract_maricopa_eb.py
@@ -10,11 +10,11 @@ c5aac02979cad1d3a353993287b8f166  lib/extract_maricopa_eb.py
 5070797a7070c2785ca9fc7684f41f0e  lib/maricopa_gx.py
 f3e72f4bc0f4d7367e4bf0bedd8fa5c6  lib/maricopa_tsoil.py
 e43288cbc4e1f73bc23c3107ea58d98f  lib/p1_figures.py
-4b4436ca41e9f22e9babfb1fe3216bd4  lib/paperfigs.py
+8ab802f227ab7cfbf73c90d004162701  lib/paperfigs.py
 ca8df1b965242a95c72fbf4f8ea9efb1  lib/paperfigs2.py
 306fd32ee5e3601c853d8903f4e73e61  lib/tleaf_eval.py
 f38f62a970a4acf601e1a68acec007bd  lib/wdf_ingest.py
-b41821590e7ee84add37dcffc86b44bb  lib/wdf_poro.py
+9adf20e399334ebe19995da71e564d63  lib/wdf_poro.py
 d51fb873b2d61fd79c5f7b891c2b903f  make_part1_figures.py
 5e5f33f8180cf083c24727c5876c5836  make_part1_tables.py
 e20332524b34beac8626b2ae64272d7e  make_part2_figures.py
@@ -46,4 +46,13 @@ abbb8539838d584dcfe23bd07c742acd  observations/maricopa/maricopa_archive_daily.c
 14b191c96f6c9552677adae0295f1fa1  observations/maricopa/maricopa_eb_hourly.csv
 50cd4259d1b6ab7d9d996663bed6b20b  observations/obs_registry_braunschweig_maricopa.csv
 78f9e120abe1ae0266065dcd598e1dbd  requirements.txt
-700a1c8f12ad24e598331fe50019b341  run_sensitivity.py
+6c6aad151159f4e29c2c69e138a6584f  run_sensitivity.py
+c30637112300803717152159036c70de  table4_and_effects/README.md
+821f875b1591a5a550a6f201a3442568  table4_and_effects/anova_summary.py
+0cef91d4dea218cd7e2ea3ba2e54f83d  table4_and_effects/effects_CO2_water_N.py
+0245ffbb2f6a3122015dda471e5c42de  table4_and_effects/fe_bound_days.py
+0293c61406959d54c2bb7031530ec460  table4_and_effects/run_decks.sh
+708e47b7da2544e056975809f9373592  table4_and_effects/soil_nmin_immobilization.py
+60ff4201e89b0300c59cbcc94cef925d  table4_and_effects/table4_agg.py
+39707439edfe672c339828614829f241  table4_and_effects/table4_extra_rows.py
+590fc774c0131eeddd0b93bf5ed885c6  table4_and_effects/table4_series.py

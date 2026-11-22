@@ -44,6 +44,15 @@ Maricopa grain protein): `observations/obs_registry_braunschweig_maricopa.csv`,
 | Table 4 agreement by site and variable; text numbers | `table4_agreement_by_site_variable.csv`, `table4_series_statistics.csv`, `part2_numbers.json` | `make_part2_tables.numbers` | all of the above | all of the above |
 | Table 5 numerical checks | `table5_numerical_checks.csv/.json` | `make_part2_tables.table5` | `output/daily_eb_actual.csv`, `daily_nitrogen.csv`, `daily_minerals.csv`, `run.log` (all 38 decks) | none |
 
+## Part 2 rows and text numbers not written by the `make_*` scripts (`table4_and_effects/`; its `README.md` lists all its scripts)
+
+| item | script | model files | observation files |
+|---|---|---|---|
+| Table 4 leaf An, gs, Tr rows (all sites) and the WheatDryFACE 2024/25 thermal-image leaf temperature row; Sect. 6.6.1 per-date CO2 effects | `table4_agg.py` | as Fig. 3 (via `lib/ebwb_gx.pairs`) | as Figs. 3 and 10 |
+| Sect. 6.7 CO2 x water and CO2 x nitrogen interactions (P values) | `anova_summary.py` | none | as Fig. 6 (treatment means, SDs) |
+| Sects. 6.5 and 7.6 share of grain-filling days with the Fe bound (58 %, 80 % at Braunschweig) | `fe_bound_days.py` | `run.log`, `output/daily_yield_components.csv` (all 38 decks) | none |
+| Sect. 4 soil mineral N 0-40 cm at maturity, RMSD without and with the immobilization | `soil_nmin_immobilization.py` | `output/daily_soilN_layers.csv`, `daily_phenology.csv` of 8 Braunschweig decks, run by the script with record 197 = 0 and read from `REF_OUTPUTS` | Dier et al. (2019) Fig. 5b, values in the script |
+
 ## Supplement S2 (`make_supplement_s2.py`)
 
 | item | file stem | function | model files beyond `init` | observation files beyond `init` |
@@ -66,7 +75,7 @@ Maricopa grain protein): `observations/obs_registry_braunschweig_maricopa.csv`,
 | Fig. 4 CO2 x water, N, temperature | `P1_Fig04_CO2_interactions` | `lib/p1_figures.fig4` | `SENS_DIR/all_metrics.json` |
 | Fig. 5 parameter sensitivity | `P1_Fig05_alt_matrix_tornado` | `lib/p1_figures.fig5` | `SENS_DIR/all_metrics.json` |
 | Table 5 sensitivity indices; Sect. 13.3/14 numbers | `table5_parameter_sensitivity.csv`, `part1_numbers.txt` | `make_part1_tables.report` | `SENS_DIR/all_metrics.json` |
-| `all_metrics.json` | — | `run_sensitivity.py` | `REF_OUTPUTS/WDF25_Ruta_aCO2_WW/input/` (control deck: `driver_main.txt` records 7, 8, 16, 22, 28; `driver_N.csv`; `cultivar_yield.csv`; `input_daily_meteo.csv`; `N_fertilizer.csv`; `phenology_cultivar.txt`), the model executable `MODEL_EXE`; per run `output/daily_growth.csv`, `daily_yield_components.csv`, `daily_fluxes.csv`, `daily_gas_exchange.csv`, `daily_nitrogen.csv`, `daily_eb_actual.csv`, `daily_phenology.csv`, `hourly_energy_balance.csv`, `daily_minerals.csv` |
+| `all_metrics.json` | — | `run_sensitivity.py` | `REF_OUTPUTS/WDF25_Ruta_aCO2_WW/input/` (control deck, record 22 set to 420 umol mol-1 in every run without its own CO2 edit: `driver_main.txt` records 7, 8, 16, 22, 28; `driver_N.csv`; `cultivar_yield.csv`; `input_daily_meteo.csv`; `N_fertilizer.csv`; `phenology_cultivar.txt`), the model executable `MODEL_EXE`; per run `output/daily_growth.csv`, `daily_yield_components.csv`, `daily_fluxes.csv`, `daily_gas_exchange.csv`, `daily_nitrogen.csv`, `daily_eb_actual.csv`, `daily_phenology.csv`, `hourly_energy_balance.csv`, `daily_minerals.csv` |
 
 ## WheatDryFACE files the scripts read (not shipped here; for the open deposit)
 

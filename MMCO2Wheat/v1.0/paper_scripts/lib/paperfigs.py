@@ -803,6 +803,10 @@ def _forest2(ax, items, pairs, title, xlabel="Effect of elevated CO$_2$ (%)", sh
                     transform=ax.get_yaxis_transform(), zorder=7, bbox=dict(facecolor="white", edgecolor="none", pad=0.6))
     if any((not RO) for _, RO, _, _, _ in rows):          # reserve a right margin for the "no obs." / "not measured" labels
         lo, hi = ax.get_xlim(); ax.set_xlim(lo, hi + 0.24 * (hi - lo))
+        # a simulated value under a label would be hidden by its white box: widen the margin until the label clears it
+        top = max([(max(RM) - 1) * 100 for _, RO, _, RM, _ in rows if not RO and RM] + [lo])
+        lo, hi = ax.get_xlim()
+        if top > hi - 0.36 * (hi - lo): ax.set_xlim(lo, (top - 0.36 * lo) / 0.64 + 0.02 * (hi - lo))
     ax.set_xlabel(xlabel); ax.set_title(title, pad=4, fontsize=7.5, loc="left")
     ax.grid(axis="x", color="#e6e6e6", lw=0.5); ax.set_axisbelow(True)
 

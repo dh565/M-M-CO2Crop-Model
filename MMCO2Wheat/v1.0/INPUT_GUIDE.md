@@ -62,9 +62,10 @@ refused outright rather than run with silently zeroed availabilities.
 
 > **Which copy is the released configuration.** A deck's own `input/driver_main.txt` is
 > the file the model reads. The released configuration is
-> `docs/V1_CONFIGURATION_driver_main_v1.0.txt`, which is byte-identical to
-> `testcase/input/driver_main.txt` and to the deck `decks/WDF25_Ruta_aCO2_WW/input/driver_main.txt`.
-> Cite and compare against those. Records 184-198 take the same value in all 38 decks and
+> `docs/V1_CONFIGURATION_driver_main_v1.0.txt`, which has the same 198 record values as
+> `testcase/input/driver_main.txt` and the deck `decks/WDF25_Ruta_aCO2_WW/input/driver_main.txt`;
+> only the comments of records 160, 168, 169, 171-174, 179, 180 and 183 differ (they state the
+> value used), and its last line states that the record values, not the comments, define v1.0. Cite and compare against those. Records 184-198 take the same value in all 38 decks and
 > in the test case, and so do records 81, 124, 172, 174 and 179; the other records may
 > differ from deck to deck (site, canopy, soil, atmospheric CO2 and the like).
 

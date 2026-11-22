@@ -28,6 +28,7 @@ the model output files (by deck) and observation files it reads.
 | `make_part1_figures.py` | Part 1, Figs. 1–5 |
 | `make_part1_tables.py` | Part 1, Table 5 and the numbers of Sects. 13.3 and 14 |
 | `run_sensitivity.py` | the 125 sensitivity runs behind Part 1 Figs. 2–5 and Table 5 (needs the model executable) |
+| `table4_and_effects/` | the Part 2 Table 4 rows and text numbers that the `make_*` scripts do not write: treatment-level series rows, gas-exchange and thermal-image rows, extra harvest rows, CO2 / water / nitrogen effects, the CO2 x supply ANOVA, the Fe sink-bound days and the soil mineral N with and without immobilization (see `table4_and_effects/README.md`) |
 | `lib/` | the modules the scripts share: deck registry and model readers (`face_results.py`), observation–model pairing of the energy-balance, soil, gas-exchange and canopy-temperature records (`tleaf_eval.py`, `ebwb_gx.py`), the WheatDryFACE file reader (`wdf_ingest.py`), the Maricopa archive readers (`maricopa_archive.py`, `maricopa_eb.py`, `maricopa_gx.py`, `maricopa_tsoil.py`, `extract_maricopa_eb.py`), the porometer figure (`wdf_poro.py`), the figure code (`paperfigs.py`, `paperfigs2.py`, `p1_figures.py`) |
 | `observations/` | observation tables derived from the open Braunschweig and Maricopa data sets, redistributed here (see `observations/README_observations.md`) |
 | `requirements.txt` | Python packages, pinned |
@@ -51,8 +52,9 @@ number comes from these files.
 ### 2. The model executable (`MODEL_EXE`) — Part 1 Figs. 2–5 and Table 5 only
 
 Built from the code package with its `Makefile`. `run_sensitivity.py` copies the archive deck
-`WDF25_Ruta_aCO2_WW/input` (the reference simulation of Part 1) 125 times, applies one input
-change per copy and runs the executable in each (about 45 s per run on one core), then collects
+`WDF25_Ruta_aCO2_WW/input` (the reference simulation of Part 1) 125 times, sets driver record 22
+(CO2) to the control value of 420 umol mol-1 in every copy, applies one input change per copy (a CO2
+run overwrites record 22 with its own value) and runs the executable in each (about 45 s per run on one core), then collects
 the harvest and season metrics of every run in `SENS_DIR/all_metrics.json`. A build in another
 environment may differ from the published numbers at the last printed digit (see the code
 package's `docs/START_HERE.md`).

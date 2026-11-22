@@ -82,12 +82,13 @@ def figS8(out):
             ax.errorbar(x, mp, yerr=sp, fmt="o", color=c, mfc=c, ms=3.4, elinewidth=0.6, capsize=0, zorder=4)
             if q != "dT":
                 ml = g[q + "_li"].mean().values
-                ax.plot(x, ml, "o", color=c, mfc="white", ms=3.4, mew=0.8, zorder=3)
+                ax.plot(x, ml, "o", color=c, mfc="none", ms=3.4, mew=0.8, zorder=5)
             mo = g[q + "_mod"].mean().values
             ax.plot(x, mo, "s--", color=c, mfc="white", ms=3.2, lw=0.9, zorder=2)
         ax.set_ylabel(lab); ax.xaxis.set_major_locator(mdates.DayLocator(interval=7)); ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
         ax.tick_params(axis="x", labelsize=6.5)
         if q == "dT": ax.axhline(0, color=GRAY, lw=0.6)
+        lo, hi = ax.get_ylim(); ax.set_ylim(lo, hi + 0.12 * (hi - lo))   # headroom so the panel letter covers no point
         letter(ax, k)
     # (d) CO2 effect on gsw by date: porometer, LI-6800, model (mean over the 4 genotype x water pairs, bar = range)
     ax = axes[3]
